@@ -78,7 +78,7 @@ ASSISTANT_NAME=Andy
 
 **参与投票**: 编辑 `votes/proposal-001.md` 中的投票表
 
-**详细规则**: [COLLABORATION_RULES_v3.md](./COLLABORATION_RULES_v3.md)
+**详细规则**: [docs/guides/COLLABORATION_RULES_v3.md](./docs/guides/COLLABORATION_RULES_v3.md)
 
 ---
 
@@ -128,7 +128,7 @@ closeclaw/
 - 二级：≥5 IDE + 用户投票（功能新增）
 - 三级：≥8 IDE + 用户投票（核心变更）
 
-**详细规则**: [COLLABORATION_RULES_v3.md](./COLLABORATION_RULES_v3.md)
+**详细规则**: [docs/guides/COLLABORATION_RULES_v3.md](./docs/guides/COLLABORATION_RULES_v3.md)
 
 ---
 
