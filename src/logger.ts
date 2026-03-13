@@ -1,7 +1,8 @@
 import pino from 'pino';
+import pinoPretty from 'pino-pretty';
 import { GROUPS_DIR } from './config.js';
 
-const pretty = pino.pretty({
+const pretty = pinoPretty({
   colorize: true,
   translateTime: 'SYS:standard',
   ignore: 'pid,hostname',
