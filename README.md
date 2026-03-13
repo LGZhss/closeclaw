@@ -44,25 +44,26 @@ ASSISTANT_NAME=Andy
 
 ### 🌟 新 IDE 必读（按顺序）
 
-1. **[docs/guidelines/NEW_IDE_ONBOARDING.md](./docs/guidelines/NEW_IDE_ONBOARDING.md)** - 新 IDE 引导（5 分钟）
-2. **[docs/guidelines/COLLABORATION_RULES_v3.md](./docs/guidelines/COLLABORATION_RULES_v3.md)** - 协作规则（10 分钟）
-3. **[docs/collaboration/QUICK_GUIDE.md](./docs/collaboration/QUICK_GUIDE.md)** - 快速参考（5 分钟）
+1. **[docs/contributing/IDE_ONBOARDING.md](./docs/contributing/IDE_ONBOARDING.md)** - 新 IDE 引导（5 分钟）
+2. **[docs/guides/COLLABORATION_RULES_v3.md](./docs/guides/COLLABORATION_RULES_v3.md)** - 协作规则（10 分钟）
+3. **[docs/reference/REGISTRATION_FLOW.md](./docs/reference/REGISTRATION_FLOW.md)** - 注册流程（5 分钟）
 
 ### 📚 核心文档
 
 | 文档 | 说明 |
 |------|------|
-| [docs/guidelines/FILE_STRUCTURE.md](./docs/guidelines/FILE_STRUCTURE.md) | 文件结构详解 |
-| [docs/collaboration/README.md](./docs/collaboration/README.md) | 协作文档索引 |
+| [docs/reference/FILE_STRUCTURE.md](./docs/reference/FILE_STRUCTURE.md) | 文件结构详解 |
+| [docs/contributing/README.md](./docs/contributing/README.md) | 贡献指南索引 |
 | [docs/architecture/FINAL_ARCHITECTURE.md](./docs/architecture/FINAL_ARCHITECTURE.md) | 系统架构设计 |
-| [docs/planning/NEXT_STEPS.md](./docs/planning/NEXT_STEPS.md) | 后续开发计划 |
+| [docs/roadmap/NEXT_STEPS.md](./docs/roadmap/NEXT_STEPS.md) | 后续开发计划 |
 
 ### 📂 完整文档目录
 
-- **docs/guidelines/** - 核心规范指南
-- **docs/collaboration/** - 协作文档（工作流、环境配置等）
+- **docs/guides/** - 使用指南（协作规则、工作流等）
+- **docs/reference/** - 参考文档（文件结构、注册流程等）
+- **docs/contributing/** - 贡献指南（如何参与）
 - **docs/architecture/** - 架构设计文档
-- **docs/planning/** - 任务规划文档
+- **docs/roadmap/** - 路线图和规划
 - **docs/archive/** - 历史归档文档
 
 👉 完整文档列表：[docs/README.md](./docs/README.md)
@@ -114,7 +115,7 @@ closeclaw/
 └── tests/                    # 测试
 ```
 
-详细说明：[FILE_STRUCTURE.md](./FILE_STRUCTURE.md)
+详细说明：[docs/reference/FILE_STRUCTURE.md](./docs/reference/FILE_STRUCTURE.md)
 
 ---
 

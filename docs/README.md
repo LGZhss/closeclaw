@@ -10,7 +10,6 @@
 ```
 docs/
 ├── README.md              # 📍 本文档索引
-├── getting-started/       # 🚀 入门指南
 ├── guides/                # 📖 使用指南
 ├── reference/             # 📚 参考文档
 ├── architecture/          # 🏗️ 架构设计
@@ -25,22 +24,11 @@ docs/
 
 | 分类 | 说明 |
 |------|------|
-| **getting-started/** | 新用户入门、环境配置 |
 | **guides/** | 协作规则、工作流程 |
 | **reference/** | 文件结构、技术参考 |
 | **architecture/** | 系统架构设计 |
 | **contributing/** | 如何贡献代码和文档 |
 | **roadmap/** | 项目规划和下一步 |
-
----
-
-## 🚀 入门指南 (getting-started/)
-
-新 IDE 必读文档。
-
-- [NEW_IDE_ONBOARDING.md](./getting-started/NEW_IDE_ONBOARDING.md) - 新 IDE 引导
-- [QUICK_GUIDE.md](./getting-started/QUICK_GUIDE.md) - 快速参考
-- [ENVIRONMENT_SETUP.md](./getting-started/ENVIRONMENT_SETUP.md) - 环境配置
 
 ---
 

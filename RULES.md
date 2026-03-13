@@ -18,23 +18,23 @@
 
 ## 一、文档结构
 
-### 📁 目标目录结构
+### 📁 当前目录结构
 
 ```
 docs/
 ├── README.md (文档中枢)
-├── 01-guidelines/ (核心规范)
-├── 02-collaboration/ (协作指南)
-├── 03-architecture/ (架构设计)
-├── 04-planning/ (任务规划)
-├── 05-learning/ (学习资源)
-├── 06-archive/ (历史归档)
-└── 07-proposals/ (提案记录)
+├── guides/ (使用指南：协作规则、工作流程)
+├── reference/ (参考文档：文件结构、注册流程)
+├── architecture/ (架构设计)
+├── contributing/ (贡献指南：如何参与)
+├── roadmap/ (路线图：项目规划)
+└── archive/ (历史归档)
 ```
 
-### 当前说明
+### 说明
 
-当前目录结构正在整理中，不符合规则的文档会移动到 `docs/06-archive/` 目录。
+- 不符合规则的文档已移动到 `docs/archive/` 目录
+- 中文命名目录已移动到 `docs/archive/deprecated/`
 
 ---
 
@@ -43,12 +43,11 @@ docs/
 ### ✅ 正确示例
 
 ```
-01-guidelines/
-├── 01-new-ide-onboarding.md
-└── 02-collaboration-rules-v3.md
-02-collaboration/
-└── 02-workflow/
-    └── 01-proposal-submission.md
+guides/
+├── collaboration-rules-v3.md
+└── workflow-optimization.md
+reference/
+└── registration-flow.md
 ```
 
 ### ❌ 错误示例
@@ -64,7 +63,7 @@ NEW_IDE_ONBOARDING.md (大写下划线)
 - **全英文**：使用英文命名
 - **小写**：全部小写字母
 - **连字符**：单词间用 `-`
-- **数字前缀**：文档按顺序编号（`01-`, `02-`）
+- **不带序号**：目录和文件名都不需要数字前缀
 
 ---
 
