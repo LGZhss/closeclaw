@@ -7,11 +7,13 @@ yarn-error.log*
 # Build outputs
 dist/
 build/
+
+# Logs
 *.log
+logs/
 
 # Environment files
 .env
-.env.*
 !.env.example
 
 # IDE files
@@ -19,17 +21,34 @@ build/
 .idea/
 *.swp
 *.swo
+*.sublime-workspace
+*.sublime-project
 
 # OS files
 .DS_Store
 Thumbs.db
+Desktop.ini
 
 # Temporary files
 *.tmp
 *.temp
 .cache/
 
-# Sensitive files (auto-detected)
-.env
-.env.example
+# Runtime data
+store/
+data/
+groups/*/logs/
+groups/*/CLAUDE.md
+!groups/global/CLAUDE.md
+!groups/main/CLAUDE.md
+
+# Container artifacts
+*.tar
+container-image/
+
+# Test coverage
+coverage/
+
+# TypeScript cache
+*.tsbuildinfo
 
