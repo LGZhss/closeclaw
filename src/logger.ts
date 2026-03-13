@@ -1,13 +1,14 @@
-import pino from 'pino';
+import { pino } from 'pino';
+import pretty from 'pino-pretty';
 import { GROUPS_DIR } from './config.js';
 
-const pretty = pino.pretty({
+const stream = pretty({
   colorize: true,
   translateTime: 'SYS:standard',
   ignore: 'pid,hostname',
 });
 
-export const logger = pino(pretty);
+export const logger = pino(stream);
 
 export const logLevels = {
   DEBUG: 10,
