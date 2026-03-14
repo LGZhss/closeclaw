@@ -172,13 +172,13 @@ function createDirectories(): void {
 }
 
 /**
- * Create CLAUDE.md files for groups
+ * Create CONTEXT.md files for groups
  */
-function createClaudeMdFiles(): void {
-  log('\n📝 Creating CLAUDE.md files...\n', colors.blue);
+function createContextMdFiles(): void {
+  log('\n📝 Creating CONTEXT.md files...\n', colors.blue);
 
-  const globalPath = path.join(PROJECT_ROOT, 'groups', 'global', 'CLAUDE.md');
-  const mainPath = path.join(PROJECT_ROOT, 'groups', 'main', 'CLAUDE.md');
+  const globalPath = path.join(PROJECT_ROOT, 'groups', 'global', 'CONTEXT.md');
+  const mainPath = path.join(PROJECT_ROOT, 'groups', 'main', 'CONTEXT.md');
 
   if (!existsSync(globalPath)) {
     const globalContent = `# Global Memory
@@ -193,7 +193,7 @@ This file contains global preferences, facts, and context shared across all conv
 - User prefers practical solutions over theoretical discussions
 `;
     writeFileSync(globalPath, globalContent);
-    log('  ✓ Created groups/global/CLAUDE.md', colors.green);
+    log('  ✓ Created groups/global/CONTEXT.md', colors.green);
   }
 
   if (!existsSync(mainPath)) {
@@ -205,7 +205,7 @@ This file contains memory and context specific to the main channel (self-chat).
 - Setup completed on ${new Date().toISOString()}
 `;
     writeFileSync(mainPath, mainContent);
-    log('  ✓ Created groups/main/CLAUDE.md', colors.green);
+    log('  ✓ Created groups/main/CONTEXT.md', colors.green);
   }
 }
 
@@ -263,8 +263,8 @@ async function main(): Promise<void> {
     // Install dependencies
     await installDependencies();
 
-    // Create CLAUDE.md files
-    createClaudeMdFiles();
+    // Create CONTEXT.md files
+    createContextMdFiles();
 
     // Build container (optional)
     await buildContainer();

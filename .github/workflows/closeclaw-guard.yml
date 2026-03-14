@@ -1,0 +1,52 @@
+name: CloseClaw Guard
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compliance Check
+        run: |
+          # 提取提案 ID
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          PROPOSAL_ID=$(echo "$COMMIT_MSG" | grep -o 'proposal-[0-9]\+' | head -1 || "")
+          
+          if [ -z "$PROPOSAL_ID" ]; then
+            echo "❌ ERROR: No proposal ID in commit (e.g. proposal-009)."
+            exit 1
+          fi
+          
+          PROPOSAL_PATH=$(ls votes/$PROPOSAL_ID*.md | head -1 || "")
+          
+          if [ ! -f "$PROPOSAL_PATH" ]; then
+            echo "❌ ERROR: Proposal $PROPOSAL_ID not found."
+            exit 1
+          fi
+          
+          # 验证通过状态
+          if ! grep -q "✅ 已通过" "$PROPOSAL_PATH"; then
+            echo "❌ ERROR: Proposal $PROPOSAL_ID is NOT approved."
+            exit 1
+          fi
+          
+          # 防止“蹭票”(Hijacking): 检查该提案是否已被之前的 Commit 引用过
+          # 逻辑：在 main 分支的历史中查找是否已经存在对该 ID 的完整实施记录
+          # (简易实现：如果当前 commit 不是创建或更新该提案的 commit，则检查历史)
+          if ! git diff --name-only HEAD~1 HEAD | grep -q "$PROPOSAL_PATH"; then
+             PREV_USAGE=$(git log main --grep="$PROPOSAL_ID" --pretty=%H | grep -v $(git rev-parse HEAD) || "")
+             if [ ! -z "$PREV_USAGE" ]; then
+                echo "⚠️ WARNING: Proposal $PROPOSAL_ID was previously referenced in $PREV_USAGE."
+                # 这里可以根据严苛程度决定是否 exit 1
+             fi
+          fi
+          
+          echo "✅ Audit passed."

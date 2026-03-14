@@ -21,7 +21,7 @@
 ### 全局记忆
 
 - 写入全局记忆：`@Andy remember [事实/偏好]`
-- 仅主通道可以修改 `groups/global/CLAUDE.md`
+- 仅主通道可以修改 `groups/global/CONTEXT.md`
 
 ### 任务管理
 
