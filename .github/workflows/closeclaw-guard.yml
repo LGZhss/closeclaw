@@ -15,6 +15,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Validate Proposal & Attribution
+        run: |
+          echo "Starting CloseClaw Guard Audit..."
+          
+          # 检查变更中是否包含 votes/ 下的新文件或修改
+          CHANGED_PROPOSALS=$(git diff --name-only HEAD~1 HEAD | grep "votes/proposal-" || true)
+          
           if [ -z "$CHANGED_PROPOSALS" ]; then
             # 如果没有提案变更，检查 commit message 中的提案 ID
             COMMIT_MSG=$(git log -1 --pretty=%B)
@@ -27,7 +34,7 @@ jobs:
             
             # 检查该提案文件是否存在
             PROPOSAL_FILE="votes/$PROPOSAL_ID.md"
-            # 尝试模糊匹配文件名（处理 proposal-009-xxx.md 的情况）
+            # 尝试模糊匹配文件名
             PROPOSAL_PATH=$(ls votes/$PROPOSAL_ID*.md | head -1 || true)
             
             if [ ! -f "$PROPOSAL_PATH" ]; then
@@ -44,18 +51,3 @@ jobs:
           fi
           
           echo "✅ Audit passed: Verified associated proposal is APPROVED."
-          PR_TITLE="${{ github.event.pull_request.title }}"
-          PR_NUMBER="${{ github.event.pull_request.number }}"
-          echo "Checking for proposal associated with PR #$PR_NUMBER: $PR_TITLE"
-          
-          # Search for proposal files containing the PR number or title keywords
-          PROPOSAL_FOUND=$(grep -lE "PR.*#$PR_NUMBER|pulls/$PR_NUMBER" votes/*.md || true)
-          
-          if [ -z "$PROPOSAL_FOUND" ]; then
-            echo "❌ ERROR: No matching proposal found in votes/ directory."
-            echo "According to RULES.md v1.5, every code change must have a corresponding proposal document for voting."
-            echo "Please create a proposal in votes/ following the template and include 'PR #$PR_NUMBER' in it."
-            exit 1
-          else
-            echo "✅ SUCCESS: Proposal found: $PROPOSAL_FOUND"
-          fi
