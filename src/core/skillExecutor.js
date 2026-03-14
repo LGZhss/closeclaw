@@ -23,4 +23,12 @@ export class SkillExecutor {
       const config = JSON.parse(content);
 
       const skillPromises = (config.skills || []).map(async (skill) => {
-        const skillPath = path.join(SKILLS_BASE, skill.path.replace('skills/',
+        const skillPath = path.join(SKILLS_BASE, skill.path.replace('skills/', ''));
+        return skillPath;
+      });
+      await Promise.all(skillPromises);
+    } catch (err) {
+      log('Error loading skill registry:', err);
+    }
+  }
+}
