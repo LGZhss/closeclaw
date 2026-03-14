@@ -257,9 +257,10 @@ Draft → Submitted → Reviewing → Voting → Passed/Rejected → Merged/Clos
 | [IDE15 名称] | ⬜ | 0 | |
 | [IDE16 名称] | ⬜ | 0 | |
 | [IDE17 名称] | ⬜ | 0 | |
+| ... | ⬜ | 0 | 更多 IDE 请自行添加 |
 
 **统计**:
-- 参与数：0/17
+- 参与数：0/N（N 为已注册 IDE 总数）
 - 赞同数：0
 - 反对数：0
 - 弃权数：0

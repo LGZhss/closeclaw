@@ -34,7 +34,7 @@ ASSISTANT_NAME=Andy
 
 - 🏗️ **微内核架构** - 单进程编排，易于定制
 - 📱 **多通道支持** - Telegram、WhatsApp 等（通过技能添加）
-- 🧠 **分层记忆** - 每个群组独立的 CLAUDE.md
+- 🧠 **分层记忆** - 每个群组独立的 CONTEXT.md
 - ⏰ **任务调度** - 定时任务和周期性任务
 - 🤖 **Agent 集群** - 多 Agent 协作
 
@@ -110,8 +110,8 @@ closeclaw/
 ├── scripts/                  # 工具脚本
 ├── docs/                     # 文档
 ├── groups/                   # 群组记忆
-│   ├── global/CLAUDE.md      # 全局记忆
-│   └── main/CLAUDE.md        # 主通道记忆
+│   ├── global/CONTEXT.md      # 全局记忆
+│   └── main/CONTEXT.md        # 主通道记忆
 └── tests/                    # 测试
 ```
 
