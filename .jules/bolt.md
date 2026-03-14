@@ -1,0 +1,3 @@
+## 2024-03-14 - SQLite Compound Indexing for Unprocessed Messages
+**Learning:** The database initialization creates separate indexes for `processed` and `timestamp`. The critical `getUnprocessedMessages` query (`WHERE processed = 0 ORDER BY timestamp ASC`) cannot efficiently use both standalone indexes simultaneously without an expensive sorting step or index intersection.
+**Action:** When querying queue-like structures in SQLite (filtering by a status flag and ordering by time), always use a compound index like `(status, time)` to allow the engine to directly traverse the relevant subset of rows in sorted order. Added `idx_messages_processed_timestamp` to prevent this bottleneck.
