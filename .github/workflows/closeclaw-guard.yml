@@ -15,26 +15,35 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Validate Proposal & Attribution
-        run: |
-          # 检查是否有对应的提案文件在 votes/ 目录下
-          # 对于 push 事件，检查 commit message 中是否包含 'Proposal: [ID]' 或关联提案文件
-          echo "Starting CloseClaw Guard Audit..."
-          
-          # 检查变更中是否包含 votes/ 下的新文件或修改
-          CHANGED_PROPOSALS=$(git diff --name-only HEAD~1 HEAD | grep "votes/proposal-" || true)
-          
           if [ -z "$CHANGED_PROPOSALS" ]; then
-            # 如果没有提案变更，检查 commit message
+            # 如果没有提案变更，检查 commit message 中的提案 ID
             COMMIT_MSG=$(git log -1 --pretty=%B)
-            if [[ ! "$COMMIT_MSG" =~ "proposal-" ]]; then
-              echo "❌ ERROR: No proposal found in this change and no proposal ID mentioned in commit message."
-              echo "According to RULES.md v1.9+, evry code change MUST be associated with a proposal."
+            PROPOSAL_ID=$(echo "$COMMIT_MSG" | grep -o 'proposal-[0-9]\+' | head -1 || true)
+            
+            if [ -z "$PROPOSAL_ID" ]; then
+              echo "❌ ERROR: No proposal ID found in commit message (e.g., proposal-009)."
+              exit 1
+            fi
+            
+            # 检查该提案文件是否存在
+            PROPOSAL_FILE="votes/$PROPOSAL_ID.md"
+            # 尝试模糊匹配文件名（处理 proposal-009-xxx.md 的情况）
+            PROPOSAL_PATH=$(ls votes/$PROPOSAL_ID*.md | head -1 || true)
+            
+            if [ ! -f "$PROPOSAL_PATH" ]; then
+              echo "❌ ERROR: Proposal file $PROPOSAL_ID not found in votes/ directory."
+              exit 1
+            fi
+            
+            # 关键：检查提案状态是否为“已通过”
+            if ! grep -q "✅ 已通过" "$PROPOSAL_PATH"; then
+              echo "❌ ERROR: Proposal $PROPOSAL_ID exists but its status is NOT '✅ 已通过'."
+              echo "You cannot commit code for a proposal that is still in voting or rejected."
               exit 1
             fi
           fi
           
-          echo "✅ Audit passed: Alignment with CloseClaw protocol detected."
+          echo "✅ Audit passed: Verified associated proposal is APPROVED."
           PR_TITLE="${{ github.event.pull_request.title }}"
           PR_NUMBER="${{ github.event.pull_request.number }}"
           echo "Checking for proposal associated with PR #$PR_NUMBER: $PR_TITLE"

@@ -196,6 +196,12 @@ NEW_协作主体_ONBOARDING.md (大写下划线)
 
 ---
 
+>- **禁止执行权 (Merge Restriction)** [CRITICAL]:
+    - **严禁自产自销**：任何协作主体（Agent/IDE）严禁调用 API 自动合并自己发起的 PR。
+    - **建议开启分支保护 (Branch Protection)**：用户应在 GitHub 仓库设置中，针对 `main` 分支开启 “Require a pull request before merging” 并勾选 “Require approvals”，将 `Required number of approvals` 设为 1。这样即使 Agent 拿到了 Token，没有您的手动点赞也合不进去。
+- **提案状态锁 (Proposal State Lock)**:
+    - 只有当 `votes/proposal-xxx.md` 中的状态字段**确认为** “✅ 已通过” 时，相关的代码修改才被允许并入 `main`。
+    - 守卫系统 (GitHub Action) 会实时扫描提案内容，伪造提案 ID 或引用未通过提案的行为将导致合规性审计失败。
 >- **身份备注原则 (Attribution Mandatory)**：
     - **透明提交**：协作主体在推送 Commit 或发起 PR 时，**必须**在说明中明确：
          - `Proposal-By`: [原始提案者 ID]
