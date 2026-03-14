@@ -13,6 +13,7 @@ const db = new Database(DB_PATH);
 
 // Enable WAL mode for better concurrency
 db.pragma('journal_mode = WAL');
+db.pragma('foreign_keys = ON');
 
 // Initialize database schema
 function initializeDatabase() {
@@ -36,7 +37,7 @@ function initializeDatabase() {
     CREATE TABLE IF NOT EXISTS registered_groups (
       jid TEXT PRIMARY KEY,
       name TEXT NOT NULL,
-      folder TEXT NOT NULL,
+      folder TEXT NOT NULL UNIQUE,
       channel TEXT NOT NULL,
       trigger TEXT,
       is_main INTEGER NOT NULL DEFAULT 0,
@@ -55,7 +56,7 @@ function initializeDatabase() {
       created_at TEXT NOT NULL,
       last_run_at TEXT,
       next_run_at TEXT,
-      FOREIGN KEY (group_folder) REFERENCES registered_groups(folder)
+      FOREIGN KEY (group_folder) REFERENCES registered_groups(folder) ON DELETE CASCADE
     );
 
     -- Task run logs table
@@ -66,7 +67,7 @@ function initializeDatabase() {
       completed_at TEXT,
       result TEXT,
       error TEXT,
-      FOREIGN KEY (task_id) REFERENCES scheduled_tasks(id)
+      FOREIGN KEY (task_id) REFERENCES scheduled_tasks(id) ON DELETE CASCADE
     );
 
     -- Sessions table
