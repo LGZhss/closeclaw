@@ -453,7 +453,7 @@ export class CognitiveSync {
 ```
 
 **CloseClaw 现状**: ⚠️ 仅有分层记忆
-- ✅ 群组独立记忆（CLAUDE.md）
+- ✅ 群组独立记忆（CONTEXT.md）
 - ✅ SQLite 持久化
 - ❌ 无 RAG 引擎
 - ❌ 无 GitNexus
