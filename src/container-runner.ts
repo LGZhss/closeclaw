@@ -7,7 +7,6 @@ import {
   DATA_DIR,
 } from "./config.js";
 import { logger } from "./logger.js";
-import { writeTaskResult, IPCMessage, IPCTask } from "./ipc.js";
 
 /**
  * Container execution result
@@ -79,22 +78,16 @@ export async function runContainer(
     dockerArgs.push(`-v`, `${globalPath}:/workspace/global`);
   }
 
-<<<<<<< HEAD
-    for (const mount of additionalMounts) {
-      const mountSpec = mount.readonly
-        ? [
-            '--mount',
-            `type=bind,source=${mount.hostPath},target=/workspace/extra/${mount.containerPath},readonly`,
-          ]
-=======
   // Add additional mounts
-    for (const mount of additionalMounts) {
-      const mountSpec = mount.readonly
-        ? ['--mount', `type=bind,source=${mount.hostPath},target=/workspace/extra/${mount.containerPath},readonly`]
->>>>>>> main
-        : ['-v', `${mount.hostPath}:/workspace/extra/${mount.containerPath}`];
-      dockerArgs.push(...mountSpec);
-    }
+  for (const mount of additionalMounts) {
+    const mountSpec = mount.readonly
+      ? [
+          "--mount",
+          `type=bind,source=${mount.hostPath},target=/workspace/extra/${mount.containerPath},readonly`,
+        ]
+      : ["-v", `${mount.hostPath}:/workspace/extra/${mount.containerPath}`];
+    dockerArgs.push(...mountSpec);
+  }
 
   // Add environment variables
   dockerArgs.push(`-e`, `ANTHROPIC_API_KEY`, `-e`, `CLAUDE_CODE_OAUTH_TOKEN`);
