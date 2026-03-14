@@ -38,9 +38,9 @@ Desktop.ini
 store/
 data/
 groups/*/logs/
-groups/*/CLAUDE.md
-!groups/global/CLAUDE.md
-!groups/main/CLAUDE.md
+groups/*/CONTEXT.md
+!groups/global/CONTEXT.md
+!groups/main/CONTEXT.md
 
 # Container artifacts
 *.tar
