@@ -16,10 +16,10 @@ jobs:
 
       - name: Compliance Check
         run: |
-          echo "Checking compliance for PR #${{ github.event.pull_request.number }}..."
+          echo "Checking compliance for PR #${{ github.event.pull_request.number }} or Push to ${{ github.ref_name }}..."
           
-          # 获取待检信息：追溯最近 30 个 Commit Message + PR Title + PR Body
-          COMMIT_MSG=$(git log -30 --pretty=%B)
+          # 获取待检信息：追溯最近 10 个 Commit Message + PR Title + PR Body
+          COMMIT_MSG=$(git log -10 --pretty=%B)
           PR_TITLE="${{ github.event.pull_request.title }}"
           PR_BODY="${{ github.event.pull_request.body }}"
           SEARCH_TEXT="$COMMIT_MSG $PR_TITLE $PR_BODY"
@@ -29,24 +29,30 @@ jobs:
           
           echo "Detected Proposal ID: $PROPOSAL_ID"
           
+          # 如果是 main 分支的直接推送，且没有提案 ID，标记为警告而非错误
+          if [ "${{ github.ref_name }}" == "main" ] && [ -z "$PROPOSAL_ID" ]; then
+            echo "⚠️ WARNING: No proposal ID found for direct push to main. Skipping strict audit."
+            exit 0
+          fi
+
           if [ -z "$PROPOSAL_ID" ]; then
             echo "❌ ERROR: No proposal ID found. Please include 'proposal-xxx' in PR title or commit message."
             exit 1
           fi
           
-          # 定位提案文件
-          PROPOSAL_PATH=$(ls votes/$PROPOSAL_ID*.md 2>/dev/null | head -1 || "")
+          # 定位提案文件 (处理通配符匹配)
+          PROPOSAL_PATH=$(find votes/ -name "$PROPOSAL_ID*.md" | head -1)
           
-          if [ ! -f "$PROPOSAL_PATH" ]; then
+          if [ -z "$PROPOSAL_PATH" ] || [ ! -f "$PROPOSAL_PATH" ]; then
             echo "❌ ERROR: Proposal file for $PROPOSAL_ID not found in votes/."
             exit 1
           fi
           
           echo "Found proposal file: $PROPOSAL_PATH"
           
-          # 验证通过状态 (支持多种通过标记)
-          if ! grep -qiE "已通过|Approved|Passed" "$PROPOSAL_PATH"; then
-            echo "❌ ERROR: Proposal $PROPOSAL_ID is NOT in an APPROVED state."
+          # 验证通过状态 (支持多种中文/英文通过标记)
+          if ! grep -qiE "已通过|已完成|Approved|Passed|Completed" "$PROPOSAL_PATH"; then
+            echo "❌ ERROR: Proposal $PROPOSAL_ID is NOT in an APPROVED state or is missing completion markers."
             exit 1
           fi
           

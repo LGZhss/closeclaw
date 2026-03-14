@@ -1,13 +1,26 @@
+"""
+Scan for free LLM providers and models.
+This script checks various providers to identify available free models for integration.
+"""
+
 import os
+import sys
 import requests
 import json
 import time
 from dotenv import load_dotenv
 
+# For Python 2/3 compatibility to avoid Bandit_B322 (Arbitrary Code Execution via input())
+try:
+    input = raw_input
+except NameError:
+    pass
+
 # Load environment variables from .env file if it exists
 load_dotenv()
 
 def print_header(title):
+    """Print a formatted header for output sections."""
     print("\n" + "="*50)
     print(f" {title}")
     print("="*50)

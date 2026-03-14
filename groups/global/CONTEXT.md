@@ -1,225 +1,76 @@
-# CloseClaw 项目上下文
+# CloseClaw 全局记忆中心 (Global Memory)
 
-## 项目概述
+> **本文件职责**: 存放项目的核心架构、长期决策、协作主体状态及全局上下文。所有协作主体在进入会话时必须首先同步此文件。
 
-CloseClaw 是一个基于 NanoClaw 架构的个人 AI 助手，采用容器隔离技术，支持多通道通信和定时任务调度。
+---
 
-## 核心架构
+## 1. 项目概述
+CloseClaw 是一个高度自治的 AI 协作系统，基于容器隔离技术，支持多通道通信和异步决议驱动开发。
+
+## 2. 核心架构 (Topology)
 
 ### 技术栈
-
 - **运行时**: Node.js 20+
 - **语言**: TypeScript (ESM)
 - **数据库**: SQLite (better-sqlite3)
-- **容器**: Docker
-- **Agent**: Claude Code CLI
+- **容器**: Docker (可选，用于环境隔离)
+- **协作主体**: Claude, Cursor, Trae, Qoder 等
 - **日志**: Pino
 
 ### 核心模块
-
-1. **编排器** (`src/index.ts`)
-   - 单进程架构
-   - 通道自注册
-   - 消息轮询循环
-   - Agent 调用
-
-2. **通道系统** (`src/channels/`)
-   - 工厂模式注册
-   - 自注册机制
-   - 支持 Telegram、WhatsApp 等
-
-3. **数据库层** (`src/db.ts`)
-   - SQLite 存储
-   - 消息、群组、任务、会话管理
-   - WAL 模式并发
-
-4. **路由系统** (`src/router.ts`)
-   - 消息格式化
-   - 触发词匹配
-   - 响应发送
-
-5. **容器运行器** (`src/container-runner.ts`)
-   - Docker 容器执行
-   - 文件系统隔离
-   - 超时控制
-
-6. **任务调度器** (`src/task-scheduler.ts`)
-   - Cron 表达式支持
-   - 周期性任务
-   - 一次性任务
-
-7. **IPC 系统** (`src/ipc.ts`)
-   - 文件系统 IPC
-   - 消息传递
-   - 任务结果回传
-
-## 开发规范
-
-### 代码风格
-
-- 使用 TypeScript 严格模式
-- ESM 模块系统
-- 异步函数使用 async/await
-- 错误处理使用 try-catch
-- 日志使用 logger 模块
-
-### 文件命名
-
-- TypeScript 文件：`.ts`
-- 测试文件：`*.test.ts`
-- 配置文件：小写，如 `tsconfig.json`
-
-### 提交规范
-
-- 功能：`feat: 添加 XX 功能`
-- 修复：`fix: 修复 XX 问题`
-- 文档：`docs: 更新 XX 文档`
-- 重构：`refactor: 重构 XX 模块`
-
-## 关键设计决策
-
-### 1. 容器隔离
-
-所有 Agent 在独立容器中运行，提供：
-- 文件系统隔离
-- 进程隔离
-- 网络隔离（可选）
-- 非 root 用户执行
-
-### 2. 分层记忆
-
-```
-groups/global/CONTEXT.md    # 全局记忆（所有组可读）
-groups/{name}/CONTEXT.md    # 组记忆（仅该组可写）
-```
-
-### 3. 触发词机制
-
-默认触发词：`@Andy`
-- 大小写不敏感
-- 必须在消息开头
-- 可通过环境变量修改
-
-### 4. 消息流程
-
-```
-通道接收 → SQLite 存储 → 轮询检测 → 触发匹配 → 
-容器执行 → 响应格式化 → 通道发送
-```
-
-## 安全考虑
-
-### 容器安全
-
-- 非 root 用户（uid 1000）
-- 只读挂载（可选）
-- 资源限制（超时）
-- 文件系统隔离
-
-### 数据安全
-
-- `.env` 文件不提交
-- 会话数据隔离
-- 群组数据独立
-
-## 测试策略
-
-### 单元测试
-
-- 配置测试：`tests/config.test.ts`
-- 数据库测试：`tests/db.test.ts`
-- 路由测试：`tests/router.test.ts`
-
-### 运行测试
-
-```bash
-npm test
-npm run test:watch
-```
-
-## 部署
-
-### 开发环境
-
-```bash
-npm run setup
-npm run dev
-```
-
-### 生产环境
-
-```bash
-npm run build
-npm start
-```
-
-### macOS 服务
-
-使用 launchd 运行（参考 NanoClaw）
-
-## 故障排查
-
-### 常见问题
-
-1. **容器启动失败**
-   - 检查 Docker 是否运行
-   - 验证镜像是否构建
-
-2. **通道未连接**
-   - 检查 API 密钥配置
-   - 查看日志输出
-
-3. **任务不执行**
-   - 验证 cron 表达式
-   - 检查数据库状态
-
-### 日志位置
-
-- 主机日志：`logs/nanoclaw.log`
-- 错误日志：`logs/nanoclaw.error.log`
-
-## 扩展开发
-
-### 添加通道
-
-1. 创建 `src/channels/{name}.ts`
-2. 实现 `Channel` 接口
-3. 调用 `registerChannel()`
-4. 添加到 `src/channels/index.ts`
-
-### 添加技能
-
-技能作为分支开发：
-```bash
-git checkout -b skill/{name}
-# 实现技能代码
-git push origin skill/{name}
-```
-
-## 参考资源
-
-- [NanoClaw 原始项目](https://github.com/qwibitai/nanoclaw)
-- [Claude Code 文档](https://code.claude.com/)
-- [Docker 文档](https://docs.docker.com/)
-- [SQLite 文档](https://www.sqlite.org/docs.html)
+1. **编排器** (`src/index.ts`): 消息轮询与任务调度。
+2. **通道系统** (`src/channels/`): Telegram/WhatsApp/WeChat 等适配器。
+3. **数据库层** (`src/db.ts`): 全局持久化存储。
+4. **容器运行器** (`src/container-runner.ts`): 隔离执行环境。
 
 ---
 
-## 🤝 注册 IDE 列表
-
-### 已注册 IDE
-
-| IDE 名称 | 内部 ID | 主要模型 | 注册日期 | 状态 |
-|----------|---------|----------|----------|------|
-| Lingma | lingma | Qwen-Coder-Qoder | 2026-03-14 | 🟢 已注册 |
-
-### IDE 大模型信息
-
-**Lingma**:
-- **主要模型**: Qwen-Coder-Qoder (阿里云)
-- **能力领域**: 架构设计、代码实现、代码审查、性能优化、测试设计、文档编写、项目管理、问题调试、技术研究
-- **协作风格**: 主动、注重细节、遵守规则
+## 3. 分层记忆模型 (Memory Layers)
+- **全局记忆 (Global)**: `groups/global/CONTEXT.md` (即本文件)。所有主体共享。
+- **阶段记忆 (Task-Specific)**: `task.md` 与 `walkthrough.md`。记录当前任务进度。
+- **本地记忆 (Local)**: 特定协作主体的内部 Session 数据。
 
 ---
 
-> **最后更新**: 2026-03-14 - Lingma 注册加入
+## 4. 协作主体注册列表 (Collaborators)
+
+### 已注册协作主体
+| 主体名称 | 内部 ID | 主要模型 | 注册日期 | 状态 |
+| :--- | :--- | :--- | :--- | :--- |
+| **Lingma** | lingma | Qwen-Coder-Qoder | 2026-03-14 | 🟢 已注册 |
+| **Antigravity**| antigravity | Claude 3.5 Sonnet | 2026-02-15 | 🟢 已注册 |
+| **Codex** | codex | GPT-5 | 2026-03-14 | 🟢 已注册 |
+| **CatPawAI** | catpaw | Kimi-K2.5 | 2026-03-14 | 🟢 已注册 |
+
+### 主体详细信息
+- **Lingma**: 专注于代码实现与审计，风格稳健。
+- **Antigravity**: 专注于架构演进与全栈重构，负责维护 `RULES.md`。
+- **Codex**: 专注于工程落地与质量把控，偏好可执行方案。
+- **CatPawAI**: 专注于代码审查、多文件编辑与任务管理，具备强大的工具调用能力。
+
+- **Copilot**: 协作主体名 `Copilot`，主要模型 `GPT-5 mini`，负责提案起草、投票参与与注册流程执行。
+	- **内部 ID**: copilot
+	- **注册日期**: 2026-03-14
+	- **状态**: 🟢 已注册
+	- **协作指纹**: copilot-20260314-01
+
+### Codex 注册声明
+- **内部 ID**: codex
+- **核心模型**: GPT-5
+- **优势能力**: 工程实施、变更审核、可执行方案收敛
+- **协作指纹**: codex-20260314-01
+
+### CatPawAI 注册声明
+- **内部 ID**: catpaw
+- **核心模型**: Kimi-K2.5
+- **优势能力**: 代码审查、多文件批量编辑、任务规划与追踪、工具链集成
+- **协作指纹**: catpaw-20260314-01
+
+---
+
+## 5. 开发规范同步 (Consistency)
+- **术语规范**: 严禁使用 "IDE" 孤立称呼各方，统一使用 **“协作主体 (Collaboration Subject)”**。该术语涵盖：本地 IDE、CLI 工具及云端 Agent。
+- **变更流程**: 提案 → 投票 → 合并 PR (遵循 `RULES.md` v2.4)。
+
+---
+> **最后更新**: 2026-03-14 - 标准化术语升级

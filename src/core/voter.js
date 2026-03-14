@@ -97,7 +97,7 @@ export class VotingEngine {
             throw new Error('投票不存在');
         }
 
-        // 计算IDE投票得分
+        // 计算协作主体投票得分
         const ideVotes = Object.values(voteRecord.votes);
         const ideScore = ideVotes.reduce((sum, vote) => sum + vote, 0);
 
@@ -111,7 +111,7 @@ export class VotingEngine {
         const totalScore = ideScore + userScore;
 
         // 计算反对票数
-        const反对票数 = ideVotes.filter(vote => vote === -1).length;
+        const 反对票数 = ideVotes.filter(vote => vote === -1).length;
 
         // 检查法定人数
         const quorum = config.voting.quorum[`level${voteRecord.level}`];
@@ -131,7 +131,7 @@ export class VotingEngine {
             ideScore,
             userScore,
             totalScore,
-           反对票数,
+            反对票数,
             actualParticipants,
             requiredQuorum: quorum,
             quorumMet,

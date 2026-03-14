@@ -2,7 +2,7 @@
   "protocol": "CloseClaw v2.0",
   "subjects": {
     "lead": "Antigravity",
-    "engineering": ["Cursor", "Windsurf", "PearAI", "Trae", "Trae-CN"],
+    "engineering": ["Cursor", "Windsurf", "PearAI", "Trae", "Trae-CN", "Codex", "Copilot"],
     "auditors": ["Lingma", "Comate", "CodeBuddy", "JoyCode", "CatPawAI", "TalkCody"],
     "cloud": ["Jules-Bolt", "Jules-Palette", "Jules-Sentinel"]
   },
