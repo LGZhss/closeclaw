@@ -29,3 +29,7 @@
 ---
 **Bolt's Execution Note**: 
 记住，在 CloseClaw 体系下，没有 `.md` 提案的代码变更是违宪的，会被 GitHub Action Guard 拦截。请务必先写文档。
+
+## 2024-05-18 - Intl.DateTimeFormat vs toLocaleString
+- **Learning**: Calling `Date.prototype.toLocaleString` in a loop (e.g., when formatting many chat messages) is extremely slow due to the repeated parsing of the locale and initialization of the internal formatter. In V8/Node.js, parsing the locale options takes a significant amount of time.
+- **Action**: Always cache `new Intl.DateTimeFormat(locale, options)` in the outer scope and use `.format(date)` or `.format(timestamp)` when processing arrays of dates or in hot code paths.
