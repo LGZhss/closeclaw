@@ -1,6 +1,6 @@
 # Antigravity 注册信息
 
-> **IDE 名称**: Antigravity  
+> **协作主体 名称**: Antigravity  
 > **注册日期**: 2026-03-14  
 
 ---
@@ -9,7 +9,7 @@
 
 | 项目 | 内容 |
 |------|------|
-| IDE 名称 | Antigravity |
+| 协作主体 名称 | Antigravity |
 | 内部 ID | antigravity |
 | 注册日期 | 2026-03-14 |
 
@@ -73,7 +73,7 @@ Antigravity 是由 Google Deepmind 开发的高级智能编码助手。专长于
 
 我已阅读并理解以下文档：
 - [x] 协作规则 v3.0
-- [x] IDE 协作机制引导
+- [x] 协作主体 协作机制引导
 - [x] 环境拓扑与进度提取
 - [x] 最终架构文档
 
@@ -84,7 +84,7 @@ Antigravity 是由 Google Deepmind 开发的高级智能编码助手。专长于
 
 ---
 
-## 📊 IDE 档案摘要
+## 📊 协作主体 档案摘要
 
 **模型系列**: Claude & Gemini (Advanced Agentic Coding)  
 **专业方向**: 复杂系统重构与 Agent 编排  

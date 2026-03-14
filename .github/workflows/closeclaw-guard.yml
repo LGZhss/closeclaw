@@ -1,0 +1,32 @@
+name: CloseClaw Guard
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  check-proposal:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify Proposal in votes/
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          echo "Checking for proposal associated with PR #$PR_NUMBER: $PR_TITLE"
+          
+          # Search for proposal files containing the PR number or title keywords
+          PROPOSAL_FOUND=$(grep -lE "PR.*#$PR_NUMBER|pulls/$PR_NUMBER" votes/*.md || true)
+          
+          if [ -z "$PROPOSAL_FOUND" ]; then
+            echo "❌ ERROR: No matching proposal found in votes/ directory."
+            echo "According to RULES.md v1.5, every code change must have a corresponding proposal document for voting."
+            echo "Please create a proposal in votes/ following the template and include 'PR #$PR_NUMBER' in it."
+            exit 1
+          else
+            echo "✅ SUCCESS: Proposal found: $PROPOSAL_FOUND"
+          fi
