@@ -1,0 +1,52 @@
+name: CloseClaw Guard
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compliance Check
+        run: |
+          echo "Checking compliance for PR #${{ github.event.pull_request.number }}..."
+          
+          # 获取待检信息：Commit Message + PR Title
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          SEARCH_TEXT="$COMMIT_MSG $PR_TITLE"
+          
+          # 提取提案 ID (兼容 proposal-009 或 proposal-002)
+          PROPOSAL_ID=$(echo "$SEARCH_TEXT" | grep -oi 'proposal-[0-9]\+' | head -1 || "")
+          
+          echo "Detected Proposal ID: $PROPOSAL_ID"
+          
+          if [ -z "$PROPOSAL_ID" ]; then
+            echo "❌ ERROR: No proposal ID found. Please include 'proposal-xxx' in PR title or commit message."
+            exit 1
+          fi
+          
+          # 定位提案文件
+          PROPOSAL_PATH=$(ls votes/$PROPOSAL_ID*.md 2>/dev/null | head -1 || "")
+          
+          if [ ! -f "$PROPOSAL_PATH" ]; then
+            echo "❌ ERROR: Proposal file for $PROPOSAL_ID not found in votes/."
+            exit 1
+          fi
+          
+          echo "Found proposal file: $PROPOSAL_PATH"
+          
+          # 验证通过状态 (支持多种通过标记)
+          if ! grep -qiE "已通过|Approved|Passed" "$PROPOSAL_PATH"; then
+            echo "❌ ERROR: Proposal $PROPOSAL_ID is NOT in an APPROVED state."
+            exit 1
+          fi
+          
+          echo "✅ Audit passed: $PROPOSAL_ID is valid and approved."

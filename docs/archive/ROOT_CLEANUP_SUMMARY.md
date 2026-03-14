@@ -112,7 +112,7 @@
 - [x] ✅ `.env` 已在忽略列表中
 - [x] ✅ `!.env.example` 保留示例文件
 - [x] ✅ 包含 node_modules/, dist/, logs/ 等
-- [x] ✅ 包含 groups/*/CLAUDE.md（除全局和主通道）
+- [x] ✅ 包含 groups/*/CONTEXT.md（除全局和主通道）
 
 ---
 
