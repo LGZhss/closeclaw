@@ -1,4 +1,5 @@
 import { pino } from 'pino';
+<<<<<<< HEAD
 import pretty from 'pino-pretty';
 import { GROUPS_DIR } from './config.js';
 
@@ -10,6 +11,21 @@ const stream = pretty({
 
 export const logger = pino(stream);
 
+=======
+import { GROUPS_DIR } from './config.js';
+
+export const logger = pino({
+  transport: {
+    target: 'pino-pretty',
+    options: {
+      colorize: true,
+      translateTime: 'SYS:standard',
+      ignore: 'pid,hostname',
+    }
+  }
+});
+
+>>>>>>> main
 export const logLevels = {
   DEBUG: 10,
   INFO: 20,

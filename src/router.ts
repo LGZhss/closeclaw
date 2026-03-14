@@ -165,3 +165,13 @@ export async function sendMessage(
 export function formatResponse(text: string): string {
   return `${ASSISTANT_NAME}: ${text}`;
 }
+
+export function routeOutbound(
+  channels: Channel[],
+  jid: string,
+  text: string,
+): Promise<void> {
+  const channel = channels.find((c) => c.ownsJid(jid) && c.isConnected());
+  if (!channel) throw new Error(`No channel for JID: ${jid}`);
+  return channel.sendMessage(jid, text);
+}
