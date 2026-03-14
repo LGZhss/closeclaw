@@ -10,8 +10,8 @@ export class McpBridge {
   private rulesFile: string;
 
   constructor() {
-    this.votesDir = path.join(process.cwd(), 'votes');
-    this.rulesFile = path.join(process.cwd(), 'RULES.md');
+    this.votesDir = path.resolve(process.env.VOTES_DIR || path.join(process.cwd(), 'votes'));
+    this.rulesFile = path.resolve(process.env.RULES_FILE || path.join(process.cwd(), 'RULES.md'));
   }
 
   /**
@@ -19,10 +19,10 @@ export class McpBridge {
    */
   async listProposals(): Promise<any[]> {
     try {
-      const files = await fs.readdir(this.votesDir);
+      const files: string[] = await fs.readdir(this.votesDir);
       const proposals = await Promise.all(
-        files.filter(f => f.endsWith('.md')).map(async (file) => {
-          const content = await fs.readFile(path.join(this.votesDir, file), 'utf8');
+        files.filter((f: string) => f.startsWith('proposal-')).map(async (file: string) => {
+          const content: string = await fs.readFile(path.join(this.votesDir, file), 'utf8');
           return {
             id: file,
             uri: `file://${path.join(this.votesDir, file)}`,
