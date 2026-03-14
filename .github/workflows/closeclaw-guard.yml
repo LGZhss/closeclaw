@@ -4,50 +4,49 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
   push:
-    branches: [main, develop]
+    branches: [main]
 
 jobs:
-  check-proposal:
+  audit:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Validate Proposal & Attribution
+      - name: Compliance Check
         run: |
-          echo "Starting CloseClaw Guard Audit..."
+          # 提取提案 ID
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          PROPOSAL_ID=$(echo "$COMMIT_MSG" | grep -o 'proposal-[0-9]\+' | head -1 || "")
           
-          # 检查变更中是否包含 votes/ 下的新文件或修改
-          CHANGED_PROPOSALS=$(git diff --name-only HEAD~1 HEAD | grep "votes/proposal-" || true)
-          
-          if [ -z "$CHANGED_PROPOSALS" ]; then
-            # 如果没有提案变更，检查 commit message 中的提案 ID
-            COMMIT_MSG=$(git log -1 --pretty=%B)
-            PROPOSAL_ID=$(echo "$COMMIT_MSG" | grep -o 'proposal-[0-9]\+' | head -1 || true)
-            
-            if [ -z "$PROPOSAL_ID" ]; then
-              echo "❌ ERROR: No proposal ID found in commit message (e.g., proposal-009)."
-              exit 1
-            fi
-            
-            # 检查该提案文件是否存在
-            PROPOSAL_FILE="votes/$PROPOSAL_ID.md"
-            # 尝试模糊匹配文件名
-            PROPOSAL_PATH=$(ls votes/$PROPOSAL_ID*.md | head -1 || true)
-            
-            if [ ! -f "$PROPOSAL_PATH" ]; then
-              echo "❌ ERROR: Proposal file $PROPOSAL_ID not found in votes/ directory."
-              exit 1
-            fi
-            
-            # 关键：检查提案状态是否为“已通过”
-            if ! grep -q "✅ 已通过" "$PROPOSAL_PATH"; then
-              echo "❌ ERROR: Proposal $PROPOSAL_ID exists but its status is NOT '✅ 已通过'."
-              echo "You cannot commit code for a proposal that is still in voting or rejected."
-              exit 1
-            fi
+          if [ -z "$PROPOSAL_ID" ]; then
+            echo "❌ ERROR: No proposal ID in commit (e.g. proposal-009)."
+            exit 1
           fi
           
-          echo "✅ Audit passed: Verified associated proposal is APPROVED."
+          PROPOSAL_PATH=$(ls votes/$PROPOSAL_ID*.md | head -1 || "")
+          
+          if [ ! -f "$PROPOSAL_PATH" ]; then
+            echo "❌ ERROR: Proposal $PROPOSAL_ID not found."
+            exit 1
+          fi
+          
+          # 验证通过状态
+          if ! grep -q "✅ 已通过" "$PROPOSAL_PATH"; then
+            echo "❌ ERROR: Proposal $PROPOSAL_ID is NOT approved."
+            exit 1
+          fi
+          
+          # 防止“蹭票”(Hijacking): 检查该提案是否已被之前的 Commit 引用过
+          # 逻辑：在 main 分支的历史中查找是否已经存在对该 ID 的完整实施记录
+          # (简易实现：如果当前 commit 不是创建或更新该提案的 commit，则检查历史)
+          if ! git diff --name-only HEAD~1 HEAD | grep -q "$PROPOSAL_PATH"; then
+             PREV_USAGE=$(git log main --grep="$PROPOSAL_ID" --pretty=%H | grep -v $(git rev-parse HEAD) || "")
+             if [ ! -z "$PREV_USAGE" ]; then
+                echo "⚠️ WARNING: Proposal $PROPOSAL_ID was previously referenced in $PREV_USAGE."
+                # 这里可以根据严苛程度决定是否 exit 1
+             fi
+          fi
+          
+          echo "✅ Audit passed."
