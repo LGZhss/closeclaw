@@ -23,6 +23,7 @@ export class SkillExecutor {
       const config = JSON.parse(content);
 
       const skillPromises = (config.skills || []).map(async (skill) => {
+<<<<<<< HEAD
         const skillPath = path.join(SKILLS_BASE, skill.path.replace('skills/', ''));
         return skillPath;
       });
@@ -31,4 +32,25 @@ export class SkillExecutor {
       log('Error loading skill registry:', err);
     }
   }
+=======
+        // ClawHub 兼容逻辑: 如果路径包含 .md，则按 SKILL.md 规范解析
+        if (skill.path.endsWith('.md')) {
+           return this.loadClawHubSkill(skill.path);
+        }
+        const skillPath = path.join(SKILLS_BASE, skill.path.replace('skills/', ''));
+        // 保持原有逻辑的占位或继续加载
+        return skillPath;
+      });
+
+      await Promise.all(skillPromises);
+    } catch (error) {
+      log(`Failed to load skills: ${error}`, 'ERROR');
+    }
+  }
+
+  async loadClawHubSkill(skillPath) {
+    log(`Loading ClawHub skill from: ${skillPath}`, 'INFO');
+    // 实现 SKILL.md 解析逻辑...
+  }
+>>>>>>> main
 }

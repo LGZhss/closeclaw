@@ -76,9 +76,9 @@
 │
 ├── 📁 groups/                            # ⭐ 群组记忆目录
 │   ├── 📁 global/
-│   │   └── 📄 CLAUDE.md                  # ⭐⭐ 全局记忆文件
+│   │   └── 📄 CONTEXT.md                  # ⭐⭐ 全局记忆文件
 │   └── 📁 main/
-│       └── 📄 CLAUDE.md                  # ⭐⭐ 主通道记忆文件
+│       └── 📄 CONTEXT.md                  # ⭐⭐ 主通道记忆文件
 │
 ├── 📁 votes/                             # ⭐⭐⭐ 投票文档目录（决议区域）
 │   ├── 📄 proposal-001.md                # 提案 001
@@ -342,7 +342,7 @@ cp templates/proposal-template.md votes/proposal-001.md
 
 ### 6. groups/ - 群组记忆
 
-#### ⭐⭐ global/CLAUDE.md
+#### ⭐⭐ global/CONTEXT.md
 
 **用途**: 全局记忆文件
 
@@ -353,7 +353,7 @@ cp templates/proposal-template.md votes/proposal-001.md
 
 ---
 
-#### ⭐⭐ main/CLAUDE.md
+#### ⭐⭐ main/CONTEXT.md
 
 **用途**: 主通道记忆文件
 
@@ -581,7 +581,7 @@ IDE 得分 = 赞同数×1 + 反对数×(-1)
 | `docs/collaboration/WORKFLOW_OPTIMIZATION.md` | 完整流程 | 经常 |
 | `scripts/init-dev-dir.sh` | 环境初始化 | 一次 |
 | `src/index.ts` | 核心代码 | 开发时 |
-| `groups/global/CLAUDE.md` | 全局记忆 | 经常 |
+| `groups/global/CONTEXT.md` | 全局记忆 | 经常 |
 
 ---
 
