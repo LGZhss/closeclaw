@@ -79,12 +79,19 @@ export async function runContainer(
     dockerArgs.push(`-v`, `${globalPath}:/workspace/global`);
   }
 
+<<<<<<< HEAD
     for (const mount of additionalMounts) {
       const mountSpec = mount.readonly
         ? [
             '--mount',
             `type=bind,source=${mount.hostPath},target=/workspace/extra/${mount.containerPath},readonly`,
           ]
+=======
+  // Add additional mounts
+    for (const mount of additionalMounts) {
+      const mountSpec = mount.readonly
+        ? ['--mount', `type=bind,source=${mount.hostPath},target=/workspace/extra/${mount.containerPath},readonly`]
+>>>>>>> main
         : ['-v', `${mount.hostPath}:/workspace/extra/${mount.containerPath}`];
       dockerArgs.push(...mountSpec);
     }

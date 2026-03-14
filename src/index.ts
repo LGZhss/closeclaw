@@ -1,16 +1,30 @@
-import { Channel, ChannelOpts, IncomingMessage, RegisteredGroup } from './types.js';
-import { getChannelFactory, getRegisteredChannelNames } from './channels/registry.js';
-import './channels/index.js'; // Trigger channel self-registration
-import { insertMessage, getUnprocessedMessages, markMessagesProcessed, getMainGroup, setRegisteredGroup } from './db.js';
-import { logger } from './logger.js';
-import { POLL_INTERVAL, GROUPS_DIR, ASSISTANT_NAME } from './config.js';
-import { processGroupMessages, sendMessage, formatResponse } from './router.js';
-import { groupQueue } from './group-queue.js';
-import { startScheduler } from './task-scheduler.js';
-import { ScheduledTask } from './types.js';
-import { runContainer } from './container-runner.js';
-import { mkdirSync, existsSync } from 'fs';
-import path from 'path';
+import {
+  Channel,
+  ChannelOpts,
+  IncomingMessage,
+  RegisteredGroup,
+} from "./types.js";
+import {
+  getChannelFactory,
+  getRegisteredChannelNames,
+} from "./channels/registry.js";
+import "./channels/index.js"; // Trigger channel self-registration
+import {
+  insertMessage,
+  getUnprocessedMessages,
+  markMessagesProcessed,
+  getMainGroup,
+  setRegisteredGroup,
+} from "./db.js";
+import { logger } from "./logger.js";
+import { POLL_INTERVAL, GROUPS_DIR, ASSISTANT_NAME } from "./config.js";
+import { processGroupMessages, sendMessage, formatResponse } from "./router.js";
+import { groupQueue } from "./group-queue.js";
+import { startScheduler } from "./task-scheduler.js";
+import { ScheduledTask } from "./types.js";
+import { runContainer } from "./container-runner.js";
+import { mkdirSync, existsSync } from "fs";
+import path from "path";
 
 // Store connected channels
 const channels: Channel[] = [];
@@ -20,7 +34,9 @@ const channels: Channel[] = [];
  */
 async function handleIncomingMessage(message: IncomingMessage): Promise<void> {
   try {
-    logger.debug(`Received message from ${message.senderName} via ${message.channel}`);
+    logger.debug(
+      `Received message from ${message.senderName} via ${message.channel}`,
+    );
 
     // Store message in database
     const msgId = insertMessage({
@@ -65,7 +81,9 @@ async function connectChannels(): Promise<void> {
   const channelOpts = buildChannelOpts();
   const registeredNames = getRegisteredChannelNames();
 
-  logger.info(`Found ${registeredNames.length} registered channel(s): ${registeredNames.join(', ')}`);
+  logger.info(
+    `Found ${registeredNames.length} registered channel(s): ${registeredNames.join(", ")}`,
+  );
 
   for (const name of registeredNames) {
     try {
@@ -90,7 +108,7 @@ async function connectChannels(): Promise<void> {
   }
 
   if (channels.length === 0) {
-    logger.warn('No channels connected. Add credentials to enable channels.');
+    logger.warn("No channels connected. Add credentials to enable channels.");
   }
 }
 
@@ -122,7 +140,7 @@ async function processGroup(groupFolder: string): Promise<void> {
         logger.error(`Agent failed: ${containerResult.error}`);
         await result.channel!.sendMessage(
           result.channel!.name,
-          `❌ Error: ${containerResult.error || 'Agent execution failed'}`
+          `❌ Error: ${containerResult.error || "Agent execution failed"}`,
         );
       }
     } catch (error) {
@@ -130,7 +148,7 @@ async function processGroup(groupFolder: string): Promise<void> {
       if (result.channel) {
         await result.channel.sendMessage(
           result.channel.name,
-          `❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+          `❌ Error: ${error instanceof Error ? error.message : "Unknown error"}`,
         );
       }
     }
@@ -141,12 +159,12 @@ async function processGroup(groupFolder: string): Promise<void> {
  * Start the message polling loop
  */
 function startMessageLoop(): () => void {
-  logger.info('Message loop started');
+  logger.info("Message loop started");
 
   const intervalId = setInterval(async () => {
     try {
       const unprocessed = getUnprocessedMessages(100);
-      
+
       if (unprocessed.length === 0) {
         return;
       }
@@ -164,7 +182,7 @@ function startMessageLoop(): () => void {
         // Find the group folder for this chat
         // This is simplified - in reality you'd look up the group by JID
         const groupFolder = chatJid; // Simplified for now
-        
+
         await processGroup(groupFolder);
       }
     } catch (error) {
@@ -175,7 +193,7 @@ function startMessageLoop(): () => void {
   // Return cleanup function
   return () => {
     clearInterval(intervalId);
-    logger.info('Message loop stopped');
+    logger.info("Message loop stopped");
   };
 }
 
@@ -207,25 +225,25 @@ async function executeScheduledTask(task: ScheduledTask): Promise<void> {
  * Initialize the main group
  */
 function initializeMainGroup(): void {
-  const mainGroupPath = path.join(GROUPS_DIR, 'main');
-  
+  const mainGroupPath = path.join(GROUPS_DIR, "main");
+
   if (!existsSync(mainGroupPath)) {
     mkdirSync(mainGroupPath, { recursive: true });
-    logger.info('Created main group directory');
+    logger.info("Created main group directory");
   }
 
   // Register main group if not exists
   const mainGroup = getMainGroup();
   if (!mainGroup) {
-    setRegisteredGroup('main', {
-      jid: 'main',
-      name: 'Main',
-      folder: 'main',
-      channel: 'main',
+    setRegisteredGroup("main", {
+      jid: "main",
+      name: "Main",
+      folder: "main",
+      channel: "main",
       isMain: true,
       added_at: new Date().toISOString(),
     });
-    logger.info('Registered main group');
+    logger.info("Registered main group");
   }
 }
 
@@ -243,8 +261,10 @@ async function main(): Promise<void> {
     await connectChannels();
 
     if (channels.length === 0) {
-      logger.warn('No channels available. Please add credentials to enable channels.');
-      logger.info('Running in limited mode (scheduler and main group only)');
+      logger.warn(
+        "No channels available. Please add credentials to enable channels.",
+      );
+      logger.info("Running in limited mode (scheduler and main group only)");
     }
 
     // Start scheduler
@@ -254,19 +274,16 @@ async function main(): Promise<void> {
     const stopMessageLoop = startMessageLoop();
 
     // Handle graceful shutdown
-    process.on('SIGINT', () => {
-      logger.info('Shutting down...');
+    const shutdown = async (signal: string) => {
+      logger.info({ signal }, "Shutting down...");
       stopScheduler();
       stopMessageLoop();
+      await Promise.all(channels.map((ch) => ch.disconnect()));
       process.exit(0);
-    });
+    };
 
-    process.on('SIGTERM', () => {
-      logger.info('Shutting down...');
-      stopScheduler();
-      stopMessageLoop();
-      process.exit(0);
-    });
+    process.on("SIGINT", () => shutdown("SIGINT"));
+    process.on("SIGTERM", () => shutdown("SIGTERM"));
 
     logger.info(`${ASSISTANT_NAME} is ready`);
   } catch (error) {

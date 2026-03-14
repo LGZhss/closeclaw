@@ -3,6 +3,15 @@ import { Channel, DbMessage, RegisteredGroup } from './types.js';
 import { TRIGGER_PATTERN, ASSISTANT_NAME } from './config.js';
 import { logger } from './logger.js';
 
+export function escapeXml(s: string): string {
+  if (!s) return '';
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 /**
  * Format messages for the agent prompt
  */
