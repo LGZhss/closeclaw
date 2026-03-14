@@ -60,8 +60,13 @@ export async function runContainer(options: ContainerOptions): Promise<Container
   // Add additional mounts
   for (const mount of additionalMounts) {
     const mountSpec = mount.readonly
+<<<<<<< HEAD
       ? [`--mount`, `type=bind,source=${mount.hostPath},target=/workspace/extra/${mount.containerPath},readonly`]
       : [`-v`, `${mount.hostPath}:/workspace/extra/${mount.containerPath}`];
+=======
+      ? ['--mount', `type=bind,source=${mount.hostPath},target=/workspace/extra/${mount.containerPath},readonly`]
+      : ['-v', `${mount.hostPath}:/workspace/extra/${mount.containerPath}`];
+>>>>>>> main
     dockerArgs.push(...mountSpec);
   }
 

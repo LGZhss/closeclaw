@@ -92,8 +92,7 @@ export class ProcessExecutor {
       const process = spawn(cmd, args, {
         cwd,
         env: {
-          ...process.env,
-          // 限制环境变量
+          // 限制环境变量，防止泄露敏感信息
           NODE_ENV: 'production',
           PATH: process.env.PATH
         },
