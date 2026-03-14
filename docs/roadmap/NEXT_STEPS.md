@@ -92,8 +92,8 @@
 
 #### 6. 记忆文件（100%）
 
-- [x] groups/global/CLAUDE.md - 全局记忆
-- [x] groups/main/CLAUDE.md - 主通道记忆
+- [x] groups/global/CONTEXT.md - 全局记忆
+- [x] groups/main/CONTEXT.md - 主通道记忆
 
 ---
 
