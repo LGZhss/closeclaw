@@ -242,37 +242,9 @@
 ```
 请提供该 IDE 背后使用的大模型信息：
 
-1. 主要大模型（必填）：
-   
-   **Gemini 系列（Google）**：
-   - [ ] Gemini 2.5 Flash Preview（推荐，免费额度充足）
-   - [ ] Gemini 1.5 Pro
-   - [ ] Gemini 1.5 Ultra
-   
-   **Qwen 系列（阿里云）**：
-   - [ ] Qwen 3.5 / Qwen 2.5
-   - [ ] Qwen-Coder（代码专用）
-   
-   **GLM 系列（智谱 AI）**：
-   - [ ] GLM-4 / GLM-4v
-   
-   **DeepSeek 系列**：
-   - [ ] DeepSeek-V3 / DeepSeek-V2
-   
-   **其他模型**：
-   - [ ] OpenRouter 聚合服务（支持多种模型）
-   - [ ] ModelScope 模型开放平台
-   - [ ] Moonshot（Kimi）
-   - [ ] NVIDIA API（Minimax/Kimi等）
-   - [ ] 其他：________（请注明）
-
-2. 辅助大模型（可选）：
-   - [ ] Gemini 1.0 Pro（轻量级任务）
-   - [ ] 其他：________
-
-3. 模型版本（可选）：
-   - 版本号：________
-   - 更新日期：________
+- **主要模型**: ________（如：Gemini 2.5 Flash、Qwen-Coder、GLM-4 等）
+- **提供商**: ________（如：Google、阿里云、智谱 AI 等）
+- **辅助模型**（可选）：________
 ```
 
 ---
