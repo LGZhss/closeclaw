@@ -8,8 +8,9 @@
 
 ## 2. 环境导航 (Navigation)
 - **环境拓扑 (Topology)**: [groups/global/CONTEXT.md](./groups/global/CONTEXT.md) (核心架构与依赖)
-- **进度索引 (Progress)**: [docs/roadmap/NEXT_STEPS.md](./docs/roadmap/NEXT_STEPS.md) | [task.md](file:///C:/Users/lgzhs/.gemini/antigravity/brain/e15a647a-fa9d-4ec2-900a-f80cfc93fd18/task.md)
-- **文件结构**: [docs/reference/FILE_STRUCTURE.md](./docs/reference/FILE_STRUCTURE.md)
+- **进度索引 (Progress)**: [docs/07-roadmap/future-plan.md](./docs/07-roadmap/future-plan.md)
+- **文件结构**: [docs/04-reference/file-structure.md](./docs/04-reference/file-structure.md)
+- **快速开始**: [docs/01-getting-started/quickstart.md](./docs/01-getting-started/quickstart.md)
 
 ## 3. 协作流
 - **接力模式**: 允许 Agent A 发起，Agent B 审计，Agent C (有额度者) 实施 PR。

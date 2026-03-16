@@ -42,7 +42,6 @@
 │   ├── 📄 router.ts                      # ⭐⭐ 消息路由
 │   ├── 📄 group-queue.ts                 # ⭐ 队列管理
 │   ├── 📄 ipc.ts                         # ⭐ IPC 通信
-│   ├── 📄 container-runner.ts            # ⭐ 容器运行器
 │   ├── 📄 task-scheduler.ts              # ⭐ 任务调度器
 │   │
 │   └── 📁 channels/                      # ⭐ 通道系统
@@ -85,14 +84,7 @@
 │   ├── 📄 proposal-002.md                # 提案 002
 │   └── ...
 │
-├── 📁 container/                         # 容器配置（可选功能）
-│   ├── 📄 Dockerfile                     # 容器镜像定义
-│   ├── 📄 build.sh                       # 容器构建脚本
-│   │
-│   └── 📁 agent-runner/                  # 容器内运行代码
-│       ├── 📄 package.json
-│       ├── 📄 tsconfig.json
-│       └── 📁 src/
+├── 📁 scripts/                           # ⭐ 工具脚本
 │           └── 📄 index.ts
 │
 ├── 📁 store/                             # 运行时数据存储
@@ -297,7 +289,6 @@ cp templates/proposal-template.md votes/proposal-001.md
 | `logger.ts` | 日志模块 | Pino 日志 |
 | `group-queue.ts` | 队列管理 | 并发控制 |
 | `ipc.ts` | IPC 通信 | 文件系统 IPC |
-| `container-runner.ts` | 容器运行 | Docker 容器管理 |
 | `task-scheduler.ts` | 任务调度 | 定时任务 |
 
 ---
@@ -448,16 +439,15 @@ IDE 得分 = 赞同数×1 + 反对数×(-1)
 
 ---
 
-### 8. container/ - 容器配置（可选）
+### 8. scripts/ - 工具脚本
 
-**用途**: Docker 容器相关配置
-
-**说明**: 如果不需要容器功能，可以忽略此目录
+**用途**: Git Worktree 管理和环境初始化工具
 
 **包含**:
-- Dockerfile - 容器镜像定义
-- build.sh - 构建脚本
-- agent-runner/ - 容器内运行代码
+- `init-dev-dir.ps1` - PowerShell 版本的环境初始化（Windows）
+- `init-dev-dir.sh` - Bash 版本的环境初始化（Linux/Mac）
+- `git-utils.ps1` - PowerShell 版本的 worktree 管理（Windows）
+- `git-utils.sh` - Bash 版本的 worktree 管理（Linux/Mac）
 
 ---
 

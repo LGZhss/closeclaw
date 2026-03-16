@@ -137,9 +137,8 @@
 | Agent Registry | P1 前期 | 是否存在、基础功能 |
 | Voting Engine | P1 前期 | 是否存在、核心逻辑 |
 | 进程沙盒 | P1 前期 | 是否存在、基础实现 |
-| IDE排行榜 | P1 前期 | 是否存在 |
 | Arbitrator | P1 中期 | 是否存在 |
-| Worker沙盒 | P1 中期 | 是否存在 |
+| Worker 沙盒 | P1 中期 | 是否存在 |
 | 完整测试 | P1 中期 | 测试覆盖率 |
 | isolated-vm POC | P1 后期 | 是否完成 |
 
