@@ -1,0 +1,19 @@
+{
+  "protocol": "CloseClaw v2.0",
+  "subjects": {
+    "lead": "Antigravity",
+    "engineering": [
+      "Cursor", "Windsurf", "Trae", "Trae-CN", "Codex",
+      "Copilot", "Verdent", "Kiro", "OpenCode"
+    ],
+    "auditors": [
+      "Lingma", "Comate", "CodeBuddy", "CodeBuddy-CN",
+      "JoyCode", "CatPawAI", "Qoder", "Cascade",
+      "Dropstone", "TalkCody", "Kimi-CloseClaw"
+    ],
+    "cloud": ["Jules-Bolt", "Jules-Palette", "Jules-Sentinel"],
+    "ide_only": ["Visual Studio Code"]
+  },
+  "trust_model": "Attribution",
+  "proxy_user": "LGZhss"
+}
