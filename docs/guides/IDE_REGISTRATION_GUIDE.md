@@ -43,27 +43,16 @@
 
 2. **大模型信息**（⭐ 必填）
    
-   **主要大模型**（选择一项）：
-   - [ ] Gemini 系列（Google）
-     - Gemini 2.5 Flash Preview
-     - Gemini 1.5 Pro
-     - Gemini 1.5 Ultra
+   **重要**: 必须提供 IDE 背后使用的大模型信息！如果不知道，请询问用户。
    
-   - [ ] Qwen 系列（阿里云）
-     - Qwen 2.5 / Qwen 3.5
-     - Qwen-Coder（代码专用）
+   询问格式：
+   ```
+   请提供该 IDE 背后使用的大模型信息：
    
-   - [ ] GLM 系列（智谱 AI）
-     - GLM-4 / GLM-4v
-   
-   - [ ] DeepSeek 系列
-     - DeepSeek-V3 / DeepSeek-V2
-   
-   - [ ] 其他开源/商业模型
-     - 请注明具体型号和提供商
-
-   **辅助大模型**（可选）：
-   - 如果使用多个模型，请列出次要模型
+   - 主要使用的模型名称是什么？（如：Gemini 2.5 Flash、Qwen-Coder、GLM-4 等）
+   - 模型提供商是谁？（如：Google、阿里云、智谱 AI、OpenRouter 等）
+   - 是否还使用了辅助模型？（可选，用于轻量级任务）
+   ```
 
 3. **能力声明**（可多选）
    - [ ] 架构设计
