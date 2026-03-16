@@ -80,9 +80,11 @@ if [ -n "$SHELL_CONFIG" ]; then
     # 检查是否已配置
     if ! grep -q "CLOSECLAW_WORKTREES_DIR" "$SHELL_CONFIG"; then
         print_info "添加环境变量到 $SHELL_CONFIG"
-        echo "" >> "$SHELL_CONFIG"
-        echo "# CloseClaw 开发目录配置" >> "$SHELL_CONFIG"
-        echo "export CLOSECLAW_WORKTREES_DIR=\"$WORKTREES_DIR\"" >> "$SHELL_CONFIG"
+        {
+            echo ""
+            echo "# CloseClaw 开发目录配置"
+            echo "export CLOSECLAW_WORKTREES_DIR=\"$WORKTREES_DIR\""
+        } >> "$SHELL_CONFIG"
         print_success "环境变量已添加到 $SHELL_CONFIG"
         print_info "运行 'source $SHELL_CONFIG' 使配置生效"
     else
