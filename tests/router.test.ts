@@ -1,6 +1,6 @@
-<<<<<<< HEAD
-import { describe, it, expect } from 'vitest';
-import { escapeXml } from '../src/router.js';
+import { describe, it, expect, vi } from 'vitest';
+import { routeOutbound, escapeXml } from '../src/router.js';
+import { Channel } from '../src/types.js';
 
 describe('escapeXml', () => {
   it('should return empty string for falsy input', () => {
@@ -36,10 +36,8 @@ describe('escapeXml', () => {
     const input = '<div class="content">Me & You</div>';
     const expected = '&lt;div class=&quot;content&quot;&gt;Me &amp; You&lt;/div&gt;';
     expect(escapeXml(input)).toBe(expected);
-=======
-import { describe, it, expect, vi } from 'vitest';
-import { routeOutbound } from '../src/router.js';
-import { Channel } from '../src/types.js';
+  });
+});
 
 describe('routeOutbound', () => {
   it('should send a message via the correct connected channel', async () => {
@@ -140,6 +138,5 @@ describe('routeOutbound', () => {
     expect(() => routeOutbound(channels, jid, text)).toThrowError(
       `No channel for JID: ${jid}`
     );
->>>>>>> main
   });
 });

@@ -1,6 +1,9 @@
-# CloseClaw 项目上下文
+﻿# CloseClaw 全局记忆中心 (Global Memory)
 
-## 项目概述
+> **本文件职责**: 运行时状态记忆——当前架构决策、活跃提案、开发规范。
+> 协作主体注册信息已迁移至 [`docs/collaborators/registry.md`](../../docs/collaborators/registry.md)，本文件不再维护主体列表。
+>
+> **编辑规范**: PowerShell 操作必须显式指定 `-Encoding UTF8`，严防乱码。
 
 CloseClaw 是一个基于 NanoClaw 架构的个人 AI 助手，采用容器隔离技术，支持多通道通信和定时任务调度。
 
@@ -158,38 +161,37 @@ npm start
    - 检查 Node.js 版本 (需要 >=20)
    - 验证依赖是否安装
 
-2. **通道未连接**
-   - 检查 API 密钥配置
-   - 查看日志输出
+CloseClaw 是一个基于容器隔离技术的 AI 协作系统，支持多通道通信和异步决议驱动开发。
 
-3. **任务不执行**
-   - 验证 cron 表达式
-   - 检查数据库状态
+---
 
-### 日志位置
+## 2. 核心架构 (Topology)
 
-- 主机日志：`logs/nanoclaw.log`
-- 错误日志：`logs/nanoclaw.error.log`
+| 层级 | 模块 | 路径 |
+| :--- | :--- | :--- |
+| 编排器 | 消息轮询与任务调度 | `src/index.ts` |
+| 通道系统 | 多平台适配器（Telegram/WhatsApp/WeChat） | `src/channels/` |
+| 数据库层 | SQLite 持久化（better-sqlite3） | `src/db.ts` |
+| 容器运行器 | 隔离执行环境（Docker 可选） | `src/container-runner.ts` |
+| 配置 | 环境变量与常量 | `src/config.ts` |
+| 日志 | Pino 结构化日志 | `src/logger.ts` |
 
-## 扩展开发
+**技术栈**: Node.js 20+ · TypeScript (ESM) · SQLite · Docker（可选） · Vitest
 
-### 添加通道
+---
 
-1. 创建 `src/channels/{name}.ts`
-2. 实现 `Channel` 接口
-3. 调用 `registerChannel()`
-4. 添加到 `src/channels/index.ts`
+## 3. 分层记忆模型 (Memory Layers)
 
-### 添加技能
+| 层级 | 位置 | 用途 |
+| :--- | :--- | :--- |
+| 全局记忆 | `groups/global/CONTEXT.md`（本文件） | 架构、规范、提案状态 |
+| 主体注册 | `docs/collaborators/registry.md` | 所有协作主体与模型列表 |
+| 阶段记忆 | `task.md` / `walkthrough.md` | 当前任务进度 |
+| 本地记忆 | 各主体 Session 内部 | 短期上下文 |
 
-技能作为分支开发：
-```bash
-git checkout -b skill/{name}
-# 实现技能代码
-git push origin skill/{name}
-```
+---
 
-## 参考资源
+## 4. 协作规范
 
 - [NanoClaw 原始项目](https://github.com/qwibitai/nanoclaw)
 - [SQLite 文档](https://www.sqlite.org/docs.html)

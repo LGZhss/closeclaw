@@ -4,6 +4,8 @@
  */
 
 import { spawn } from 'child_process';
+import os from 'os';
+import path from 'path';
 import { log } from '../utils/logger.js';
 import { config } from '../config/config.js';
 
@@ -24,7 +26,7 @@ export class ProcessExecutor {
 
     return new Promise((resolve, reject) => {
       // 创建临时JavaScript文件
-      const tempFile = `temp_${executionId}.js`;
+      const tempFile = path.join(os.tmpdir(), `temp_${executionId}.js`);
       const fs = require('fs');
       
       try {
@@ -32,7 +34,7 @@ export class ProcessExecutor {
         fs.writeFileSync(tempFile, code);
 
         // 生成命令
-        const command = `node ${tempFile}`;
+        const command = `node "${tempFile}"`;
         
         // 执行命令
         this.executeCommand(command, { timeout }).then(result => {
