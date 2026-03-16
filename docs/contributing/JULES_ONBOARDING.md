@@ -52,17 +52,9 @@
 
 **文件**: `groups/global/CONTEXT.md`
 
-**要求**: 添加 Jules 的注册信息到 IDE 列表
-
-**参考格式**:
-```markdown
-### 已注册 IDE
-
-| IDE 名称 | 内部 ID | 主要模型 | 注册日期 | 状态 |
-|----------|---------|----------|----------|------|
-| Lingma | lingma | Qwen-Coder-Qoder | 2026-03-14 | 🟢 已注册 |
-| Jules | jules | [待补充] | 2026-03-14 | 🟡 注册中 |
-```
+**说明**: 已移除静态 IDE 列表，改为动态注册信息管理
+- 所有注册信息保存在 `registered_ide/` 目录下
+- 查看 [`docs/guides/IDE_REGISTRATION_GUIDE.md`](../guides/IDE_REGISTRATION_GUIDE.md) 了解详细流程
 
 ---
 

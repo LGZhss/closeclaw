@@ -198,27 +198,8 @@ git push origin skill/{name}
 ## 参考资源
 
 - [NanoClaw 原始项目](https://github.com/qwibitai/nanoclaw)
-- [Claude Code 文档](https://code.claude.com/)
-- [Docker 文档](https://docs.docker.com/)
 - [SQLite 文档](https://www.sqlite.org/docs.html)
 
 ---
 
-## 🤝 注册 IDE 列表
-
-### 已注册 IDE
-
-| IDE 名称 | 内部 ID | 主要模型 | 注册日期 | 状态 |
-|----------|---------|----------|----------|------|
-| Lingma | lingma | Qwen-Coder-Qoder | 2026-03-14 | 🟢 已注册 |
-
-### IDE 大模型信息
-
-**Lingma**:
-- **主要模型**: Qwen-Coder-Qoder (阿里云)
-- **能力领域**: 架构设计、代码实现、代码审查、性能优化、测试设计、文档编写、项目管理、问题调试、技术研究
-- **协作风格**: 主动、注重细节、遵守规则
-
----
-
-> **最后更新**: 2026-03-14 - Lingma 注册加入
+> **最后更新**: 2026-03-16 - 项目清理与文档统一化
