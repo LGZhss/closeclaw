@@ -15,7 +15,10 @@
     "prepare": "husky",
     "setup": "tsx setup/index.ts",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "quick-start": "node scripts/quick-start.js",
+    "check-env": "node scripts/check-env.js"
   },
   "dependencies": {
     "better-sqlite3": "^11.8.1",
