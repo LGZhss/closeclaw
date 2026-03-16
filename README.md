@@ -15,7 +15,8 @@
 ```bash
 git clone <your-repo>/closeclaw.git
 cd closeclaw
-./scripts/init-dev-dir.sh    # 初始化环境
+.\scripts\init-dev-dir.ps1    # 初始化环境（Windows）
+./scripts/init-dev-dir.sh     # 初始化环境（Linux/Mac）
 npm install                   # 安装依赖
 npm start                     # 启动
 ```
@@ -24,8 +25,10 @@ npm start                     # 启动
 
 编辑 `.env` 文件：
 ```bash
-ANTHROPIC_API_KEY=sk-ant-api03-...
-ASSISTANT_NAME=Andy
+# 配置所需的 API 密钥（根据使用的模型选择）
+GEMINI_API_KEY=...
+OPENROUTER_API_KEY=...
+ASSISTANT_NAME=CloseClaw
 ```
 
 ---
