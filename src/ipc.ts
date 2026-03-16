@@ -77,23 +77,30 @@ export function readMessage(messageId: string): IPCMessage | null {
 /**
  * Get all pending messages
  */
-export function getPendingMessages(): IPCMessage[] {
+export async function getPendingMessages(): Promise<IPCMessage[]> {
   ensureIpcDirs();
   const messages: IPCMessage[] = [];
 
   try {
-    const files = fs.readdirSync(MESSAGES_DIR);
-    for (const file of files) {
-      if (file.endsWith('.json')) {
+    const files = await fs.promises.readdir(MESSAGES_DIR);
+
+    // Process files concurrently to avoid blocking event loop
+    const messagePromises = files
+      .filter(file => file.endsWith('.json'))
+      .map(async file => {
         const filePath = path.join(MESSAGES_DIR, file);
         try {
-          const content = fs.readFileSync(filePath, 'utf8');
-          const message = JSON.parse(content) as IPCMessage;
-          messages.push(message);
+          const content = await fs.promises.readFile(filePath, 'utf8');
+          return JSON.parse(content) as IPCMessage;
         } catch (error) {
           logger.warn(`Failed to read IPC message file ${file}: ${error}`);
+          return null;
         }
-      }
+      });
+
+    const results = await Promise.all(messagePromises);
+    for (const msg of results) {
+      if (msg) messages.push(msg);
     }
   } catch (error) {
     logger.error(`Failed to read messages directory: ${error}`);
@@ -198,7 +205,7 @@ export async function pollIPC(
   onMessage: (message: IPCMessage) => void,
   onTaskResult: (task: IPCTask) => void
 ): Promise<void> {
-  const messages = getPendingMessages();
+  const messages = await getPendingMessages();
   for (const message of messages) {
     onMessage(message);
   }
@@ -210,28 +217,33 @@ export async function pollIPC(
 /**
  * Clean up old IPC files
  */
-export function cleanupIPC(maxAge: number = 3600000): void {
+export async function cleanupIPC(maxAge: number = 3600000): Promise<void> {
   const now = Date.now();
   
-  [MESSAGES_DIR, TASKS_DIR].forEach((dir) => {
+  const dirs = [MESSAGES_DIR, TASKS_DIR];
+
+  await Promise.all(dirs.map(async (dir) => {
     try {
-      const files = fs.readdirSync(dir);
-      for (const file of files) {
-        if (file.endsWith('.json')) {
+      const files = await fs.promises.readdir(dir);
+
+      const cleanupPromises = files
+        .filter(file => file.endsWith('.json'))
+        .map(async file => {
           const filePath = path.join(dir, file);
           try {
-            const stats = fs.statSync(filePath);
+            const stats = await fs.promises.stat(filePath);
             if (now - stats.mtimeMs > maxAge) {
-              fs.unlinkSync(filePath);
+              await fs.promises.unlink(filePath);
               logger.debug(`Cleaned up old IPC file: ${file}`);
             }
           } catch (error) {
             logger.warn(`Failed to stat IPC file ${file}: ${error}`);
           }
-        }
-      }
+        });
+
+      await Promise.all(cleanupPromises);
     } catch (error) {
       logger.error(`Failed to cleanup IPC directory ${dir}: ${error}`);
     }
-  });
+  }));
 }
