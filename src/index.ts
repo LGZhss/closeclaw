@@ -22,7 +22,7 @@ import { processGroupMessages, sendMessage, formatResponse } from "./router.js";
 import { groupQueue } from "./group-queue.js";
 import { startScheduler } from "./task-scheduler.js";
 import { ScheduledTask } from "./types.js";
-import { runContainer } from "./container-runner.js";
+
 import { mkdirSync, existsSync } from "fs";
 import path from "path";
 
@@ -126,23 +126,10 @@ async function processGroup(groupFolder: string): Promise<void> {
     try {
       logger.info(`Running agent for group: ${groupFolder}`);
 
-      // Run container with the agent
-      const containerResult = await runContainer({
-        groupFolder,
-        prompt: result.prompt,
-      });
-
-      if (containerResult.success && containerResult.output) {
-        // Format and send response
-        const response = formatResponse(containerResult.output);
-        await result.channel!.sendMessage(result.channel!.name, response);
-      } else {
-        logger.error(`Agent failed: ${containerResult.error}`);
-        await result.channel!.sendMessage(
-          result.channel!.name,
-          `❌ Error: ${containerResult.error || "Agent execution failed"}`,
-        );
-      }
+      // TODO: Implement agent execution without container
+      // Placeholder: send acknowledgment
+      const response = formatResponse("Agent execution is not yet implemented after container removal.");
+      await result.channel!.sendMessage(result.channel!.name, response);
     } catch (error) {
       logger.error(`Failed to process group ${groupFolder}: ${error}`);
       if (result.channel) {
@@ -204,17 +191,9 @@ async function executeScheduledTask(task: ScheduledTask): Promise<void> {
   logger.info(`Executing scheduled task ${task.id}`);
 
   try {
-    // Run container with the task prompt
-    const containerResult = await runContainer({
-      groupFolder: task.group_folder,
-      prompt: task.prompt,
-    });
-
-    if (containerResult.success && containerResult.output) {
-      logger.info(`Task ${task.id} completed successfully`);
-    } else {
-      logger.error(`Task ${task.id} failed: ${containerResult.error}`);
-    }
+    // TODO: Implement task execution without container
+    logger.info(`Task ${task.id} prompt: ${task.prompt}`);
+    logger.info(`Task ${task.id} completed (placeholder)`);
   } catch (error) {
     logger.error(`Task ${task.id} execution error: ${error}`);
     throw error;
