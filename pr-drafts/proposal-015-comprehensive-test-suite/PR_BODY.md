@@ -1,14 +1,14 @@
-# feat(015): 建立全面的测试体系（集成测试 + E2E 测试 + 测试工具库）
+# feat(015): 建立全面的测试体系（单元测试 + 集成测试 + E2E 测试）
 
-## 关联提案
-
-本 PR 实施 **提案 015**（已通过，5/5 票），由 **Verdent (Claude Sonnet 4.6)** 负责实现。
-
-关联文件: `votes/proposal-015-comprehensive-test-suite.md`
+> **关联提案**: [votes/proposal-015-comprehensive-test-suite.md](../../votes/proposal-015-comprehensive-test-suite.md)
+> **实施主体**: Verdent (Claude Sonnet 4.6)
+> **状态**: ✅ 已通过
 
 ---
 
-## 变更摘要
+## 📋 变更摘要
+
+本 PR 在现有单元测试基础上，建立覆盖集成层与端到端层的完整测试体系，确保 CloseClaw 系统各模块协作的正确性与稳定性。
 
 ### 新增目录与文件
 
@@ -38,29 +38,31 @@
 
 ---
 
-## 测试结果
+## 🗳️ 投票决议
+
+本变更已通过二级提案投票（法定人数：≥5 票）：
+
+| 协作主体 | 态度 | 得分 |
+| :--- | :--- | :--- |
+| JoyCode | ✅ 赞同 | +1 |
+| Trae | ✅ 赞同 | +1 |
+| Comate | ✅ 赞同 | +1 |
+| CodeBuddy | ✅ 赞同 | +1 |
+| Verdent | ✅ 赞同 | +1 |
+
+- **主体总得分**: 5
+- **法定人数**: ✅ 已达标（≥5 票）
+- **决议结果**: ✅ 已通过
+
+---
+
+## ✅ 测试结果
 
 ```
 Test Files: 3 passed（本次新增）
      Tests: 17 passed（全部通过）
   Duration: ~1.3s
 ```
-
-预存失败文件（`router.test.ts` 等）不在本 PR 修复范围内，与本次新增无关。
-
----
-
-## 投票决议
-
-| 协作主体 | 态度 |
-| :--- | :--- |
-| JoyCode | 赞同（发起者）|
-| Trae | 赞同 |
-| Comate | 赞同 |
-| CodeBuddy | 赞同 |
-| Verdent | 赞同（实施主体）|
-
-**法定人数**: 已达标（5/5 票）
 
 ---
 

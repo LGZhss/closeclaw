@@ -1,57 +1,73 @@
 # CloseClaw RULES v3.1
 
-> **鐗堟湰**: 3.1 | **鏇存柊**: 2026-03-17
+> **版本**: 3.1 | **更新**: 2026-03-17
 
 ---
 
-## 1. 鏍稿績鍘熷垯
-- **鏃犳彁妗堜笉浠ｇ爜**: 鍙樻洿蹇呴』鍏宠仈 `votes/proposal-xxx.md`銆?- **鐘舵€侀攣**: 浠?`鉁?宸查€氳繃` 鎻愭鍏佽骞跺叆 `main`銆?- **韬唤澶囨敞**: `Proposal-By: ID`, `Implemented-By: ID` (瑙?[.subjects.json](./.subjects.json))銆?- **涓枃鑷充笂**: UI銆佷换鍔℃憳瑕併€佹矡閫氬繀椤讳娇鐢ㄧ畝浣撲腑鏂囥€?
-## 2. 鎶曠エ瑙勫垯锛堣缁嗚鍒欒 [docs/02-collaboration/rules.md](./docs/02-collaboration/rules.md)锛?
-### 涓€銆佽鑹插垎鍊艰瀹?
-| 瑙掕壊 | 璧炴垚 | 鍙嶅 | 寮冩潈 |
+## 1. 核心原则
+- **无提案不代码**: 变更必须关联 `votes/proposal-xxx.md`。
+- **状态锁**: 仅 `✅ 已通过` 提案允许合并入 `main`。
+- **身份备注**: `Proposal-By: ID`, `Implemented-By: ID` (见 [.subjects.json](./.subjects.json))。
+- **中文至上**: UI、任务摘要、沟通必须使用简体中文。
+
+## 2. 投票规则（详细规则见 [docs/02-collaboration/rules.md](./docs/02-collaboration/rules.md)）
+
+### 一、角色分值设定
+| 角色 | 赞成 | 反对 | 弃权 |
 |------|------|------|------|
-| **鍗忎綔涓讳綋**锛?~30浜猴級 | +1 鍒?| +2 鍒?| 0 鍒?|
-| **鐢ㄦ埛**锛?浜猴級 | +0.5n 鍒嗭紙鍒拌禐鎴愭柟锛?| +0.5n 鍒嗭紙鍒板弽瀵规柟锛?| 0 鍒?|
+| **协作主体**（~30人） | +1 分 | +2 分 | 0 分 |
+| **用户**（1人） | +0.5n 分（到赞成方） | +0.5n 分（到反对方） | 0 分 |
 
-鍏朵腑锛宍n` = 鍗忎綔涓讳綋鎬讳汉鏁?
-### 浜屻€佸垽瀹氬叕寮?
-鍐宠閫氳繃鐨勫敮涓€鏉′欢涓猴細
+其中，`n` = 协作主体总人数
+
+### 二、判定公式
+决议通过的唯一条件为：
 
 ```
-璧炴垚鎬诲垎 > 鍙嶅鎬诲垎
+赞成总分 > 反对总分
 ```
 
-灞曞紑锛?```
-(鍗忎綔涓讳綋璧炴垚 脳 1 + 鐢ㄦ埛璧炴垚) > (鍗忎綔涓讳綋鍙嶅 脳 2 + 鐢ㄦ埛鍙嶅)
+展开：
+```
+(协作主体赞成 × 1 + 用户赞成) > (协作主体反对 × 2 + 用户反对)
 ```
 
-### 涓夈€佺ず渚?
-**鍦烘櫙**锛? 涓崗浣滀富浣撹禐鎴愶紝2 涓崗浣滀富浣撳弽瀵癸紝鐢ㄦ埛璧炴垚
+### 三、示例
+**场景**：5 个协作主体赞同，2 个协作主体反对，用户赞同
 
-**璁＄畻**锛?- 鍗忎綔涓讳綋鎬讳汉鏁?n = 7
-- 鍗忎綔涓讳綋璧炴垚 = 5 脳 1 = 5
-- 鍗忎綔涓讳綋鍙嶅 = 2 脳 2 = 4
-- 鐢ㄦ埛璧炴垚 = 0.5 脳 7 = 3.5
-- 鐢ㄦ埛鍙嶅 = 0
-- 璧炴垚鎬诲垎 = 5 + 3.5 = 8.5
-- 鍙嶅鎬诲垎 = 4 + 0 = 4
-- **8.5 > 4** 鈫?鉁?閫氳繃
+**计算**：
+- 协作主体总人数 n = 7
+- 协作主体赞成 = 5 × 1 = 5
+- 协作主体反对 = 2 × 2 = 4
+- 用户赞成 = 0.5 × 7 = 3.5
+- 用户反对 = 0
+- 赞成总分 = 5 + 3.5 = 8.5
+- 反对总分 = 4 + 0 = 4
+- **8.5 > 4** → ✅ 通过
 
-### 鍥涖€佹硶瀹氫汉鏁?| 鍐宠绾у埆 | 鍗忎綔涓讳綋鍙備笌浜烘暟 |
+### 四、法定人数
+| 决议级别 | 协作主体参与人数 |
 |---------|---------------|
-| 涓€绾?| 鈮?2 |
-| 浜岀骇 | 鈮?3 |
-| 涓夌骇 | 鈮?5 |
+| 一级 | ≥ 2 |
+| 二级 | ≥ 5 |
+| 三级 | ≥ 8 |
 
-## 3. 鐜瀵艰埅 (Navigation)
-- **鐜鎷撴墤 (Topology)**: [groups/global/CONTEXT.md](./groups/global/CONTEXT.md)
-- **杩涘害绱㈠紩 (Progress)**: [docs/07-roadmap/future-plan.md](./docs/07-roadmap/future-plan.md)
-- **鏂囦欢缁撴瀯**: [docs/04-reference/file-structure.md](./docs/04-reference/file-structure.md)
-- **蹇€熷紑濮?*: [docs/01-getting-started/quickstart.md](./docs/01-getting-started/quickstart.md)锛堝緟鍒涘缓锛?- **瀹屾暣鍗忎綔瑙勫垯**: [docs/02-collaboration/rules.md](./docs/02-collaboration/rules.md)
+## 3. 环境导航 (Navigation)
+- **环境拓扑 (Topology)**: [groups/global/CONTEXT.md](./groups/global/CONTEXT.md)
+- **进度索引 (Progress)**: [docs/07-roadmap/future-plan.md](./docs/07-roadmap/future-plan.md)
+- **文件结构**: [docs/04-reference/file-structure.md](./docs/04-reference/file-structure.md)
+- **快速开始**: [docs/01-getting-started/quickstart.md](./docs/01-getting-started/quickstart.md)（待创建）
+- **完整协作规则**: [docs/02-collaboration/rules.md](./docs/02-collaboration/rules.md)
 
-## 4. 鍗忎綔娴?- **鎺ュ姏妯″紡**: 鍏佽 Agent A 鍙戣捣锛孉gent B 瀹¤锛孉gent C (鏈夐搴﹁€? 瀹炴柦 PR銆?- **绂佹鍚堝苟**: Agent 涓ョ璋冪敤 API 鑷姩鍚堝苟鑷繁鐨?PR銆?- **韬唤楠岃瘉**: 娉ㄥ唽鍒楄〃瑙?[.subjects.json](./.subjects.json)銆?
-## 5. 鏂囦欢瑙勮寖
-- **鍏ㄨ嫳鏂囧懡鍚?*: 鐩綍/鏂囦欢浣跨敤 `kebab-case`銆?- **绂佹鎬荤粨**: 涓ョ鐢熸垚鏃犳剰涔夌殑"鎬荤粨/瀹屾垚"绫?md 鏂囨。銆?
+## 4. 协作流
+- **接力模式**: 允许 Agent A 发起，Agent B 审计，Agent C (有额度者) 实施 PR。
+- **禁止合并**: Agent 严禁调用 API 自动合并自己的 PR。
+- **身份验证**: 注册列表见 [.subjects.json](./.subjects.json)。
+
+## 5. 文件规范
+- **全英文命名**: 目录/文件使用 `kebab-case`。
+- **禁止总结**: 严禁生成无意义的"总结/完成"类 md 文档。
+
 ---
 
-> **CloseClaw - 鍏钩銆侀€忔槑銆侀珮鏁堢殑澶氭櫤鑳戒綋鍗忎綔**
+> **CloseClaw - 公平、透明、高效的多智能体协作**

@@ -13,7 +13,7 @@
 参考 [learn-claude-code](https://github.com/shareAI-lab/learn-claude-code) 提出的理念：
 
 - **The Model IS the Agent** - 模型本身就是智能体，无需额外的 Agent 框架
-- **我们构建 Harness，而不是 Agent** - CloseClaw 的架构围绕以下 Harness 组件设计：
+- **我们构建 Harness，而不是 Agent** - CloseClaw 的架构围绕以下 Harness 组件 design：
   - **Tools**: 文件 I/O、Shell、网络、数据库、浏览器
   - **Knowledge**: 产品文档、领域参考、API 规范、风格指南
   - **Observation**: Git diff、错误日志、浏览器状态、传感器数据
@@ -41,66 +41,42 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    用户交互层                                │
-│              (CLI / 本地 IDE 集成)                         │
+│                    用户交互层 (Interaction)                 │
+│              (CLI / 本地 IDE 集成 / 外部通道)               │
+│              - src/router.ts (API 路由)                      │
+│              - src/channels/ (Telegram/etc 通道)            │
 └─────────────────────────────────────────────────────────────┘
                           ↓
 ┌─────────────────────────────────────────────────────────────┐
-│                    多智能体协调层 (新增)                     │
-│              ┌──────────────────────────┐                   │
-│              │  Agent Registry         │                   │
-│              │  - 协作主体注册管理         │                   │
-│              │  - 大模型追踪           │                   │
-│              └──────────────────────────┘                   │
-│              ┌──────────────────────────┐                   │
-│              │  Voting Engine          │                   │
-│              │  - 三级法定人数          │                   │
-│              │  - 权重计算 (1/3 用户)  │                   │
-│              │  - 赞成+1 / 弃权0 / 反对-1│                │
-│              └──────────────────────────┘                   │
-│              ┌──────────────────────────┐                   │
-│              │  Arbitrator             │                   │
-│              │  - 争议解决             │                   │
-│              │  - 决策确认             │                   │
-│              └──────────────────────────┘                   │
+│                    任务调度层 (Scheduling)                   │
+│              - src/task-scheduler.ts (任务队列)              │
+│              - src/group-queue.ts (群组队列)                 │
+│              - src/dispatcher.js (任务分发)                  │
 └─────────────────────────────────────────────────────────────┘
                           ↓
 ┌─────────────────────────────────────────────────────────────┐
-│                    调度层                                    │
-│                   Dispatcher                                │
-│              - 任务路由                                    │
-│              - 上下文管理                                  │
-│              - 投票流程协调                                │
+│                    多智能体协调层 (Coordination)             │
+│              - src/core/agentRegistry.js (注册管理)          │
+│              - src/core/voter.js (投票引擎)                  │
+│              - src/core/arbitrator.js (仲裁)                 │
 └─────────────────────────────────────────────────────────────┘
                           ↓
 ┌─────────────────────────────────────────────────────────────┐
-│                    沙盒层 (新增)                            │
-│              Sandbox Manager                               │
-│              - 进程级隔离 (优先)                          │
-│              - Worker Threads                            │
-│              - 多级降级 (isolated-vm 二期)                 │
+│                    执行与沙盒层 (Execution)                  │
+│              - src/sandbox/ (隔离环境管理)                   │
+│              - src/container-runner.ts (容器执行)            │
 └─────────────────────────────────────────────────────────────┘
                           ↓
 ┌─────────────────────────────────────────────────────────────┐
-│                    工具层                                    │
-│                  ToolRegistry                              │
-│              - 统一工具抽象                                │
-│              - 工具缓存 (P10)                              │
-│              - 经验学习 (P11)                              │
+│                    工具与模型层 (Tools & Models)             │
+│              - src/tools/ (统一工具抽象)                     │
+│              - src/adapters/ (12+ LLM 适配器)               │
 └─────────────────────────────────────────────────────────────┘
                           ↓
 ┌─────────────────────────────────────────────────────────────┐
-│                    模型层                                    │
-│              Registry + Adapters                           │
-│              - 12个 LLM 适配器                            │
-│              - 动态故障转移链                              │
-└─────────────────────────────────────────────────────────────┘
-                          ↓
-┌─────────────────────────────────────────────────────────────┐
-│                    记忆层                                    │
-│            SessionManager + SQLite                         │
-│              - L1: 活跃会话                                │
-│              - L2: 归档数据                                │
+│                    数据与持久化层 (Persistence)               │
+│              - src/db.ts (SQLite/SQLiteCloud)                │
+│              - src/core/session.js (活跃会话)                │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -108,254 +84,26 @@
 
 ## 🧩 核心模块详解
 
-### 1. 多智能体协调层（新增）
-
-#### Agent Registry（智能体注册表）
-
-**职责**:
-
-- 协作主体注册与管理
-- 背后大模型信息追踪
-- 协作主体排行榜维护
-- 大模型排行榜维护
-
-**强制要求**:
-每次新协作主体注册或已有协作主体更新时，必须询问用户：
-
-```
-请提供该协作主体背后使用的大模型信息：
-
-1. 主要大模型（必填）：
-   - [ ] Claude 3.5 Sonnet
-   - [ ] Claude 3 Opus
-   - [ ] GPT-4 Turbo
-   - [ ] GPT-4.1
-   - [ ] Gemini 1.5 Pro
-   - [ ] 其他：________
-```
-
-**数据结构**:
-
-```javascript
-{
-  ideId: 'antigravity',
-  name: 'Antigravity',
-  model: {
-    primary: 'Claude 3.5 Sonnet',
-    secondary: ['Claude 3 Haiku'],
-    version: '2026-03'
-  },
-  registeredAt: '2026-03-13',
-  stats: {
-    totalVotes: 0,
-    avgScore: 0,
-    participationRate: 0
-  }
-}
-```
-
-***
-
-#### Voting Engine（投票引擎）
-
-**职责**:
-
-- 管理投票流程
-- 计算投票得分
-- 验证法定人数
-- 判断是否通过
-
-> **详细投票规则请参考** **[RULES.md](../../RULES.md)。**
-
-***
-
-**三级法定人数**:
-
-| 决议级别   | 协作主体参与人数 | 适用场景          |
-| ------ | -------- | ------------- |
-| 一级（简单） | ≥ 2      | 修bug、改格式、补注释  |
-| 二级（常规） | ≥ 3      | 新增功能、改逻辑、优化性能 |
-| 三级（关键） | ≥ 5      | 改架构、调流程、删模块   |
-
-**通过条件**: 总得分 > 0 且满足法定人数
-
-> 详细规则见 [RULES.md](../../RULES.md)
-
-***
-
-#### Arbitrator（仲裁模块）
-
-**职责**:
-
-- 争议解决
-- 决策确认
-- 特殊情况处理
-
-**特殊情况**:
-
-- 用户提出的修改要求：先走流程 → 特批通过 → 后续可撤销
-- 投票僵局：用户可介入
-
-***
-
-### 2. 沙盒层（新增）
-
-#### Sandbox Manager（沙盒管理器）
-
-**技术方案**（基于Round 2投票结果）:
-
-**优先级顺序**:
-
-1. **子进程 + IPC + 资源限制**（基线隔离）
-2. **Worker Threads +** **`vm`**（可信脚本）
-3. **isolated-vm**（二期增强）
-
-**降级策略**:
-
-```
-执行顺序:
-  isolated-vm → 失败 → vm2/Worker Threads → 失败 → 子进程
-                                  ↓
-                            自动降级 + 告警
-```
-
-**实施阶段**:
-
-- **Phase 1 (2-3周)**: 子进程沙盒 + 超时/内存限额 + 审计
-- **Phase 2 (2周)**: isolated-vm POC验证（Windows重点）
-- **Phase 3 (持续)**: 高危任务切换到更强隔离
-
-**风险预案**:
-
-- 原生模块构建失败 → 自动切换
-- 沙盒逃逸 → 后端可切换 + Feature Flag
-- 性能回退 → 仅高风险路径使用
-
-***
-
-### 3. 调度层
-
-#### Dispatcher（调度器）
-
-**职责**:
-
-- 任务路由
-- 上下文管理
-- 投票流程协调
-- 沙盒调用
-
-**新增功能**:
-
-- 集成投票引擎
-- 支持多智能体协调
-- 代码修改前必须投票
-
-***
-
-### 4. 工具层
-
-#### Tool Registry（工具注册表）
-
-**复用自 lgzhssagent**:
-
-- 统一工具抽象
-- 工具缓存（P10）
-- 经验学习（P11）
-
-**新增约束**:
-
-- 代码修改类工具必须先经过投票流程
-- 必须提供源码或git分支
-
-***
-
-### 5. 模型层
-
-#### Registry + Adapters
-
-**复用自 lgzhssagent**（12个适配器）:
-
-- ✅ OpenAI Adapter
-- ✅ Claude Adapter
-- ✅ Gemini Adapter
-- ✅ 智谱AI Adapter
-- ✅ 硅基流动 Adapter
-- ✅ Cerebras Adapter
-- ✅ ModelScope Adapter
-- ✅ Poixe Adapter
-- ✅ OpenRouter Adapter
-- ✅ NVIDIA Adapter
-- ✅ Local Adapter
-- ✅ Base Adapter
-
-**新增功能**:
-
-- 动态故障转移链
-- 性能监控前置
-
-***
-
-### 6. 记忆层
-
-#### SessionManager + SQLite
-
-**复用自 lgzhssagent**:
-
-- L1: 活跃会话
-- L2: 归档数据
-- Function Call/Response 支持
-
-**新增内容**:
-
-- 投票记录存储
-- 决策日志
-- 协作主体排行榜历史
-
-***
-
-## 📊 排行榜系统
-
-### 协作主体排行榜
-
-**维度权重**:
-
-- 历史评分: 40%
-- 投票参与度: 30%
-- 响应速度: 15%
-- 协作质量: 15%
-
-**展示格式**:
-
-```
-# IDE排行榜 - 2026-W10
-
-| 排名 | 协作主体名称 | 综合得分 | 历史评分 | 参与度 | 响应速度 | 协作质量 | 趋势 |
-|------|---------|---------|---------|--------|---------|---------|------|
-| 1 🥇 | Antigravity | 92.5 | 9.2 | 95% | 98% | 90% ↑ |
-| 2 🥈 | Kiro | 90.0 | 9.0 | 92% | 95% | 88% ↑ |
-| 3 🥉 | cursor | 88.5 | 8.8 | 90% | 92% | 86% - |
-```
-
-***
-
-### 大模型排行榜
-
-**维度权重**:
-
-- 平均得分: 35%
-- 投票参与度: 30%
-- 稳定性: 20%
-- 响应速度: 15%
-
-**展示格式**:
-
-```
-# 大模型排行榜 - 2026-W10
-
-| 排名 | 模型名称 | 综合得分 | 平均得分 | 参与度 | 稳定性 | 响应速度 | 使用IDE数 | 趋势 |
-|------|---------|---------|---------|--------|--------|---------|----------|------|
-| 1 🥇 | Claude 3.5 Sonnet | 91.2 | 9.0 | 93% | 95% | 90% | 5 ↑ |
-```
+### 1. 通讯与路由 (Channels & Routing)
+- **src/channels/**: 实现与外部平台（如 Telegram）的交互。
+- **src/router.ts**: 核心业务路由，处理任务接收、分发及反馈结果。
+
+### 2. 任务调度 (Scheduling)
+- **src/task-scheduler.ts**: 管理并发任务，确保系统稳定性。
+- **src/dispatcher.js**: 负责将具体指令路由到对应的处理模块。
+
+### 3. 多智能体协调 (Coordination)
+- **src/core/agentRegistry.js**: 协作主体管理与追踪。
+- **src/core/voter.js**: 核心投票引擎，支持三级决议制度。
+- **src/core/arbitrator.js**: 自动处理投票争议及特殊权限决策。
+
+### 4. 沙盒与容器 (Sandbox & Containers)
+- **src/sandbox/**: 进程级隔离，防止代码执行影响主机安全。
+- **src/container-runner.ts**: 实现容器化执行环境。
+
+### 5. 模型适配器 (Adapters)
+- **src/adapters/**: 支持 OpenAI, Claude, Gemini, 硅基流动等多种主流模型。
+- **subject-adapter.ts**: 专门处理协作主体与特定模型的绑定关系。
 
 ***
 
@@ -380,7 +128,7 @@
    ↓
 4. 发起投票
    ↓
-5. 协作主体投票（赞同+1 / 弃权0 / 反对-1）
+5. 协作主体投票（赞成+1 / 弃权0 / 反对-1）
    ↓
 6. 用户投票（二级及以上必须参与）
    ↓
@@ -398,84 +146,19 @@
 
 ```
 .closeclaw/
-├── README.md
-├── package.json
-├── tsconfig.json
-├── .env.example
-│
 ├── src/
-│   ├── index.js
-│   │
-│   ├── core/                          # 核心模块
-│   │   ├── dispatcher.js             # 调度器
-│   │   ├── session.js                # 会话管理
-│   │   ├── voter.js                  # 投票引擎（新增）
-│   │   ├── arbitrator.js             # 仲裁模块（新增）
-│   │   └── agentRegistry.js          # 智能体注册表（新增）
-│   │
-│   ├── sandbox/                       # 沙盒层（新增）
-│   │   ├── sandboxManager.js         # 沙盒管理器
-│   │   ├── processExecutor.js        # 进程执行器
-│   │   └── workerExecutor.js         # Worker执行器
-│   │
-│   ├── adapters/                      # LLM适配器（复用）
-│   │   ├── base.js
-│   │   ├── openai.js
-│   │   ├── claude.js
-│   │   ├── gemini.js
-│   │   └── ... (共12个)
-│   │
-│   ├── agents/                        # 智能体模块（新增）
-│   │   ├── rankings/
-│   │   │   ├── collaboratorRanking.js        # 协作主体排行榜
-│   │   │   └── modelRanking.js      # 大模型排行榜
-│   │   └── performanceTracker.js     # 绩效追踪
-│   │
-│   ├── tools/                         # 工具层（复用）
-│   │   ├── toolRegistry.js
-│   │   ├── toolDefinitions.js
-│   │   └── cliAnything.js
-│   │
-│   ├── utils/                         # 工具函数（复用）
-│   │   ├── logger.js
-│   │   ├── cache.js
-│   │   ├── toolCache.js
-│   │   └── verifier.js
-│   │
-│   ├── prompts/                       # 提示词（复用）
-│   │   ├── core.js
-│   │   └── extensions.js
-│   │
-│   ├── providers/                     # Provider注册表（复用）
-│   │   └── registry.js
-│   │
-│   └── config/                        # 配置
-│       └── config.js
-│
-├── docs/
-│   ├── architecture/
-│   │   └── FINAL_ARCHITECTURE.md     # 本文档
-│   ├── collaboration/
-│   │   ├── COLLABORATION_RULES_v3.md
-│   │   ├── onboarding.md
-│   │   ├── ENVIRONMENT_RULES.md
-│   │   └── REGISTRATION_FLOW.md
-│   └── planning/
-│       └── TASK_PLANNING.md
-│
-├── tests/
-│   ├── unit/
-│   │   ├── voter.test.js
-│   │   ├── sandbox.test.js
-│   │   └── ...
-│   └── integration/
-│
-├── memory/
-│   └── sqlite/
-│
-└── closeclaw_refactor_plan/          # 重构计划（保留）
-    ├── ROUND2_VOTING_RESULT.md
-    └── docs/                         # 本文档位置
+│   ├── index.ts                # 入口文件
+│   ├── core/                   # 核心协作逻辑 (.js)
+│   ├── adapters/               # 模型适配器 (混合 JS/TS)
+│   ├── channels/               # 外部通讯通道 (.ts)
+│   ├── sandbox/                # 沙盒执行环境 (.js)
+│   ├── tools/                  # 工具管理 (.js)
+│   ├── router.ts               # 路由分发 (.ts)
+│   ├── task-scheduler.ts       # 任务调度 (.ts)
+│   └── db.ts                   # 数据库持久化 (.ts)
+├── docs/                       # 结构化文档中心
+├── votes/                      # 提案与投票记录
+└── worktrees/                  # 并行任务工作树
 ```
 
 ***
@@ -505,12 +188,12 @@
 
 ## 🔗 相关文档
 
-- [协作规则 v3.0](../collaboration/COLLABORATION_RULES_v3.md)
+- [协作规则 v3.1](../../RULES.md) ⭐⭐⭐
+- [架构概览](../05-architecture/overview.md)
 - [协作主体协作机制引导](../03-development/onboarding.md)
-- [环境拓扑与进度提取](../collaboration/ENVIRONMENT_RULES.md)
+- [环境拓扑与进度提取](../02-collaboration/environment.md)
 - [新协作主体注册流程](../04-reference/registration-flow.md)
-- [规划任务](../planning/TASK_PLANNING.md)
-- [Round 2 投票结果](../../ROUND2_VOTING_RESULT.md)
+- [规划任务](../07-roadmap/tasks.md)
 
 ***
 

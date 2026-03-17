@@ -31,12 +31,12 @@
 - 大模型信息（必填）
 - 能力声明
 
-### 3️⃣ 创建文档
-`registered_ide/{你的 id}_registration.md`
+### 3️⃣ 登记信息
+在 [`docs/06-registry/collaborators.md`](../06-registry/collaborators.md) 中添加协作主体信息。
 
-### 4️⃣ 提交并更新
+### 4️⃣ 更新配置并提交
+- 更新 [`.subjects.json`](../../.subjects.json)
 - 提交到 Git
-- 更新 `groups/global/CONTEXT.md`
 
 ---
 

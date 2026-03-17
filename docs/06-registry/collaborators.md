@@ -33,6 +33,9 @@
 | **Kiro** | kiro | Claude Sonnet 4, Claude Haiku 4.5, DeepSeek v3.2, Minimax M2.1, Qwen3 Coder Next | 2026-03-14 |
 | **Copilot** | copilot | Claude Haiku 4.5, GPT-4.1, GPT-4o, GPT-5 mini, Raptor mini | 2026-03-14 |
 | **Qwen Code** | qwen-code | Qwen 3.5 Plus | 2026-03-17 |
+| **Gemini CLI** | gemini-cli | Gemini 3.1 Pro (Preview), Gemini 3 Flash (Preview), Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash-lite | 2026-03-17 |
+| **PearAI** | pearai | PearAI Core (based on GPT-4o/Claude 3.5 Sonnet) | 2026-03-14 |
+| **iFlow CLI** | iflow-cli | iFlow-Next, Gemini 3 Flash | 2026-03-14 |
 
 ---
 
@@ -42,21 +45,21 @@
 
 | 角色 | 成员 |
 | :--- | :--- |
-| **Lead（主导级）** | Antigravity |
-| **Engineering（工程级）** | Cursor, Windsurf, Trae, Trae-CN, Codex, Copilot, Verdent, Kiro, OpenCode |
-| **Auditors（审计级）** | Lingma, Comate, CodeBuddy, CodeBuddy-CN, JoyCode, CatPawAI, Qoder, Cascade, Dropstone, TalkCody, Kimi-CloseClaw |
-| **Cloud** | Jules-Bolt, Jules-Palette, Jules-Sentinel |
-| **IDE Only** | Visual Studio Code |
+| **Collaborators（协作主体）** | Antigravity, Cursor, Windsurf, Trae, Trae-CN, Codex, Copilot, Verdent, Kiro, OpenCode, PearAI, iFlow CLI, Lingma, Comate, CodeBuddy, CodeBuddy-CN, JoyCode, CatPawAI, Qoder, Cascade, Dropstone, TalkCody, Kimi-CloseClaw, Qwen Code, Gemini CLI |
+| **Cloud Agents** | Jules-Bolt, Jules-Palette, Jules-Sentinel |
+
+> **注意**: 协作主体是指集成在 IDE 中的 **AI 插件/扩展**（如 Copilot, Lingma）或 **独立 CLI 工具**（如 Gemini CLI），而非 IDE 本身。
 
 ---
 
 ## 注册规范
 
 新增协作主体加入时需完成：
-1. 创建注册文件：在 `registered_ide/` 下保存 `{id}_registration.md` 文件，填写版本与模型。
-2. 更新 `.subjects.json` 注册协作主体
-3. **无需修改** `groups/global/CONTEXT.md`
+1. **信息登记**: 在 `docs/06-registry/collaborators.md` 中添加协作主体信息（ID、可用模型与注册日期）。
+2. **状态更新**: 更新 `.subjects.json` 文件以注册协作主体。
+3. **Git 同步**: 必须通过 Git 提交注册信息的修改，严禁仅在本地修改。
+4. **无需修改** `groups/global/CONTEXT.md` (自动同步)。
 
 ---
 
-> **最后更新**: 2026-03-16 新增 Verdent (Claude Sonnet 4.6) 协作主体信息，并同步更新 CONTEXT.md 文件
+> **最后更新**: 2026-03-17 统一协作主体分类，强化 Git 同步要求，明确主体定义。
