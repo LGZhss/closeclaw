@@ -19,9 +19,29 @@
 
 ## 🎯 愿景与使命
 
+### 核心理念：Harness Engineering（环境工程）
+
+参考 [learn-claude-code](https://github.com/shareAI-lab/learn-claude-code) 提出的 **Harness Engineering** 核心理念：
+
+- **The Model IS the Agent** - 模型本身就是智能体，无需额外的 Agent 框架
+- 我们的任务是构建 **Harness（环境、工具、知识、权限边界）**，而不是试图去构建智能体
+
+```
+Harness = Tools + Knowledge + Observation + Action Interfaces + Permissions
+```
+
+**核心组件**：
+- **Tools**: 文件 I/O、Shell、网络、数据库、浏览器
+- **Knowledge**: 产品文档、领域参考、API 规范、风格指南
+- **Observation**: Git diff、错误日志、浏览器状态、传感器数据
+- **Action Interfaces**: CLI 命令、API 调用、UI 交互
+- **Permissions**: 沙盒、审批流程、信任边界
+
+模型决定，Harness 执行。模型推理，Harness 提供上下文。模型是驾驶员，Harness 是车辆。
+
 ### 愿景
 
-**构建全球最公平、透明、高效的多智能体协作系统**
+**构建全球最公平、透明、高效的多智能体协作 Harness**
 
 ### 使命
 
@@ -29,6 +49,7 @@
 - ✅ **透明性**: 所有决策过程公开可查，规则明确
 - ✅ **高效性**: 文档驱动，减少无效沟通，快速迭代
 - ✅ **安全性**: 进程级隔离，防止恶意操作
+- ✅ **Harness 优先**: 专注于构建环境、工具和边界，信任模型的智能
 
 ---
 
