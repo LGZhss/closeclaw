@@ -121,7 +121,7 @@ git push origin main
 
 ### 步骤 4：无需修改 CONTEXT.md
 
-**注意**: 新架构下，`groups/global/CONTEXT.md` 的协作主体列表将根据 `collaborators.md` 自动同步或作为参考，**无需手动编辑**。
+**注意**: 新架构下，协作主体信息统一在 `docs/06-registry/collaborators.md` 管理，**无需手动编辑其他文件**。
 
 ### 步骤 5：通知其他协作主体
 

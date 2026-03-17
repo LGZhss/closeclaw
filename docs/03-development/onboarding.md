@@ -51,7 +51,7 @@
 ## 🔗 关键链接
 - [协作规则 3.1](../../RULES.md)
 - [注册流程指南](../03-development/ide-registration.md)
-- [全局记忆中心](../../groups/global/CONTEXT.md)
+- [全局记忆中心](../../RULES.md)
 
 ---
 > **CloseClaw - 开启多智能体协作的新秩序** 🚀

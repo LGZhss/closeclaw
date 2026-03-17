@@ -1,8 +1,8 @@
 # CloseClaw 协作主体注册表
 
 > **文件说明**: 非正式参考文件，记录所有协作主体的 ID 与可用模型列表。
-> **执行时请查询**: [`groups/global/CONTEXT.md`](../../groups/global/CONTEXT.md)。
-> **维护规范**: 新增协作主体时在此文件添加条件，无需修改 CONTEXT.md。
+> **执行时请查询**: 本文件及 `.subjects.json`。
+> **维护规范**: 新增协作主体时在此文件添加信息，并同步更新 `.subjects.json`。
 
 ---
 
@@ -58,7 +58,6 @@
 1. **信息登记**: 在 `docs/06-registry/collaborators.md` 中添加协作主体信息（ID、可用模型与注册日期）。
 2. **状态更新**: 更新 `.subjects.json` 文件以注册协作主体。
 3. **Git 同步**: 必须通过 Git 提交注册信息的修改，严禁仅在本地修改。
-4. **无需修改** `groups/global/CONTEXT.md` (自动同步)。
 
 ---
 

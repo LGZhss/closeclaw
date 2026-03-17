@@ -1,8 +1,8 @@
-# CloseClaw - 个人 AI 助手
+# CloseClaw - 多智能体协作系统
 
 > 模型必读：请先阅读 [RULES.md](./RULES.md)
 >
-> **版本**: 2.0.0  
+> **版本**: 2.1.0  
 > **基于**: NanoClaw 架构  
 > **状态**: 🟢 开发中
 
@@ -47,31 +47,30 @@ WORKSPACE_DIR=E:\.lgzhssagent\workspace
 - 📱 **多通道支持** - Telegram、WhatsApp 等（通过技能添加）
 - 🧠 **分层记忆** - 每个群组独立的 CONTEXT.md
 - ⏰ **任务调度** - 定时任务和周期性任务
-- 🤖 **Agent 集群** - 多 Agent 协作
+- 🤖 **多智能体协作** - 基于投票决议的公平协作系统
 
 ---
 
 ## 📖 文档指引
 
-### 🌟 新 IDE 必读（按顺序）
+### 🌟 新协作主体必读（按顺序）
 
-1. **[docs/01-getting-started/quickstart.md](./docs/01-getting-started/quickstart.md)** - 快速开始（5 分钟）
-2. **[docs/02-collaboration/rules.md](./docs/02-collaboration/rules.md)** - 协作规则（10 分钟）
+1. **[RULES.md](./RULES.md)** - 核心规则（5 分钟）
+2. **[docs/03-development/onboarding.md](./docs/03-development/onboarding.md)** - 进场指引（10 分钟）
 3. **[docs/03-development/ide-registration.md](./docs/03-development/ide-registration.md)** - 注册流程（5 分钟）
 
 ### 📚 核心文档
 
 | 文档 | 说明 |
 |------|------|
+| [RULES.md](./RULES.md) | 核心规则与投票机制 |
 | [docs/04-reference/file-structure.md](./docs/04-reference/file-structure.md) | 文件结构详解 |
 | [docs/05-architecture/overview.md](./docs/05-architecture/overview.md) | 系统架构设计 |
 | [docs/07-roadmap/future-plan.md](./docs/07-roadmap/future-plan.md) | 未来发展规划 |
-| [docs/02-collaboration/rules.md](./docs/02-collaboration/rules.md) | 协作规则 |
 | [docs/06-registry/collaborators.md](./docs/06-registry/collaborators.md) | 协作主体注册 |
 
 ### 📂 完整文档目录
 
-- **docs/01-getting-started/** - 新手入门
 - **docs/02-collaboration/** - 协作机制
 - **docs/03-development/** - 开发指南
 - **docs/04-reference/** - 技术参考
@@ -91,7 +90,7 @@ WORKSPACE_DIR=E:\.lgzhssagent\workspace
 
 **参与投票**: 编辑 `votes/proposal-001.md` 中的投票表
 
-**详细规则**: [docs/02-collaboration/rules.md](./docs/02-collaboration/rules.md)
+**详细规则**: [RULES.md](./RULES.md)
 
 ---
 
@@ -123,9 +122,7 @@ closeclaw/
 ├── templates/                # 提案模板
 ├── scripts/                  # 工具脚本
 ├── docs/                     # 文档
-├── groups/                   # 群组记忆
-│   ├── global/CONTEXT.md      # 全局记忆
-│   └── main/CONTEXT.md        # 主通道记忆
+├── registered_ide/           # 协作主体注册记录
 └── tests/                    # 测试
 ```
 
@@ -138,11 +135,11 @@ closeclaw/
 **提案流程**：复制模板 → 填写内容 → 创建 worktree → 开发 → PR → 投票
 
 **决议级别**：
-- 一级：≥2 IDE（简单修改）
+- 一级：≥2 协作主体（简单修改）
 - 二级：≥3 协作主体 + 用户投票（功能新增）
-- 三级：≥8 IDE + 用户投票（核心变更）
+- 三级：≥5 协作主体 + 用户投票（核心变更）
 
-**详细规则**: [docs/02-collaboration/rules.md](./docs/02-collaboration/rules.md)
+**详细规则**: [RULES.md](./RULES.md)
 
 ---
 
@@ -166,8 +163,8 @@ npm run format
 
 ## 🆘 需要帮助？
 
-**新 IDE**: [docs/01-getting-started/quickstart.md](./docs/01-getting-started/quickstart.md)  
-**快速参考**: [docs/02-collaboration/rules.md](./docs/02-collaboration/rules.md)  
+**新协作主体**: [docs/03-development/onboarding.md](./docs/03-development/onboarding.md)  
+**核心规则**: [RULES.md](./RULES.md)  
 **文件结构**: [docs/04-reference/file-structure.md](./docs/04-reference/file-structure.md)  
 **全部文档**: [docs/README.md](./docs/README.md)
 
