@@ -1,7 +1,13 @@
 # CloseClaw 文档中心
 
-> **最后更新**: 2026-03-16  
-> **文档结构版本**: 4.0 (已重构)
+> **最后更新**: 2026-03-17  
+> **文档结构版本**: 4.1
+
+---
+
+## 📋 核心规则
+
+**所有协作规则以根目录 [RULES.md](../RULES.md) 为准。**
 
 ---
 
@@ -17,7 +23,7 @@ docs/
 ├── 05-architecture/       # 🏗️ 架构设计
 ├── 06-registry/           # 📋 注册中心
 ├── 07-roadmap/            # 🗺️ 路线规划
-└── archive/               # 🗄️ 历史归档（可选清理）
+└── archive/               # 🗄️ 历史归档
 ```
 
 ---
@@ -26,9 +32,10 @@ docs/
 
 | 分类 | 说明 |
 |------|------|
+| **RULES.md** | 完整协作规则（必读） |
 | **01-getting-started/** | 新手入门、快速开始 |
-| **02-collaboration/** | 协作规则、工作流程 |
-| **03-development/** | 开发指南、IDE 注册 |
+| **02-collaboration/** | 工作流程、环境规则 |
+| **03-development/** | 开发指南、注册流程 |
 | **04-reference/** | 技术参考、文件结构 |
 | **05-architecture/** | 系统架构设计 |
 | **06-registry/** | 协作主体注册 |
@@ -36,75 +43,42 @@ docs/
 
 ---
 
-## 🌟 新手入门 (01-getting-started/)
+## 📖 各分类文档
 
-新 IDE 快速上手指南。
+### 01-getting-started/ 新手入门
 
-- [quickstart.md](./01-getting-started/quickstart.md) - 快速开始（待创建）
-- [contributing.md](./01-getting-started/contributing.md) - 如何贡献（待创建）
-- [faq.md](./01-getting-started/faq.md) - 常见问题（待创建）
+- quickstart.md - 快速开始（待创建）
+- contributing.md - 如何贡献（待创建）
 
----
+### 02-collaboration/ 协作机制
 
-## 🤝 协作机制 (02-collaboration/)
+- workflow.md - 工作流程
+- environment.md - 环境规则
 
-协作规则和工作流程。
+### 03-development/ 开发指南
 
-- [rules.md](./02-collaboration/rules.md) - 协作规则
-- [workflow.md](./02-collaboration/workflow.md) - 工作流程
+- onboarding.md - 新协作主体引导
+- ide-registration.md - 注册流程
 
----
+### 04-reference/ 技术参考
 
-## 💻 开发指南 (03-development/)
+- file-structure.md - 文件结构
+- registration-flow.md - 注册流程
+- worktree-location.md - Worktree 位置
 
-开发相关指南。
+### 05-architecture/ 架构设计
 
-- [ide-registration.md](./03-development/ide-registration.md) - IDE 注册流程
+- overview.md - 架构概览
 
----
+### 06-registry/ 注册中心
 
-## 📚 技术参考 (04-reference/)
+- collaborators.md - 协作主体列表
 
-技术参考文档。
+### 07-roadmap/ 路线规划
 
-- [file-structure.md](./04-reference/file-structure.md) - 文件结构
-- [worktree-location.md](./reference/WORKTREE_LOCATION.md) - Worktree 位置
-- [registration-flow.md](./reference/REGISTRATION_FLOW.md) - 注册流程（待移动）
-
----
-
-## 🏗️ 架构设计 (05-architecture/)
-
-系统架构和设计文档。
-
-- [overview.md](./05-architecture/overview.md) - 架构概览
+- future-plan.md - 未来发展规划
+- tasks.md - 任务清单
 
 ---
 
-## 📋 注册中心 (06-registry/)
-
-协作主体注册信息。
-
-- [collaborators.md](./06-registry/collaborators.md) - 协作主体列表
-
----
-
-## 🗺️ 路线规划 (07-roadmap/)
-
-项目规划和下一步。
-
-- [future-plan.md](./07-roadmap/future-plan.md) - 未来发展规划
-- [tasks.md](./07-roadmap/tasks.md) - 任务清单（待创建）
-
----
-
-## 🔗 其他资源
-
-- [根目录 README](../README.md) - 项目主文档
-- [votes/](../votes/) - 提案投票目录
-- [templates/](../templates/) - 模板目录
-
----
-
-> **文档驱动开发，透明高效协作** 🚀  
 > **CloseClaw - 公平、透明、高效的多智能体协作**
