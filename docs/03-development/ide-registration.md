@@ -78,114 +78,50 @@
 
 ## 注册流程
 
-### 步骤 1：创建注册文档
+### 步骤 1：信息登记
 
-在项目根目录的 `registered_ide/` 文件夹下创建文件：
+在 `docs/06-registry/collaborators.md` 中添加你的协作主体信息。
 
-```
-registered_ide/{你的 id}_registration.md
-```
+**操作指南**：
+1. 打开 [`docs/06-registry/collaborators.md`](../06-registry/collaborators.md) 文件。
+2. 在“注册总览”表格末尾添加一行，包含：协作主体名称、内部 ID、可用模型列表和当前日期。
+3. 在“协作主体分组”表格中，根据你的角色（Lead, Engineering, Auditors, Cloud, IDE Only）将你的名称加入对应列表。
 
 **示例**：
-- `registered_ide/lingma_registration.md`
-- `registered_ide/antigravity_registration.md`
-
-### 步骤 2：填写注册表格
-
-使用以下模板：
-
 ```markdown
-# {协作主体名称} 注册信息
-
-> **协作主体名称**: {名称}  
-> **内部 ID**: {id}  
-> **注册日期**: 2026-03-XX  
-> **状态**: 🟢 已注册
-
----
-
-## 📋 基本信息
-
-| 项目 | 内容 |
-|------|------|
-| 协作主体名称 | {名称} |
-| 内部 ID | {id} |
-| 版本 | {版本号} |
-| 注册日期 | 2026-03-XX |
-
----
-
-## 🤖 大模型信息
-
-### 主要大模型
-
-**模型名称**: Gemini 2.5 Flash Preview  
-**提供商**: Google  
-**版本**: 2026-03  
-**API 类型**: REST API
-
-### 辅助大模型（可选）
-
-**模型名称**: {如有请填写}  
-**提供商**: {如有请填写}
-
----
-
-## 💪 能力声明
-
-**核心能力**：
-- ✅ 架构设计
-- ✅ 代码实现
-- ✅ 代码审查
-
-**其他能力**：
-- 性能优化
-- 测试设计
-
----
-
-## 📝 特殊说明
-
-{如有特殊说明或需要注意的事项，请在此处说明}
-
----
-
-## ✅ 确认
-
-我已阅读并理解以下文档：
-- ✅ 协作规则 v3.0
-- ✅ Worktree 工作流指南
-- ✅ 快速参考指南
-
-我同意遵守 CloseClaw 的所有协作规则。
-
-**签名**: {协作主体名称}  
-**日期**: 2026-03-XX
+| **Gemini CLI** | gemini-cli | Gemini 3.1 Pro (Preview), Gemini 3 Flash (Preview), Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash-lite | 2026-03-17 |
 ```
 
-### 步骤 3：提交注册文档
+### 步骤 2：更新配置文件
+
+编辑根目录下的 [`.subjects.json`](../../.subjects.json)，将你的 ID 添加到相应的角色数组中。
+
+**示例**：
+```json
+{
+  "subjects": {
+    "engineering": ["Cursor", "Windsurf", "Gemini-CLI"],
+    "auditors": ["Lingma", "Comate"]
+  }
+}
+```
+
+### 步骤 3：提交更改
 
 ```bash
-# 1. 添加到 Git
-git add registered_ide/{你的 id}_registration.md
+# 1. 添加修改的文件
+git add docs/06-registry/collaborators.md .subjects.json
 
 # 2. 提交
 git commit -m "docs: register {协作主体名称} ({id})"
 
-# 3. 推送
+# 3. 推送 (如果需要)
 git push origin main
 ```
 
-### 步骤 4：更新全局记忆
+### 步骤 4：无需修改 CONTEXT.md
 
-编辑 `groups/global/CONTEXT.md`，在"已注册协作主体"表格中添加你的信息：
-
-```markdown
-## 已注册协作主体
-| 名称 | ID | 主要模型 | 注册日期 | 状态 |
-|------|-----|----------|----------|------|
-| {名称} | {id} | {主要模型} | 2026-03-XX | 🟢 已注册 |
-```
+**注意**: 新架构下，`groups/global/CONTEXT.md` 的协作主体列表将根据 `collaborators.md` 自动同步或作为参考，**无需手动编辑**。
 
 ### 步骤 5：通知其他协作主体
 
@@ -334,7 +270,7 @@ AND
 
 ## 🔗 已注册协作主体列表
 
-查看 [`registered_ide/`](../../registered_ide/) 目录了解所有已注册的协作主体。
+查看 [`docs/06-registry/collaborators.md`](../06-registry/collaborators.md) 了解所有已注册的协作主体。
 
 ---
 

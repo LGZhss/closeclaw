@@ -197,16 +197,25 @@ Harness = Tools + Knowledge + Observation + Action Interfaces + Permissions
 **关键结果**:
 - ✅ 7 个编号目录创建完成
 - ✅ 核心文档精简到<10KB
-- ✅ 删除所有冗余文档
-- ✅ 新人查找效率提升 75%
+- ✅ 协作主体注册流程统一（docs/06-registry/collaborators.md）
+- ✅ 协作主体分类简化（Collaborators & Cloud Agents）
+- ✅ 架构文档与实际代码完成对齐评估
 
-**状态**: 🟢 已完成（Phase 1-3 完成）
+**状态**: 🟢 已完成
 
-**完成内容**:
-1. ✅ 创建 7 个编号目录
-2. ✅ 移动 6 个核心文档
-3. ✅ 删除 8 个冗余文档
-4. ✅ 更新引用链接
+---
+
+### M8: 架构对齐与类型安全（2026-03 ~ 2026-04）
+
+**目标**: 解决文档架构与实际代码的偏差，推进全量 TypeScript 迁移
+
+**关键结果**:
+- ⏳ 更新架构图以包含 `src/channels/` 和 `src/router.ts` 等缺失模块
+- ⏳ 将 `src/core/` 下的 JS 模块迁移至 TypeScript
+- ⏳ 建立统一的类型定义文件 (`src/types.ts`)
+- ⏳ 核心调度逻辑单元测试覆盖率提升
+
+**状态**: 🟡 进行中
 
 ---
 
