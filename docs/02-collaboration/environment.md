@@ -1,14 +1,14 @@
 # 环境拓扑与进度提取规则
 
 &gt; **文档**: 环境拓扑与进度提取规则
-&gt; **版本**: 2.0.0
-&gt; **目的**: 指导IDE如何正确提取和理解环境信息
+&gt; **版本**: 3.1
+&gt; **目的**: 指导协作主体如何正确提取和理解环境信息
 
 ---
 
 ## 📋 概述
 
-本文档定义了IDE如何正确提取CloseClaw项目的环境拓扑和当前进度。请仔细阅读并遵循，避免生搬硬套导致模型误解。
+本文档定义了协作主体如何正确提取CloseClaw项目的环境拓扑和当前进度。请仔细阅读并遵循，避免生搬硬套导致模型误解。
 
 ---
 
@@ -50,7 +50,7 @@
 │   ├── contributing/      # 贡献文档
 │   └── roadmap/           # 路线图
 ├── tests/                 # 测试目录
-├── registered_ide/        # 注册的 IDE
+├── registered_collaborator/ # 注册的协作主体
 ├── groups/                # 组配置
 ├── scripts/               # 脚本工具
 ├── templates/             # 模板文件
@@ -115,7 +115,7 @@
 |------|------|---------|
 | 最终架构 | `docs/architecture/FINAL_ARCHITECTURE.md` | 是否存在、是否完整 |
 | 协作规则 | `docs/guides/COLLABORATION_RULES_v3.md` | 是否存在、版本号 |
-| IDE引导 | `docs/contributing/IDE_ONBOARDING.md` | 是否存在 |
+| 协作主体引导 | `docs/03-development/onboarding.md` | 是否存在 |
 | 环境规则 | `docs/guides/ENVIRONMENT_RULES.md` | 是否存在 |
 | 注册流程 | `docs/reference/REGISTRATION_FLOW.md` | 是否存在 |
 | 规划任务 | `docs/roadmap/TASK_PLANNING.md` | 是否存在 |
@@ -277,7 +277,7 @@ async function readFileSafe(filePath, defaultValue = '') {
 # CloseClaw 环境报告
 
 &gt; **生成时间**: 2026-03-13
-&gt; **生成者**: [IDE名称]
+&gt; **生成者**: [协作主体名称]
 
 ---
 
