@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+dist/
+build/
+
+# Logs
+*.log
+logs/
+
+# Environment files
+.env
+!.env.example
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-workspace
+*.sublime-project
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Runtime data
+store/
+data/
+groups/*/logs/
+groups/*/CONTEXT.md
+!groups/global/CONTEXT.md
+!groups/main/CONTEXT.md
+
+# Container artifacts
+*.tar
+container-image/
+
+# Test coverage
+coverage/
+
+# TypeScript cache
+*.tsbuildinfo
+
