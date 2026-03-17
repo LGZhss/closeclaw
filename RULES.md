@@ -49,8 +49,8 @@
 | 决议级别 | 协作主体参与人数 |
 |---------|---------------|
 | 一级 | ≥ 2 |
-| 二级 | ≥ 5 |
-| 三级 | ≥ 8 |
+| 二级 | ≥ 3 |
+| 三级 | ≥ 5 |
 
 ## 3. 环境导航 (Navigation)
 - **环境拓扑 (Topology)**: [groups/global/CONTEXT.md](./groups/global/CONTEXT.md)

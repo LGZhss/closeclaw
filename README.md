@@ -139,7 +139,7 @@ closeclaw/
 
 **决议级别**：
 - 一级：≥2 IDE（简单修改）
-- 二级：≥5 IDE + 用户投票（功能新增）
+- 二级：≥3 协作主体 + 用户投票（功能新增）
 - 三级：≥8 IDE + 用户投票（核心变更）
 
 **详细规则**: [docs/02-collaboration/rules.md](./docs/02-collaboration/rules.md)
