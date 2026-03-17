@@ -32,6 +32,7 @@
 | **TalkCody** | talkcody | MiniMax M2.5 | 2026-03-15 |
 | **Kiro** | kiro | Claude Sonnet 4, Claude Haiku 4.5, DeepSeek v3.2, Minimax M2.1, Qwen3 Coder Next | 2026-03-14 |
 | **Copilot** | copilot | Claude Haiku 4.5, GPT-4.1, GPT-4o, GPT-5 mini, Raptor mini | 2026-03-14 |
+| **Qwen Code** | qwen-code | Qwen 3.5 Plus | 2026-03-17 |
 
 ---
 

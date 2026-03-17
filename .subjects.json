@@ -3,7 +3,7 @@
   "subjects": {
     "lead": "Antigravity",
     "engineering": ["Cursor", "Windsurf", "PearAI", "Trae", "Trae-CN"],
-    "auditors": ["Lingma", "Comate", "CodeBuddy", "JoyCode", "CatPawAI", "TalkCody"],
+    "auditors": ["Lingma", "Comate", "CodeBuddy", "JoyCode", "CatPawAI", "TalkCody", "Qwen Code"],
     "cloud": ["Jules-Bolt", "Jules-Palette", "Jules-Sentinel"]
   },
   "trust_model": "Attribution",
