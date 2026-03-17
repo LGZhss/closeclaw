@@ -33,3 +33,7 @@
 ## 2024-05-18 - Intl.DateTimeFormat vs toLocaleString
 - **Learning**: Calling `Date.prototype.toLocaleString` in a loop (e.g., when formatting many chat messages) is extremely slow due to the repeated parsing of the locale and initialization of the internal formatter. In V8/Node.js, parsing the locale options takes a significant amount of time.
 - **Action**: Always cache `new Intl.DateTimeFormat(locale, options)` in the outer scope and use `.format(date)` or `.format(timestamp)` when processing arrays of dates or in hot code paths.
+
+## 2026-03-16 - File System Operations Blocking Event Loop
+- **Learning**: Synchronous file system operations (`fs.readFileSync`, `fs.readdirSync`, etc.) inside loops or frequently called functions like IPC message polling and file cleanup can severely block the Node.js event loop. Even if raw latency for many small files might seem acceptable initially, doing this sequentially prevents Node from handling other I/O efficiently.
+- **Action**: Use asynchronous `fs.promises` APIs (like `readdir`, `readFile`, `stat`, `unlink`) combined with `Promise.all` to read/process multiple files concurrently. This allows Node's event loop to remain responsive.
