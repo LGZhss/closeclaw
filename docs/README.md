@@ -16,7 +16,6 @@
 ```
 docs/
 ├── README.md              # 📍 本文档索引
-├── 01-getting-started/    # 🚀 新手入门
 ├── 02-collaboration/      # 🤝 协作机制
 ├── 03-development/        # 💻 开发指南
 ├── 04-reference/          # 📚 技术参考
@@ -41,10 +40,6 @@ docs/
 ---
 
 ## 📖 各分类文档
-
-### 01-getting-started/ 新手入门
-
-- [quickstart.md](./01-getting-started/quickstart.md) - 新会话提示词模板
 
 ### 02-collaboration/ 协作机制
 
