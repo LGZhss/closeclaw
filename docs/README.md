@@ -1,7 +1,13 @@
 # CloseClaw 文档中心
 
-> **最后更新**: 2026-03-14  
-> **文档结构版本**: 3.0
+> **最后更新**: 2026-03-17  
+> **文档结构版本**: 4.1
+
+---
+
+## 📋 核心规则
+
+**所有协作规则以根目录 [RULES.md](../RULES.md) 为准。**
 
 ---
 
@@ -10,11 +16,13 @@
 ```
 docs/
 ├── README.md              # 📍 本文档索引
-├── guides/                # 📖 使用指南
-├── reference/             # 📚 参考文档
-├── architecture/          # 🏗️ 架构设计
-├── contributing/          # 🤝 贡献指南
-├── roadmap/               # 🗺️ 路线图
+├── 01-getting-started/    #  新手入门
+├── 02-collaboration/      # 🤝 协作机制
+├── 03-development/        # 💻 开发指南
+├── 04-reference/          # 📚 技术参考
+├── 05-architecture/       # 🏗️ 架构设计
+├── 06-registry/           # 📋 注册中心
+├── 07-roadmap/            # 🗺️ 路线规划
 └── archive/               # 🗄️ 历史归档
 ```
 
@@ -24,72 +32,53 @@ docs/
 
 | 分类 | 说明 |
 |------|------|
-| **guides/** | 协作规则、工作流程 |
-| **reference/** | 文件结构、技术参考 |
-| **architecture/** | 系统架构设计 |
-| **contributing/** | 如何贡献代码和文档 |
-| **roadmap/** | 项目规划和下一步 |
+| **RULES.md** | 完整协作规则（必读） |
+| **01-getting-started/** | 新手入门、快速开始 |
+| **02-collaboration/** | 工作流程、环境规则 |
+| **03-development/** | 开发指南、注册流程 |
+| **04-reference/** | 技术参考、文件结构 |
+| **05-architecture/** | 系统架构设计 |
+| **06-registry/** | 协作主体注册 |
+| **07-roadmap/** | 路线规划和未来计划 |
 
 ---
 
-## 📖 使用指南 (guides/)
+## 📖 各分类文档
 
-协作规则和工作流程。
+### 01-getting-started/ 新手入门
 
-- [COLLABORATION_RULES_v3.md](./guides/COLLABORATION_RULES_v3.md) - 协作规则 v3.0
-- [WORKFLOW_OPTIMIZATION.md](./guides/WORKFLOW_OPTIMIZATION.md) - 工作流程优化
-- [ENVIRONMENT_RULES.md](./guides/ENVIRONMENT_RULES.md) - 环境规则
-- [DEDICATED_DEV_DIR.md](./guides/DEDICATED_DEV_DIR.md) - 专门开发目录
+- quickstart.md - 快速开始（待创建）
+- contributing.md - 如何贡献（待创建）
 
----
+### 02-collaboration/ 协作机制
 
-## 📚 参考文档 (reference/)
+- workflow.md - 工作流程
+- environment.md - 环境规则
 
-技术参考和分析文档。
+### 03-development/ 开发指南
 
-- [FILE_STRUCTURE.md](./reference/FILE_STRUCTURE.md) - 文件结构
-- [WORKTREE_LOCATION.md](./reference/WORKTREE_LOCATION.md) - Worktree 位置
-- [REGISTRATION_FLOW.md](./reference/REGISTRATION_FLOW.md) - 注册流程
-- [MISSING_FEATURES_ANALYSIS.md](./reference/MISSING_FEATURES_ANALYSIS.md) - 缺失功能分析
-- [THREE_WAY_COMPARISON.md](./reference/THREE_WAY_COMPARISON.md) - 三方对比
+- onboarding.md - 新协作主体引导
+- ide-registration.md - 注册流程
 
----
+### 04-reference/ 技术参考
 
-## 🏗️ 架构设计 (architecture/)
+- file-structure.md - 文件结构
+- registration-flow.md - 注册流程
+- worktree-location.md - Worktree 位置
 
-系统架构和设计文档。
+### 05-architecture/ 架构设计
 
-- [FINAL_ARCHITECTURE.md](./architecture/FINAL_ARCHITECTURE.md) - 最终架构
+- overview.md - 架构概览
 
----
+### 06-registry/ 注册中心
 
-## 🤝 贡献指南 (contributing/)
+- collaborators.md - 协作主体列表
 
-如何贡献代码和文档。
+### 07-roadmap/ 路线规划
 
-- [README.md](./contributing/README.md) - 贡献索引
-- [IDE_ONBOARDING.md](./contributing/IDE_ONBOARDING.md) - IDE 引导
-- [UPDATE_NOTES.md](./contributing/UPDATE_NOTES.md) - 更新说明
+- future-plan.md - 未来发展规划
+- tasks.md - 任务清单
 
 ---
 
-## 🗺️ 路线图 (roadmap/)
-
-项目规划和下一步。
-
-- [NEXT_STEPS.md](./roadmap/NEXT_STEPS.md) - 下一步
-- [TASK_PLANNING.md](./roadmap/TASK_PLANNING.md) - 任务规划
-- [DOCUMENT_ARCHITECTURE_OPTIMIZATION.md](./roadmap/DOCUMENT_ARCHITECTURE_OPTIMIZATION.md) - 文档架构优化
-
----
-
-## 🔗 其他资源
-
-- [根目录 README](../README.md) - 项目主文档
-- [votes/](../votes/) - 提案投票目录
-- [templates/](../templates/) - 模板目录
-
----
-
-> **文档驱动开发，透明高效协作** 🚀  
 > **CloseClaw - 公平、透明、高效的多智能体协作**

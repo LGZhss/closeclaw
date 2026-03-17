@@ -1,45 +1,73 @@
-# CloseClaw RULES v2.4 [ULTRA]
+# CloseClaw RULES v3.1
 
-> **进场必读**: 本文件是所有 AI 协助者/协作主体的“最高宪章”。新会话唤醒后必须首先执行步骤 1-3。
-
----
-
-## 1. 进场与审计 (Entry & Audit)
-当你进入本项目工作区时，**必须**执行以下标准化操作：
-1. **身份自检与宣告**: 确定自身所属协作主体（包括 IDE、CLI、Cloud Agent 等）、模型版本及 Session ID（指纹）。
-   - **格式**: `SYNCED | [当前协作主体名+模型] | [指纹] | 进度已同步，准备执行 [任务阶段]。`
-2. **环境探测**: 
-   - 必读全局记忆: [groups/global/CONTEXT.md](./groups/global/CONTEXT.md)
-   - 必读任务清单: [task.md](file:///C:/Users/lgzhs/.gemini/antigravity/brain/af0ece73-7fe3-483d-bf0e-fa1d31e54d00/task.md)
-3. **接力审计 (Critique)**: 检查前任协作主体的最新改动，发现逻辑错误或违规行为必须立即在回复中指出。
+> **版本**: 3.1 | **更新**: 2026-03-17
 
 ---
 
-## 2. 核心协作原则
-- **无提案不代码**: 核心逻辑变更必须关联 `votes/proposal-xxx.md`。
-- **术语规范**: 严禁将自己仅称为 "IDE"，统一使用 **“协作主体 (Collaboration Subject)”**，其范畴涵盖：本地各个 IDE（如 Cursor, Windsurf）、命令行 CLI 工具以及云端 Agents。
-- **中文至上**: UI、TaskName、TaskSummary、沟通内容以及 **PR 描述及其补充说明** 必须使用**简体中文**。严禁提交仅包含英文说明的 PR。
-- **PR 强制性**: 所有代码更新必须通过 Pull Request。严禁直接推送 `main`。
+## 1. 核心原则
+- **无提案不代码**: 变更必须关联 `votes/proposal-xxx.md`。
+- **状态锁**: 仅 `✅ 已通过` 提案允许合并入 `main`。
+- **身份备注**: `Proposal-By: ID`, `Implemented-By: ID` (见 [.subjects.json](./.subjects.json))。
+- **中文至上**: UI、任务摘要、沟通必须使用简体中文。
+
+## 2. 投票规则（详细规则见 [docs/02-collaboration/rules.md](./docs/02-collaboration/rules.md)）
+
+### 一、角色分值设定
+| 角色 | 赞成 | 反对 | 弃权 |
+|------|------|------|------|
+| **协作主体**（~30人） | +1 分 | +2 分 | 0 分 |
+| **用户**（1人） | +0.5n 分（到赞成方） | +0.5n 分（到反对方） | 0 分 |
+
+其中，`n` = 协作主体总人数
+
+### 二、判定公式
+决议通过的唯一条件为：
+
+```
+赞成总分 > 反对总分
+```
+
+展开：
+```
+(协作主体赞成 × 1 + 用户赞成) > (协作主体反对 × 2 + 用户反对)
+```
+
+### 三、示例
+**场景**：5 个协作主体赞同，2 个协作主体反对，用户赞同
+
+**计算**：
+- 协作主体总人数 n = 7
+- 协作主体赞成 = 5 × 1 = 5
+- 协作主体反对 = 2 × 2 = 4
+- 用户赞成 = 0.5 × 7 = 3.5
+- 用户反对 = 0
+- 赞成总分 = 5 + 3.5 = 8.5
+- 反对总分 = 4 + 0 = 4
+- **8.5 > 4** → ✅ 通过
+
+### 四、法定人数
+| 决议级别 | 协作主体参与人数 |
+|---------|---------------|
+| 一级 | ≥ 2 |
+| 二级 | ≥ 5 |
+| 三级 | ≥ 8 |
+
+## 3. 环境导航 (Navigation)
+- **环境拓扑 (Topology)**: [groups/global/CONTEXT.md](./groups/global/CONTEXT.md)
+- **进度索引 (Progress)**: [docs/07-roadmap/future-plan.md](./docs/07-roadmap/future-plan.md)
+- **文件结构**: [docs/04-reference/file-structure.md](./docs/04-reference/file-structure.md)
+- **快速开始**: [docs/01-getting-started/quickstart.md](./docs/01-getting-started/quickstart.md)（待创建）
+- **完整协作规则**: [docs/02-collaboration/rules.md](./docs/02-collaboration/rules.md)
+
+## 4. 协作流
+- **接力模式**: 允许 Agent A 发起，Agent B 审计，Agent C (有额度者) 实施 PR。
+- **禁止合并**: Agent 严禁调用 API 自动合并自己的 PR。
+- **身份验证**: 注册列表见 [.subjects.json](./.subjects.json)。
+
+## 5. 文件规范
+- **全英文命名**: 目录/文件使用 `kebab-case`。
+- **禁止总结**: 严禁生成无意义的"总结/完成"类 md 文档。
 
 ---
 
-## 3. 环境导航与记忆 (Memory)
-- **全局长期记忆**: [groups/global/CONTEXT.md](./groups/global/CONTEXT.md) (由协作主体共同维护)
-- **进度索引**: [docs/roadmap/NEXT_STEPS.md](./docs/roadmap/NEXT_STEPS.md)
-- **注册白名单**: [.subjects.json](./.subjects.json)
-
----
-
-## 4. 离场与接力 (Handover)
-为确保下一个协作主体顺利接手：
-1. **状态落盘**: 任务结束前必须更新 `walkthrough.md` 和 `task.md`。
-2. **环境状态**: 更新 [groups/global/CONTEXT.md](./groups/global/CONTEXT.md) 中的进度说明。
-3. **完成宣告**: 回复 `COMPLETED | [当前协作主体] | [改动简述]。`
-
----
-
-## 5. 技术避坑指南 (Technical Guardrails)
-- **编码安全**: 使用 PowerShell 进行批量替换命令时，**必须**显式指定 `-Encoding utf8`，严防 UTF-8 与 GBK 冲突导致的乱码。
-
----
-> **版本**: 2.4 | **最后更新**: 2026-03-14
+> **CloseClaw - 公平、透明、高效的多智能体协作**

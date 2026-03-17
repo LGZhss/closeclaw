@@ -1,10 +1,38 @@
 {
   "protocol": "CloseClaw v2.0",
   "subjects": {
-    "lead": "Antigravity",
-    "engineering": ["Cursor", "Windsurf", "PearAI", "Trae", "Trae-CN", "Codex", "Copilot"],
-    "auditors": ["Lingma", "Comate", "CodeBuddy", "JoyCode", "CatPawAI", "TalkCody"],
-    "cloud": ["Jules-Bolt", "Jules-Palette", "Jules-Sentinel"]
+    "collaborators": [
+      "Antigravity",
+      "Cursor",
+      "Windsurf",
+      "PearAI",
+      "Trae",
+      "Trae-CN",
+      "iFlow CLI",
+      "Lingma",
+      "Comate",
+      "CodeBuddy",
+      "JoyCode",
+      "CatPawAI",
+      "TalkCody",
+      "Qwen Code",
+      "Gemini-CLI",
+      "Codex",
+      "Copilot",
+      "Verdent",
+      "Kiro",
+      "OpenCode",
+      "CodeBuddy-CN",
+      "Qoder",
+      "Cascade",
+      "Dropstone",
+      "Kimi-CloseClaw"
+    ],
+    "cloud": [
+      "Jules-Bolt",
+      "Jules-Palette",
+      "Jules-Sentinel"
+    ]
   },
   "trust_model": "Attribution",
   "proxy_user": "LGZhss"

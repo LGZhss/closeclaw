@@ -1,89 +1,155 @@
 #!/usr/bin/env node
 /**
- * 自动化投票统计脚本
+ * 自动化投票统计脚本 (v2.0)
  * 
- * 功能: 解析 votes/ 目录中的提案文件，计算投票结果并输出统计报告
- * 用法: node scripts/auto-vote-stats.js [提案ID]
+ * 功能：
+ * 1. 解析 votes/ 目录中的所有提案文件
+ * 2. 提取协作主体投票和用户投票
+ * 3. 计算法定人数和通过状态
+ * 4. 输出控制台报表和 JSON 报告
  * 
- * 示例:
- *   node scripts/auto-vote-stats.js           # 统计所有提案
- *   node scripts/auto-vote-stats.js 011       # 统计指定提案
+ * 编码：UTF-8
  */
 
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const VOTES_DIR = path.join(__dirname, '..', 'votes');
 
 // 提案级别配置
 const PROPOSAL_LEVELS = {
   '一级': { minVotes: 2, weight: 1 },
   '二级': { minVotes: 3, weight: 2 },
-  '三级': { minVotes: 4, weight: 3 }
+  '三级': { minVotes: 5, weight: 3 } // 统一为 5 票（三级决议）
 };
 
 /**
- * 解析单个提案文件
+ * 解析 Markdown 表格行
+ */
+function parseTableRow(line) {
+  return line.split('|').map(cell => cell.trim()).filter(cell => cell !== '');
+}
+
+/**
+ * 从提案文件提取投票信息
  */
 function parseProposal(filePath) {
   const content = fs.readFileSync(filePath, 'utf-8');
   const filename = path.basename(filePath);
+  const lines = content.split('\n');
+  
+  const result = {
+    id: null,
+    title: null,
+    level: '一级',
+    status: '投票中',
+    votes: [],
+    userVote: null,
+    ideTotalScore: 0,
+    userScore: 0,
+    quorumMet: false,
+    passed: false,
+    filename: filename
+  };
   
   // 提取提案 ID
-  const idMatch = content.match(/提案\s*ID[^\d]*(\d+)/i) || filename.match(/(\d+)/);
-  const proposalId = idMatch ? idMatch[1] : 'unknown';
+  const idMatch = content.match(/>\s*\*\*提案 ID\*\*:\s*(\d+)/) || filename.match(/(\d+)/);
+  if (idMatch) result.id = idMatch[1];
+  
+  // 提取提案标题
+  const titleMatch = content.match(/^#\s*(?:提案\s*\d+[:：]?)?\s*(.+)/m);
+  if (titleMatch) result.title = titleMatch[1].trim();
   
   // 提取提案级别
-  const levelMatch = content.match(/提案级别[^一二级三]*([一二三])级/);
-  const level = levelMatch ? `${levelMatch[1]}级` : '一级';
+  const levelMatch = content.match(/>\s*\*\*提案级别\*\*:\s*([一二三级]+)/);
+  if (levelMatch) result.level = levelMatch[1];
   
   // 提取状态
-  const statusMatch = content.match(/状态[^\n]*([🟢🟡⚪✅])/);
-  let status = statusMatch ? statusMatch[1] : '⚪';
+  const statusMatch = content.match(/>\s*\*\*状态\*\*:\s*([^ \n]+)/);
+  if (statusMatch) result.status = statusMatch[1].trim();
   
   // 解析投票表格
-  const votes = [];
-  const voteTableMatch = content.match(/\|[^|]*协作主体[^|]*\|[^|]*态度[^|]*\|[^|]*得分[^|]*\|[^|]*备注[^|]*\|[^]*?(?=\n## |\n---|$)/);
+  let inIdeVoteTable = false;
+  let inUserVoteTable = false;
   
-  if (voteTableMatch) {
-    const lines = voteTableMatch[0].split('\n').filter(line => line.startsWith('|') && !line.includes(':---'));
-    for (const line of lines.slice(1)) { // 跳过表头
-      const parts = line.split('|').map(p => p.trim()).filter(p => p);
-      if (parts.length >= 3) {
-        const attitude = parts[1];
-        const score = parts[2].includes('+1') ? 1 : parts[2].includes('-1') ? -1 : 0;
-        if (score !== 0) {
-          votes.push({ subject: parts[0], attitude, score, note: parts[3] || '' });
-        }
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    
+    // 检测协作主体投票表头
+    if (line.includes('协作主体投票') || line.includes('IDE 投票')) {
+      inIdeVoteTable = true;
+      inUserVoteTable = false;
+      continue;
+    }
+    
+    // 检测用户投票表头
+    if (line.includes('用户投票')) {
+      inIdeVoteTable = false;
+      inUserVoteTable = true;
+      continue;
+    }
+    
+    // 解析协作主体投票行
+    if (inIdeVoteTable && line.startsWith('|') && !line.includes(':---') && !line.includes('协作主体')) {
+      const cells = parseTableRow(line);
+      if (cells.length >= 2) {
+        const subject = cells[0].replace(/^[✅❌⚪]\s*/, '').trim();
+        const attitude = cells[1].includes('赞同') ? '赞同' : 
+                        cells[1].includes('反对') ? '反对' : '弃权';
+        const score = attitude === '赞同' ? 1 : attitude === '反对' ? -2 : 0; // 反对为 -2
+        
+        result.votes.push({ subject, attitude, score, note: cells[3] || '' });
+        result.ideTotalScore += (attitude === '赞同' ? 1 : 0);
+        // 注意：计算逻辑在后面统一处理
+      }
+    }
+    
+    // 解析用户投票
+    if (inUserVoteTable && line.startsWith('|') && !line.includes(':---') && !line.includes('用户')) {
+      const cells = parseTableRow(line);
+      if (cells.length >= 2) {
+        result.userVote = cells[1].includes('赞同') ? '赞同' : 
+                         cells[1].includes('反对') ? '反对' : '弃权';
       }
     }
   }
   
-  const totalScore = votes.reduce((sum, v) => sum + v.score, 0);
-  const levelConfig = PROPOSAL_LEVELS[level] || PROPOSAL_LEVELS['一级'];
-  const hasQuorum = votes.length >= levelConfig.minVotes;
-  const passed = hasQuorum && totalScore > 0;
+  // 获取参与人数
+  const participatingIdes = result.votes.filter(v => v.attitude !== '弃权').length;
+  const n = participatingIdes || 1; // 协作主体总数（参与者）
   
-  return {
-    id: proposalId,
-    filename,
-    level,
-    status,
-    votes,
-    totalScore,
-    voteCount: votes.length,
-    minRequired: levelConfig.minVotes,
-    hasQuorum,
-    passed
-  };
+  // 计算得分 (规则: 赞成+1, 反对+2) -> 这里简化为逻辑判断
+  const ideAgree = result.votes.filter(v => v.attitude === '赞同').length;
+  const ideOppose = result.votes.filter(v => v.attitude === '反对').length;
+  
+  // 用户得分: 0.5n
+  if (result.userVote === '赞同') {
+    result.userScore = 0.5 * n;
+  } else if (result.userVote === '反对') {
+    result.userScore = -0.5 * n;
+  }
+  
+  const agreeScore = ideAgree * 1 + (result.userVote === '赞同' ? 0.5 * n : 0);
+  const opposeScore = ideOppose * 2 + (result.userVote === '反对' ? 0.5 * n : 0);
+  
+  // 判断法定人数
+  const minRequired = PROPOSAL_LEVELS[result.level]?.minVotes || 2;
+  result.quorumMet = participatingIdes >= minRequired;
+  
+  // 判断是否通过
+  result.passed = result.quorumMet && (agreeScore > opposeScore);
+  
+  return result;
 }
 
 /**
  * 扫描所有提案
  */
 function scanProposals() {
+  if (!fs.existsSync(VOTES_DIR)) return [];
   const files = fs.readdirSync(VOTES_DIR)
     .filter(f => f.startsWith('proposal-') && f.endsWith('.md'))
     .map(f => path.join(VOTES_DIR, f));
@@ -92,37 +158,21 @@ function scanProposals() {
 }
 
 /**
- * 输出统计报告
+ * 输出报表
  */
 function printReport(proposals) {
   console.log('\n📊 CloseClaw 提案投票统计报告');
   console.log('=' .repeat(50));
   
-  const passed = proposals.filter(p => p.passed);
-  const voting = proposals.filter(p => !p.passed && p.hasQuorum);
-  const pending = proposals.filter(p => !p.hasQuorum);
+  const sorted = proposals.sort((a, b) => parseInt(a.id || 0) - parseInt(b.id || 0));
   
-  console.log(`\n✅ 已通过: ${passed.length} 个`);
-  console.log(`🟡 投票中(已达法定人数): ${voting.length} 个`);
-  console.log(`⚪ 待投票(未达法定人数): ${pending.length} 个`);
-  
-  console.log('\n📋 提案详情:');
-  console.log('-'.repeat(50));
-  
-  for (const p of proposals.sort((a, b) => parseInt(a.id) - parseInt(b.id))) {
-    const statusIcon = p.passed ? '✅' : p.hasQuorum ? '🟡' : '⚪';
-    const statusText = p.passed ? '已通过' : p.hasQuorum ? '投票中' : '待投票';
-    console.log(`\n提案 ${p.id} (${p.level}): ${statusIcon} ${statusText}`);
-    console.log(`  文件: ${p.filename}`);
-    console.log(`  票数: ${p.voteCount}/${p.minRequired} (得分: ${p.totalScore})`);
-    
-    if (p.votes.length > 0) {
-      console.log('  投票详情:');
-      for (const v of p.votes) {
-        const icon = v.score > 0 ? '👍' : '👎';
-        console.log(`    ${icon} ${v.subject}: ${v.attitude}`);
-      }
-    }
+  for (const p of sorted) {
+    const statusIcon = p.passed ? '✅' : p.quorumMet ? '🟡' : '⚪';
+    const statusText = p.passed ? '已通过' : p.quorumMet ? '投票中' : '待参与';
+    console.log(`\n提案 ${p.id || '??'} [${p.level}]: ${statusIcon} ${statusText}`);
+    console.log(`  标题: ${p.title || p.filename}`);
+    console.log(`  参与: ${p.votes.length} 协作主体 | 用户: ${p.userVote || '未投票'}`);
+    console.log(`  结果: ${p.passed ? '通过' : '未通过'} (法定人数: ${p.quorumMet ? '是' : '否'})`);
   }
   
   console.log('\n' + '='.repeat(50));
@@ -133,24 +183,26 @@ function printReport(proposals) {
  */
 function main() {
   const targetId = process.argv[2];
-  
-  console.log('🔍 正在扫描提案文件...');
   let proposals = scanProposals();
   
   if (targetId) {
     proposals = proposals.filter(p => p.id === targetId);
-    if (proposals.length === 0) {
-      console.error(`❌ 未找到提案 ${targetId}`);
-      process.exit(1);
-    }
   }
   
   printReport(proposals);
   
-  // 输出 JSON 格式（供其他脚本使用）
-  if (process.env.OUTPUT_JSON) {
-    console.log('\n📦 JSON 输出:');
-    console.log(JSON.stringify(proposals, null, 2));
+  // 输出 JSON (供 CI 使用)
+  if (process.env.GITHUB_OUTPUT || process.env.OUTPUT_JSON) {
+    const report = {
+      timestamp: new Date().toISOString(),
+      proposals: proposals
+    };
+    if (process.env.GITHUB_OUTPUT) {
+      fs.appendFileSync(process.env.GITHUB_OUTPUT, `report=${JSON.stringify(report)}\n`);
+    } else {
+      console.log('\n📦 JSON Report:');
+      console.log(JSON.stringify(report, null, 2));
+    }
   }
 }
 

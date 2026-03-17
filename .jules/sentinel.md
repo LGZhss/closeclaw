@@ -22,3 +22,7 @@
 ---
 **Sentinel's Note**: 
 安全漏洞的修补必须是透明且可审计的。CloseClaw 提案是你修补行为的法律依据。
+## 2025-03-15 - [Secure Temporary File Creation]
+**Vulnerability:** Untrusted Javascript code was being written directly into the current working directory (`process.cwd()`) and executed via `child_process.spawn`. The file paths were unquoted relative paths (`node temp_${id}.js`), which allowed directory pollution, path traversal possibilities if the execution ID was manipulated, and potential command injection.
+**Learning:** The application evaluates code by dynamically creating and running files. Hardcoded relative paths expose the current directory.
+**Prevention:** Use `os.tmpdir()` alongside `path.join()` for temporary code file generation, and enclose the file path in double quotes (`"..."`) when formulating the shell execution command.

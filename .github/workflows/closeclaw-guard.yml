@@ -15,11 +15,15 @@ jobs:
           fetch-depth: 0
 
       - name: Compliance Check
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
         run: |
           echo "Checking compliance for PR #${{ github.event.pull_request.number }} or Push to ${{ github.ref_name }}..."
           
-          # 获取待检信息：追溯最近 10 个 Commit Message + PR Title + PR Body
-          COMMIT_MSG=$(git log -10 --pretty=%B)
+<<<<<<< HEAD
+          # 获取待检信息：追溯最近 30 个 Commit Message + PR Title + PR Body
+          COMMIT_MSG=$(git log -30 --pretty=%B)
           PR_TITLE="${{ github.event.pull_request.title }}"
           PR_BODY="${{ github.event.pull_request.body }}"
           SEARCH_TEXT="$COMMIT_MSG $PR_TITLE $PR_BODY"
