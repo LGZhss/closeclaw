@@ -2,8 +2,8 @@
   "protocol": "CloseClaw v2.0",
   "subjects": {
     "lead": "Antigravity",
-    "engineering": ["Cursor", "Windsurf", "PearAI", "Trae", "Trae-CN"],
-    "auditors": ["Lingma", "Comate", "CodeBuddy", "JoyCode", "CatPawAI", "TalkCody"],
+    "engineering": ["Cursor", "Windsurf", "PearAI", "Trae", "Trae-CN", "iFlow CLI"],
+    "auditors": ["Lingma", "Comate", "CodeBuddy", "JoyCode", "CatPawAI", "TalkCody", "Qwen Code", "Gemini-CLI"],
     "cloud": ["Jules-Bolt", "Jules-Palette", "Jules-Sentinel"]
   },
   "trust_model": "Attribution",
