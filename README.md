@@ -55,9 +55,9 @@ WORKSPACE_DIR=E:\.lgzhssagent\workspace
 
 ### 🌟 新协作主体必读（按顺序）
 
-1. **[RULES.md](./RULES.md)** - 核心规则（5 分钟）
-2. **[docs/03-development/onboarding.md](./docs/03-development/onboarding.md)** - 进场指引（10 分钟）
-3. **[docs/03-development/ide-registration.md](./docs/03-development/ide-registration.md)** - 注册流程（5 分钟）
+1. **[docs/01-getting-started/quickstart.md](./docs/01-getting-started/quickstart.md)** - 新会话提示词（1 分钟）
+2. **[RULES.md](./RULES.md)** - 核心规则（5 分钟）
+3. **[docs/03-development/onboarding.md](./docs/03-development/onboarding.md)** - 进场指引（10 分钟）
 
 ### 📚 核心文档
 
