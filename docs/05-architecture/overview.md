@@ -10,17 +10,13 @@
 
 ## 🧠 核心理念：Harness Engineering（环境工程）
 
-参考 [learn-claude-code](https://github.com/shareAI-lab/learn-claude-code) 提出的理念：
+基于 **Harness Engineering** 理念：
 
-- **The Model IS the Agent** - 模型本身就是智能体，无需额外的 Agent 框架
-- **我们构建 Harness，而不是 Agent** - CloseClaw 的架构围绕以下 Harness 组件 design：
-  - **Tools**: 文件 I/O、Shell、网络、数据库、浏览器
-  - **Knowledge**: 产品文档、领域参考、API 规范、风格指南
-  - **Observation**: Git diff、错误日志、浏览器状态、传感器数据
-  - **Action Interfaces**: CLI 命令、API 调用、UI 交互
-  - **Permissions**: 沙盒、审批流程、信任边界
+- **模型即智能体** - 模型本身就是智能体
+- **构建 Harness** - 提供环境、工具、知识、边界
+- **API 化演进** - 从手动轮换到 API 调度的多智能体架构
 
-模型决定，Harness 执行。模型推理，Harness 提供上下文。CloseClaw 是一个为协作模型设计的专业 Harness。
+> Harness = Tools + Knowledge + Observation + Action Interfaces + Permissions
 
 ***
 
@@ -28,10 +24,10 @@
 
 **CloseClaw** 是一个基于 Node.js 的本地 AI 协同调度 Harness，由原 lgzhssagent 重构而来。核心特点是：
 
-- **多智能体平等协作** - 所有协作主体平等参与投票
-- **数学化决策权重** - 协作主体赞成+1 / 反对+2，用户权重=0.5n
-- **投票与仲裁机制** - 三级法定人数，简单清晰的投票规则
-- **沙盒隔离安全** - 进程级隔离优先，多级降级策略
+- **Harness 优先** - 专注于构建环境和工具，信任模型的智能
+- **投票与仲裁机制** - 简单清晰的决策规则
+- **沙盒隔离安全** - 进程级隔离，多级降级策略
+- **API 化架构** - 支持从手动轮换向 API 调度演进
 
 ***
 

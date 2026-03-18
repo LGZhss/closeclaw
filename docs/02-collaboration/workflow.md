@@ -1,40 +1,26 @@
 # CloseClaw IDE 协作优化方案
 
-> **版本**: 1.0.0
-> **创建日期**: 2026-03-13
-> **状态**: 🟢 生效中
-> **目标**: 系统性优化 IDE 协作机制，提升开发效率与协作规范性
+> **版本**: 2.0  
+> **创建日期**: 2026-03-13  
+> **最后更新**: 2026-03-16  
+> **状态**: 🟢 生效中  
+> **目标**: 基于现实约束优化 IDE 协作机制
 
 ---
 
-## 📋 目录
+## 💡 现实约束
 
-1. [执行摘要](#执行摘要)
-2. [现有架构评估](#现有架构评估)
-3. [强制 Worktree 工作流](#强制-worktree-工作流)
-4. [文档资源复用指南](#文档资源复用指南)
-5. [IDE 协作流程优化](#ide-协作流程优化)
-6. [实施路线图](#实施路线图)
-7. [附录](#附录)
+**重要前提**：
+- 协作主体不是随时在线的智能体
+- 用户手动轮换 IDE（各协作主体有限额）
+- 不可能让用户整天开着一堆卡的 IDE
+- 后期通过 API 转向多智能体架构
 
----
-
-## 执行摘要
-
-### 优化目标
-
-本方案旨在对 CloseClaw 项目的 IDE 协作机制进行系统性优化，重点包括：
-
-1. **实施强制 worktree 工作流** - 确保团队成员遵循统一的分支管理规范
-2. **文档资源全面评估** - 识别可复用或修改后可有效使用的文档资源
-3. **协作流程优化** - 提供优化后的 IDE 协作流程文档
-
-### 核心原则
-
-- ✅ **保留现有架构稳定性** - 不影响已实现的核心功能
-- ✅ **提升开发效率** - 简化协作流程，减少不必要的开销
-- ✅ **增强协作规范性** - 建立清晰的工作流程和标准
-- ✅ **文档驱动开发** - 充分利用现有文档资源
+**当前策略**：
+- ✅ 单 IDE 工作流 - 每次只使用一个 IDE
+- ✅ 会话状态保存 - 自动保存/恢复上下文
+- ✅ 轻量级切换 - 快速在不同 IDE 间切换
+- ✅ ClawHub Skill + Claude Code 插件支持
 
 ---
 
@@ -310,29 +296,25 @@ git worktree remove review-XXX
 
 ---
 
-#### 场景 3: 并行处理多个提案
+#### 场景 3: 快速切换 IDE
 
 ```bash
-# IDE 需要同时处理 proposal-001 和 proposal-002
+# 保存当前 IDE 会话状态
+# 1. 提交当前更改
+git add .
+git commit -m "chore: 保存会话状态"
 
-# 1. 创建两个 worktree
-git worktree add ../worktrees/proposal-001 -b proposal/001
-git worktree add ../worktrees/proposal-002 -b proposal/002
+# 2. 推送到远程
+git push
 
-# 2. 在两个工作目录间切换
-cd ../worktrees/proposal-001  # 处理提案 1
-# ... 开发 ...
+# 3. 切换到另一个 IDE
+# 关闭当前 IDE，打开另一个
 
-cd ../proposal-002  # 切换到提案 2
-# ... 开发 ...
-
-# 3. 每个 worktree 独立提交
-cd ../worktrees/proposal-001
-git add . && git commit -m "feat: 提案 001 完成"
-
-cd ../proposal-002
-git add . && git commit -m "feat: 提案 002 完成"
+# 4. 新 IDE 拉取最新状态
+git pull
 ```
+
+**注意**: 由于各协作主体有限额，用户需要手动轮换 IDE。重点是优化切换体验，而不是同时运行多个 IDE。
 
 ---
 
@@ -983,267 +965,15 @@ chmod +x scripts/git-utils.sh
 
 ---
 
-## 实施路线图
+## 🔗 相关文档
 
-### 阶段 1: 准备工作（第 1 周）
-
-**目标**: 完成基础设置和文档准备
-
-**任务**:
-
-1. **Git 仓库初始化**
-   ```bash
-   # 1. 初始化 Git 仓库（如未初始化）
-   git init
-   
-   # 2. 创建 main 分支
-   git checkout -b main
-   
-   # 3. 初始提交
-   git add .
-   git commit -m "initial commit"
-   ```
-
-2. **创建 Worktree 基础设施**
-   ```bash
-   # 1. 创建 worktrees 目录
-   mkdir -p worktrees
-   
-   # 2. 创建工具脚本目录
-   mkdir -p scripts
-   
-   # 3. 创建模板目录
-   mkdir -p templates
-   ```
-
-3. **配置 Git Hooks**
-   ```bash
-   # 安装 Husky
-   npm install husky --save-dev
-   npx husky install
-   
-   # 添加 pre-commit hook
-   npx husky add .husky/pre-commit "npm run lint && npm test"
-   ```
-
-4. **部署工具脚本**
-   - 复制 `git-utils.sh` 到 `scripts/`
-   - 添加执行权限
-   - 测试基本功能
-
-5. **文档准备**
-   - 创建 `templates/proposal-template.md`
-   - 更新 `docs/03-development/onboarding.md`（添加 Worktree 说明）
-   - 归档旧文档
-
-**验收标准**:
-- ✅ Git 仓库正常运行
-- ✅ Worktree 创建成功
-- ✅ Git Hooks 生效
-- ✅ 工具脚本可用
-- ✅ 文档模板就绪
-
----
-
-### 阶段 2: 试点运行（第 2-3 周）
-
-**目标**: 通过小型提案验证 Worktree 流程
-
-**任务**:
-
-1. **选择试点提案**
-   - 选择 1-2 个一级决议提案
-   - 影响范围小，风险低
-   - 便于快速验证流程
-
-2. **执行完整流程**
-   ```bash
-   # 1. 创建 worktree
-   ./scripts/git-utils.sh create 001 simple-fix
-   
-   # 2. 开发
-   cd worktrees/proposal-001
-   # ... 编写代码 ...
-   
-   # 3. 提交
-   git add .
-   git commit -m "feat: 提案 001"
-   
-   # 4. 推送
-   git push -u origin proposal-001
-   
-   # 5. 创建 PR
-   # GitHub/GitLab 上创建
-   
-   # 6. 审查合并
-   # 其他 IDE 审查
-   
-   # 7. 清理
-   cd ../..
-   ./scripts/git-utils.sh cleanup 001
-   ```
-
-3. **收集反馈**
-   - IDE 使用体验
-   - 流程顺畅度
-   - 遇到的问题
-   - 改进建议
-
-4. **优化流程**
-   - 根据反馈调整
-   - 更新文档
-   - 改进工具脚本
-
-**验收标准**:
-- ✅ 完成至少 2 个提案的完整流程
-- ✅ 所有参与 IDE 熟悉 Worktree 操作
-- ✅ 收集并处理反馈意见
-- ✅ 流程文档更新
-
----
-
-### 阶段 3: 全面推广（第 4 周起）
-
-**目标**: 所有代码修改都遵循 Worktree 流程
-
-**任务**:
-
-1. **强制执行**
-   - Git Hooks 禁止在 main 分支直接提交
-   - 所有提案必须通过 worktree 开发
-   - PR 审查成为标准流程
-
-2. **持续优化**
-   - 定期回顾流程效率
-   - 收集 IDE 反馈
-   - 持续改进工具和文档
-
-3. **扩展功能**
-   - 添加自动化测试
-   - 集成 CI/CD
-   - 性能监控
-
-**验收标准**:
-- ✅ 100% 的代码修改通过 worktree 流程
-- ✅ 无直接在 main 分支的提交
-- ✅ PR 审查成为常态
-- ✅ IDE 满意度高
-
----
-
-## 附录
-
-### A. Git Worktree 常见问题
-
-**Q1: Worktree 和普通分支有什么区别？**
-
-A: 
-- **分支**: 只是指向提交的指针
-- **Worktree**: 独立的工作目录，可以检出不同分支
-
-**Q2: Worktree 会占用多少磁盘空间？**
-
-A:
-- Git 对象数据库是共享的
-- 每个 worktree 只占用工作文件的额外空间
-- 通常每个 worktree 额外占用 10-50MB
-
-**Q3: 如何在 worktree 间切换？**
-
-A:
-```bash
-# 方法 1: cd 切换
-cd ../worktrees/proposal-001
-
-# 方法 2: 使用工具脚本
-./scripts/git-utils.sh switch proposal-001
-```
-
-**Q4: Worktree 可以删除吗？**
-
-A:
-```bash
-# 可以安全删除已完成的 worktree
-git worktree remove ../worktrees/proposal-001
-
-# 删除前确保：
-# 1. 代码已合并
-# 2. 没有未提交的更改
-```
-
----
-
-### B. 提案级别判断速查表
-
-| 修改类型 | 决议级别 | IDE 人数 | 用户投票 |
-|---------|---------|---------|---------|
-| 拼写错误 | 一级 | ≥2 | 自愿 |
-| 代码格式 | 一级 | ≥2 | 自愿 |
-| 简单注释 | 一级 | ≥2 | 自愿 |
-| 简单 Bug 修复 | 一级 | ≥2 | 自愿 |
-| 新增基础功能 | 二级 | ≥5 | **必须** |
-| 性能优化 | 二级 | ≥5 | **必须** |
-| 批量修改 | 二级 | ≥5 | **必须** |
-| 核心架构 | 三级 | ≥8 | **必须** |
-| 主业务流程 | 三级 | ≥8 | **必须** |
-| 核心功能 | 三级 | ≥8 | **必须** |
-| 数据安全 | 三级 | ≥8 | **必须** |
-
----
-
-### C. 投票计算公式速查
-
-```
-IDE 得分 = (赞同数 × 1) + (反对数 × -1)
-
-用户得分 = 
-  - 赞同：IDE 得分 × 1/2
-  - 反对：IDE 得分 × 1/2（反向扣除）
-  - 弃权：0
-
-综合总票数 = IDE 得分 + 用户得分
-
-通过条件 = 综合总票数 > 反对票数量
-           AND
-           满足法定人数
-```
-
-**示例**：
-```
-5 个 IDE 赞同，2 个 IDE 反对，用户赞同
-
-IDE 得分 = 5×1 + 2×(-1) = 3
-用户得分 = 3 × 1/2 = 1.5
-综合总票数 = 3 + 1.5 = 4.5
-反对票数量 = 2
-法定人数 = 5 (二级决议) ✓
-
-结果：4.5 > 2 → ✅ 通过
-```
-
----
-
-### D. 相关文档链接
-
-- [协作规则 v3.0](../../RULES.md)
+- [协作规则](../../RULES.md)
 - [协作主体引导](../03-development/onboarding.md)
 - [环境拓扑与进度提取](./environment.md)
 - [新 IDE 注册流程](../04-reference/registration-flow.md)
 - [架构概览](../05-architecture/overview.md)
-- [任务规划](../07-roadmap/tasks.md)
+- [未来规划](../07-roadmap/future-plan.md)
 
 ---
 
-### E. 工具脚本完整列表
-
-| 脚本 | 路径 | 用途 |
-|------|------|------|
-| Git 工具 | `scripts/git-utils.sh` | Worktree 管理 |
-| 提案模板 | `templates/proposal-template.md` | 提案文档模板 |
-| Git Hooks | `.husky/pre-commit` | 提交前检查 |
-| VS Code 工作区 | `.vscode/workspaces.code-workspace` | 多 worktree 配置 |
-
----
-
-> **本方案自发布之日起生效**
 > **CloseClaw - 公平、透明、高效的多智能体协作** 🚀
