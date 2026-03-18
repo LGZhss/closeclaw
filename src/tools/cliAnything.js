@@ -5,14 +5,11 @@
  * 提供命令行界面交互能力，支持自然语言到CLI命令的转换
  */
 
-import { exec } from 'child_process';
-import { promisify } from 'util';
 import path from 'path';
 import fs from 'fs/promises';
 import { log } from '../../utils/logger.js';
 import { resolveSafePath } from '../../config/config.js';
-
-const execAsync = promisify(exec);
+import { sandboxManager } from '../sandbox/sandboxManager.js';
 
 /**
  * CLI-Anything 工具处理器
@@ -108,11 +105,10 @@ async function executeCliAnything(prompt, workDir, timeout) {
     }
   }
   
-  // 执行命令
-  const result = await execAsync(command, {
+  // 执行命令 - 使用沙盒管理器进行隔离执行
+  const result = await sandboxManager.executeCommand(command, {
     cwd: workDir,
-    timeout,
-    maxBuffer: 1024 * 1024 // 1MB buffer
+    timeout
   });
   
   return result;
