@@ -139,14 +139,19 @@ export function getUnprocessedMessages(limit: number = 100): DbMessage[] {
 // every time the input array length changes. This reduces string allocation overhead
 // and prevents polluting the prepared statement cache.
 // Expected impact: Query time reduced by ~40-50% for repeated batch updates.
-const markProcessedStmt = db.prepare(`
-  UPDATE messages
-  SET processed = 1
-  WHERE id IN (SELECT value FROM json_each(?))
-`);
+let markProcessedStmt: ReturnType<typeof db.prepare> | null = null;
 
 export function markMessagesProcessed(ids: number[]): void {
   if (ids.length === 0) return;
+
+  if (!markProcessedStmt) {
+    markProcessedStmt = db.prepare(`
+      UPDATE messages
+      SET processed = 1
+      WHERE id IN (SELECT value FROM json_each(?))
+    `);
+  }
+
   markProcessedStmt.run(JSON.stringify(ids));
 }
 
