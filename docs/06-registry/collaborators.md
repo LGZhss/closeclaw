@@ -36,6 +36,7 @@
 | **Gemini CLI** | gemini-cli | Gemini 3.1 Pro (Preview), Gemini 3 Flash (Preview), Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash-lite | 2026-03-17 |
 | **PearAI** | pearai | PearAI Core (based on GPT-4o/Claude 3.5 Sonnet) | 2026-03-14 |
 | **iFlow CLI** | iflow-cli | iFlow-Next, Gemini 3 Flash | 2026-03-14 |
+| **Zed** | zed | Gemini 3.1 Pro, Gemini 3 Pro, Gemini 3 Flash, Grok 4, Grok 4 Fast, Grok Code Fast 1, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5, GPT-5.4 Latest, GPT-5.3-Codex, GPT-5.2, GPT-5.2-Codex, GPT-5 mini | 2026-03-17 |
 
 ---
 
@@ -45,7 +46,7 @@
 
 | 角色 | 成员 |
 | :--- | :--- |
-| **Collaborators（协作主体）** | Antigravity, Cursor, Windsurf, Trae, Trae-CN, Codex, Copilot, Verdent, Kiro, OpenCode, PearAI, iFlow CLI, Lingma, Comate, CodeBuddy, CodeBuddy-CN, JoyCode, CatPawAI, Qoder, Cascade, Dropstone, TalkCody, Kimi-CloseClaw, Qwen Code, Gemini CLI |
+| **Collaborators（协作主体）** | Antigravity, Cursor, Windsurf, Trae, Trae-CN, Codex, Copilot, Verdent, Kiro, OpenCode, PearAI, iFlow CLI, Lingma, Comate, CodeBuddy, CodeBuddy-CN, JoyCode, CatPawAI, Qoder, Cascade, Dropstone, TalkCody, Kimi-CloseClaw, Qwen Code, Gemini CLI, Zed |
 | **Cloud Agents** | Jules-Bolt, Jules-Palette, Jules-Sentinel |
 
 > **注意**: 协作主体是指集成在 IDE 中的 **AI 插件/扩展**（如 Copilot, Lingma）或 **独立 CLI 工具**（如 Gemini CLI），而非 IDE 本身。
@@ -62,4 +63,4 @@
 
 ---
 
-> **最后更新**: 2026-03-17 统一协作主体分类，强化 Git 同步要求，明确主体定义。
+> **最后更新**: 2026-03-17 新增 Zed 协作主体注册。
