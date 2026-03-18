@@ -1,9 +1,4 @@
-import {
-  Channel,
-  ChannelOpts,
-  IncomingMessage,
-  RegisteredGroup,
-} from "./types.js";
+import { Channel, ChannelOpts, IncomingMessage } from "./types.js";
 import {
   getChannelFactory,
   getRegisteredChannelNames,
@@ -13,12 +8,13 @@ import {
   insertMessage,
   getUnprocessedMessages,
   markMessagesProcessed,
+  getRegisteredGroup,
   getMainGroup,
   setRegisteredGroup,
 } from "./db.js";
 import { logger } from "./logger.js";
 import { POLL_INTERVAL, GROUPS_DIR, ASSISTANT_NAME } from "./config.js";
-import { processGroupMessages, sendMessage, formatResponse } from "./router.js";
+import { processGroupMessages, formatResponse } from "./router.js";
 import { groupQueue } from "./group-queue.js";
 import { startScheduler } from "./task-scheduler.js";
 import { ScheduledTask } from "./types.js";
@@ -40,16 +36,16 @@ async function handleIncomingMessage(message: IncomingMessage): Promise<void> {
 
     // Store message in database
     const msgId = insertMessage({
-      id: message.id,
+      id: 0, // AUTOINCREMENT — value ignored by INSERT
       channel: message.channel,
-      chatJid: message.chatJid,
-      senderJid: message.senderJid,
-      senderName: message.senderName,
+      chat_jid: message.chatJid,
+      sender_jid: message.senderJid,
+      sender_name: message.senderName,
       text: message.text,
       timestamp: message.timestamp,
-      isGroup: message.isGroup,
+      is_group: message.isGroup,
       group_name: message.groupName,
-      processed: 0,
+      processed: false,
       created_at: new Date().toISOString(),
     });
 
@@ -128,7 +124,9 @@ async function processGroup(groupFolder: string): Promise<void> {
 
       // TODO: Implement agent execution without container
       // Placeholder: send acknowledgment
-      const response = formatResponse("Agent execution is not yet implemented after container removal.");
+      const response = formatResponse(
+        "Agent execution is not yet implemented after container removal.",
+      );
       await result.channel!.sendMessage(result.channel!.name, response);
     } catch (error) {
       logger.error(`Failed to process group ${groupFolder}: ${error}`);
@@ -159,16 +157,21 @@ function startMessageLoop(): () => void {
       // Group messages by chat_jid
       const groupedMessages = new Map<string, typeof unprocessed>();
       for (const msg of unprocessed) {
-        const existing = groupedMessages.get(msg.chatJid) || [];
+        const existing = groupedMessages.get(msg.chat_jid) || [];
         existing.push(msg);
-        groupedMessages.set(msg.chatJid, existing);
+        groupedMessages.set(msg.chat_jid, existing);
       }
 
-      // Process each group
-      for (const [chatJid, messages] of groupedMessages.entries()) {
-        // Find the group folder for this chat
-        // This is simplified - in reality you'd look up the group by JID
-        const groupFolder = chatJid; // Simplified for now
+      // Process each group — look up registered group by JID to get folder
+      for (const [chatJid] of groupedMessages.entries()) {
+        const group = getRegisteredGroup(chatJid);
+        if (!group) {
+          logger.warn(`No registered group for JID: ${chatJid}, skipping`);
+          const msgs = groupedMessages.get(chatJid) ?? [];
+          markMessagesProcessed(msgs.map((m) => m.id));
+          continue;
+        }
+        const groupFolder = group.folder;
 
         await processGroup(groupFolder);
       }

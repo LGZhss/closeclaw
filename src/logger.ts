@@ -1,15 +1,14 @@
-import { pino } from 'pino';
-import { GROUPS_DIR } from './config.js';
+import { pino } from "pino";
 
 export const logger = pino({
   transport: {
-    target: 'pino-pretty',
+    target: "pino-pretty",
     options: {
       colorize: true,
-      translateTime: 'SYS:standard',
-      ignore: 'pid,hostname',
-    }
-  }
+      translateTime: "SYS:standard",
+      ignore: "pid,hostname",
+    },
+  },
 });
 
 export const logLevels = {
@@ -18,13 +17,30 @@ export const logLevels = {
   WARN: 30,
   ERROR: 40,
   FATAL: 50,
+} as const;
+
+type LogLevel = keyof typeof logLevels;
+
+const levelToMethod: Record<
+  LogLevel,
+  "debug" | "info" | "warn" | "error" | "fatal"
+> = {
+  DEBUG: "debug",
+  INFO: "info",
+  WARN: "warn",
+  ERROR: "error",
+  FATAL: "fatal",
 };
 
-export function log(message: string, level: keyof typeof logLevels = 'INFO') {
-  const logLevel = logLevels[level] || logLevels.INFO;
-  logger[level.toLowerCase() as keyof typeof logger]({ msg: message });
+export function log(message: string, level: LogLevel = "INFO") {
+  const method = levelToMethod[level] ?? "info";
+  logger[method](message);
 }
 
-export function groupLog(folder: string, message: string, level: keyof typeof logLevels = 'INFO') {
+export function groupLog(
+  folder: string,
+  message: string,
+  level: LogLevel = "INFO",
+) {
   log(`[${folder}] ${message}`, level);
 }
