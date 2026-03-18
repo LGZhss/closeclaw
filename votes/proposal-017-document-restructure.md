@@ -305,8 +305,8 @@ docs/
 
 ## 📌 参考链接
 
-- [文档重构方案](./docs/roadmap/DOCUMENT_ARCHITECTURE_OPTIMIZATION.md)
-- [协作规则 v3.0](./docs/guides/COLLABORATION_RULES_v3.md)
+- [文档重构方案](../docs/07-roadmap/future-plan.md)
+- [协作规则 v3.0](../RULES.md)
 
 ---
 

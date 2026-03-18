@@ -114,8 +114,8 @@
 | 文件 | 用途 | 阅读优先级 |
 |------|------|-----------|
 | `NEW_IDE_ONBOARDING.md` | 新 IDE 引导 | 第一次必读 |
-| `COLLABORATION_RULES_v3.md` | 协作规则 | 每次参与前复习 |
-| `docs/collaboration/QUICK_GUIDE.md` | 快速参考 | 日常查阅 |
+| `RULES.md` | 协作规则 | 每次参与前复习 |
+| `docs/02-collaboration/workflow.md` | 工作流程 | 日常查阅 |
 
 #### 📚 项目文档
 
@@ -505,9 +505,9 @@ IDE 得分 = 赞同数×1 + 反对数×(-1)
 ```
 1. NEW_IDE_ONBOARDING.md (引导)
    ↓
-2. COLLABORATION_RULES_v3.md (规则)
+2. RULES.md (规则)
    ↓
-3. docs/collaboration/QUICK_GUIDE.md (快速参考)
+3. docs/02-collaboration/workflow.md (工作流程)
    ↓
 4. scripts/init-dev-dir.sh (初始化)
    ↓
@@ -555,8 +555,8 @@ IDE 得分 = 赞同数×1 + 反对数×(-1)
 | 文件/目录 | 用途 | 频率 |
 |----------|------|------|
 | `NEW_IDE_ONBOARDING.md` | 新 IDE 引导 | 第一次 |
-| `COLLABORATION_RULES_v3.md` | 协作规则 | 每次 |
-| `docs/collaboration/QUICK_GUIDE.md` | 快速参考 | 每天 |
+| `RULES.md` | 协作规则 | 每次 |
+| `docs/02-collaboration/workflow.md` | 工作流程 | 每天 |
 | `votes/` | 投票区域 | 每次提案 |
 | `scripts/git-utils.sh` | Worktree 工具 | 每天 |
 | `templates/proposal-template.md` | 提案模板 | 每次提案 |
@@ -567,8 +567,8 @@ IDE 得分 = 赞同数×1 + 反对数×(-1)
 
 | 文件/目录 | 用途 | 频率 |
 |----------|------|------|
-| `docs/collaboration/README.md` | 文档导航 | 经常 |
-| `docs/collaboration/WORKFLOW_OPTIMIZATION.md` | 完整流程 | 经常 |
+| `docs/README.md` | 文档导航 | 经常 |
+| `docs/02-collaboration/workflow.md` | 完整流程 | 经常 |
 | `scripts/init-dev-dir.sh` | 环境初始化 | 一次 |
 | `src/index.ts` | 核心代码 | 开发时 |
 | `groups/global/CONTEXT.md` | 全局记忆 | 经常 |
@@ -579,9 +579,9 @@ IDE 得分 = 赞同数×1 + 反对数×(-1)
 
 | 文件/目录 | 用途 | 频率 |
 |----------|------|------|
-| `docs/architecture/FINAL_ARCHITECTURE.md` | 架构文档 | 需要时 |
+| `docs/05-architecture/overview.md` | 架构文档 | 需要时 |
 | `src/*.ts` | 源代码 | 开发时 |
-| `docs/planning/TASK_PLANNING.md` | 任务规划 | 需要时 |
+| `docs/07-roadmap/tasks.md` | 任务规划 | 需要时 |
 | 其他文档 | 参考 | 需要时 |
 
 ---
@@ -598,15 +598,15 @@ IDE 得分 = 赞同数×1 + 反对数×(-1)
 
 **创建 worktree** → `scripts/git-utils.sh`
 
-**查看文档** → `docs/collaboration/README.md`
+**查看文档** → `docs/README.md`
 
-**了解规则** → `COLLABORATION_RULES_v3.md`
+**了解规则** → `RULES.md`
 
-**学习架构** → `docs/architecture/FINAL_ARCHITECTURE.md`
+**学习架构** → `docs/05-architecture/overview.md`
 
-**配置环境** → `docs/collaboration/ENVIRONMENT_SETUP.md`
+**配置环境** → `docs/02-collaboration/environment.md`
 
-**快速参考** → `docs/collaboration/QUICK_GUIDE.md`
+**快速参考** → `docs/02-collaboration/workflow.md`
 
 ---
 
@@ -615,10 +615,10 @@ IDE 得分 = 赞同数×1 + 反对数×(-1)
 ### 新 IDE 熟悉文件结构
 
 - [ ] 知道 `votes/` 是投票区域
-- [ ] 知道 `COLLABORATION_RULES_v3.md` 是核心规则
+- [ ] 知道 `RULES.md` 是核心规则
 - [ ] 知道 `scripts/git-utils.sh` 是 Worktree 工具
 - [ ] 知道 `templates/proposal-template.md` 是提案模板
-- [ ] 知道 `docs/collaboration/` 是协作文档目录
+- [ ] 知道 `docs/02-collaboration/` 是协作文档目录
 - [ ] 知道 `~/dev/closeclaw-proposals/` 是工作目录
 
 ---

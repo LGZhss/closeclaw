@@ -113,12 +113,12 @@
 
 | 文档 | 路径 | 检查内容 |
 |------|------|---------|
-| 最终架构 | `docs/architecture/FINAL_ARCHITECTURE.md` | 是否存在、是否完整 |
-| 协作规则 | `docs/guides/COLLABORATION_RULES_v3.md` | 是否存在、版本号 |
+| 最终架构 | `docs/05-architecture/overview.md` | 是否存在、是否完整 |
+| 协作规则 | `RULES.md` | 是否存在、版本号 |
 | 协作主体引导 | `docs/03-development/onboarding.md` | 是否存在 |
-| 环境规则 | `docs/guides/ENVIRONMENT_RULES.md` | 是否存在 |
-| 注册流程 | `docs/reference/REGISTRATION_FLOW.md` | 是否存在 |
-| 规划任务 | `docs/roadmap/TASK_PLANNING.md` | 是否存在 |
+| 环境规则 | `docs/02-collaboration/environment.md` | 是否存在 |
+| 注册流程 | `docs/04-reference/registration-flow.md` | 是否存在 |
+| 规划任务 | `docs/07-roadmap/tasks.md` | 是否存在 |
 
 **提取方法**:
 1. ✅ 检查文件是否存在
@@ -339,9 +339,9 @@ async function readFileSafe(filePath, defaultValue = '') {
 
 ## 🔗 相关文档
 
-- [IDE协作机制引导](../contributing/IDE_ONBOARDING.md)
-- [最终架构文档](../architecture/FINAL_ARCHITECTURE.md)
-- [协作规则 v3.0](./COLLABORATION_RULES_v3.md)
+- [协作主体引导](../03-development/onboarding.md)
+- [架构概览](../05-architecture/overview.md)
+- [协作规则](../../RULES.md)
 
 ---
 

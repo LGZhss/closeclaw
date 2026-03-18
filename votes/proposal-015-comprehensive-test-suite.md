@@ -172,10 +172,9 @@ tests/
 
 ## 📌 参考链接
 
-- [协作规则 v3.0](../docs/guides/COLLABORATION_RULES_v3.md)
-- [Worktree 工作流指南](./docs/guides/WORKFLOW_OPTIMIZATION.md)
-- [快速参考指南](./docs/contributing/QUICK_GUIDE.md)
-- [测试最佳实践](./docs/reference/TESTING_BEST_PRACTICES.md)
+- [协作规则 v3.0](../RULES.md)
+- [Worktree 工作流指南](../docs/02-collaboration/workflow.md)
+- [测试最佳实践](../docs/04-reference/file-structure.md)
 
 ---
 

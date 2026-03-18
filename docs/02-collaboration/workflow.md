@@ -83,11 +83,11 @@
 | LEGACY_RESOURCES_SUMMARY.md | 根目录 | ✅ 完整 | 完全复用 - 旧项目资源 |
 | MIGRATION_SUMMARY.md | 根目录 | ✅ 完整 | 部分复用 - 迁移总结 |
 | README.md | 根目录 | ✅ 完整 | 完全复用 - 用户文档 |
-| docs/architecture/FINAL_ARCHITECTURE.md | docs/ | ✅ 完整 | 完全复用 - 架构文档 |
-| docs/collaboration/IDE_ONBOARDING.md | docs/ | ✅ 完整 | 完全复用 - IDE 引导 |
-| docs/collaboration/ENVIRONMENT_RULES.md | docs/ | ✅ 完整 | 完全复用 - 环境规则 |
-| docs/collaboration/REGISTRATION_FLOW.md | docs/ | ✅ 完整 | 完全复用 - 注册流程 |
-| docs/planning/TASK_PLANNING.md | docs/ | ✅ 完整 | 部分复用 - 任务规划 |
+| docs/05-architecture/overview.md | docs/ | ✅ 完整 | 完全复用 - 架构文档 |
+| docs/03-development/onboarding.md | docs/ | ✅ 完整 | 完全复用 - IDE 引导 |
+| docs/02-collaboration/environment.md | docs/ | ✅ 完整 | 完全复用 - 环境规则 |
+| docs/04-reference/registration-flow.md | docs/ | ✅ 完整 | 完全复用 - 注册流程 |
+| docs/07-roadmap/tasks.md | docs/ | ✅ 完整 | 部分复用 - 任务规划 |
 
 **评估结论**：
 
@@ -405,7 +405,7 @@ git add . && git commit -m "feat: 提案 002 完成"
 **文档列表**：
 
 1. **FINAL_ARCHITECTURE.md**
-   - **路径**: `docs/architecture/FINAL_ARCHITECTURE.md`
+   - **路径**: `docs/05-architecture/overview.md`
    - **复用建议**: ✅ 完全复用
    - **内容**: 6 层系统架构、核心模块详解
    - **更新频率**: 低（架构稳定后基本不变）
@@ -427,18 +427,18 @@ git add . && git commit -m "feat: 提案 002 完成"
 
 **文档列表**：
 
-1. **IDE_ONBOARDING.md**
-   - **路径**: `docs/collaboration/IDE_ONBOARDING.md`
+1. **onboarding.md**
+   - **路径**: `docs/03-development/onboarding.md`
    - **复用建议**: ✅ 优化后复用
    - **优化点**: 添加 Worktree 流程说明
 
-2. **ENVIRONMENT_RULES.md**
-   - **路径**: `docs/collaboration/ENVIRONMENT_RULES.md`
+2. **environment.md**
+   - **路径**: `docs/02-collaboration/environment.md`
    - **复用建议**: ✅ 优化后复用
    - **优化点**: 添加 Worktree 环境检查
 
-3. **REGISTRATION_FLOW.md**
-   - **路径**: `docs/collaboration/REGISTRATION_FLOW.md`
+3. **registration-flow.md**
+   - **路径**: `docs/04-reference/registration-flow.md`
    - **复用建议**: ✅ 优化后复用
    - **优化点**: 添加 Worktree 配置步骤
 
@@ -1033,7 +1033,7 @@ chmod +x scripts/git-utils.sh
 
 5. **文档准备**
    - 创建 `templates/proposal-template.md`
-   - 更新 `docs/collaboration/IDE_ONBOARDING.md`（添加 Worktree 说明）
+   - 更新 `docs/03-development/onboarding.md`（添加 Worktree 说明）
    - 归档旧文档
 
 **验收标准**:
@@ -1225,12 +1225,12 @@ IDE 得分 = 5×1 + 2×(-1) = 3
 
 ### D. 相关文档链接
 
-- [协作规则 v3.0](./COLLABORATION_RULES_v3.md)
-- [IDE 协作机制引导](./docs/collaboration/IDE_ONBOARDING.md)
-- [环境拓扑与进度提取](./docs/collaboration/ENVIRONMENT_RULES.md)
-- [新 IDE 注册流程](./docs/collaboration/REGISTRATION_FLOW.md)
-- [最终架构文档](./docs/architecture/FINAL_ARCHITECTURE.md)
-- [任务规划](./docs/planning/TASK_PLANNING.md)
+- [协作规则 v3.0](../../RULES.md)
+- [协作主体引导](../03-development/onboarding.md)
+- [环境拓扑与进度提取](./environment.md)
+- [新 IDE 注册流程](../04-reference/registration-flow.md)
+- [架构概览](../05-architecture/overview.md)
+- [任务规划](../07-roadmap/tasks.md)
 
 ---
 
