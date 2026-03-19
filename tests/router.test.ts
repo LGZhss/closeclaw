@@ -1,6 +1,59 @@
 import { describe, it, expect, vi } from 'vitest';
-import { routeOutbound, escapeXml } from '../src/router.js';
-import { Channel } from '../src/types.js';
+import { routeOutbound, escapeXml, shouldTrigger } from '../src/router.js';
+import { Channel, DbMessage } from '../src/types.js';
+import { ASSISTANT_NAME } from '../src/config.js';
+
+describe('shouldTrigger', () => {
+  const createMockMessage = (text: string | null | undefined): DbMessage => ({
+    id: 1,
+    channel: 'test',
+    chat_jid: 'group@g.us',
+    sender_jid: 'user@s.whatsapp.net',
+    sender_name: 'TestUser',
+    text: text as string, // Cast to handle the intentional invalid types we test
+    timestamp: Date.now(),
+    is_group: true,
+    processed: false,
+    created_at: new Date().toISOString()
+  });
+
+  it('should return false for empty text', () => {
+    expect(shouldTrigger(createMockMessage(''))).toBe(false);
+  });
+
+  it('should return false for null or undefined text', () => {
+    expect(shouldTrigger(createMockMessage(null))).toBe(false);
+    expect(shouldTrigger(createMockMessage(undefined))).toBe(false);
+  });
+
+  it(`should return true when text exactly matches @${ASSISTANT_NAME}`, () => {
+    expect(shouldTrigger(createMockMessage(`@${ASSISTANT_NAME}`))).toBe(true);
+  });
+
+  it(`should return true when text starts with @${ASSISTANT_NAME}`, () => {
+    expect(shouldTrigger(createMockMessage(`@${ASSISTANT_NAME} hello there`))).toBe(true);
+  });
+
+  it('should return true for case-insensitive matches', () => {
+    expect(shouldTrigger(createMockMessage(`@${ASSISTANT_NAME.toLowerCase()} hi`))).toBe(true);
+    expect(shouldTrigger(createMockMessage(`@${ASSISTANT_NAME.toUpperCase()} hi`))).toBe(true);
+  });
+
+  it('should return true when text has leading or trailing whitespace', () => {
+    expect(shouldTrigger(createMockMessage(`   @${ASSISTANT_NAME}   `))).toBe(true);
+    expect(shouldTrigger(createMockMessage(`\n@${ASSISTANT_NAME}\t`))).toBe(true);
+  });
+
+  it(`should return false when @${ASSISTANT_NAME} is in the middle or end of the string`, () => {
+    expect(shouldTrigger(createMockMessage(`Hello @${ASSISTANT_NAME}`))).toBe(false);
+    expect(shouldTrigger(createMockMessage(`Hi @${ASSISTANT_NAME} how are you?`))).toBe(false);
+  });
+
+  it(`should return false when @${ASSISTANT_NAME} is part of another word`, () => {
+    expect(shouldTrigger(createMockMessage(`@${ASSISTANT_NAME}Bot`))).toBe(false);
+    expect(shouldTrigger(createMockMessage(`@${ASSISTANT_NAME}123`))).toBe(false);
+  });
+});
 
 describe('escapeXml', () => {
   it('should return empty string for falsy input', () => {

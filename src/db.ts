@@ -1,19 +1,25 @@
-import Database from 'better-sqlite3';
-import path from 'path';
-import { STORE_DIR } from './config.js';
-import { logger } from './logger.js';
-import type { RegisteredGroup, ScheduledTask, Session, RouterState, DbMessage } from './types.js';
+import Database from "better-sqlite3";
+import path from "path";
+import { STORE_DIR } from "./config.js";
+import { logger } from "./logger.js";
+import type {
+  RegisteredGroup,
+  ScheduledTask,
+  Session,
+  RouterState,
+  DbMessage,
+} from "./types.js";
 
 // Ensure store directory exists
-import { mkdirSync } from 'fs';
+import { mkdirSync } from "fs";
 mkdirSync(STORE_DIR, { recursive: true });
 
-const DB_PATH = path.join(STORE_DIR, 'messages.db');
+const DB_PATH = path.join(STORE_DIR, "messages.db");
 const db = new Database(DB_PATH);
 
 // Enable WAL mode for better concurrency
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
+db.pragma("journal_mode = WAL");
+db.pragma("foreign_keys = ON");
 
 // Initialize database schema
 function initializeDatabase() {
@@ -102,7 +108,7 @@ function initializeDatabase() {
     CREATE INDEX IF NOT EXISTS idx_task_logs_task_id ON task_run_logs(task_id);
   `);
 
-  logger.info('Database initialized');
+  logger.info("Database initialized");
 }
 
 // Message operations
@@ -120,7 +126,7 @@ export function insertMessage(msg: DbMessage): number {
     msg.timestamp,
     msg.is_group ? 1 : 0,
     msg.group_name || null,
-    msg.processed ? 1 : 0
+    msg.processed ? 1 : 0,
   ).lastInsertRowid as number;
 }
 
@@ -136,12 +142,17 @@ export function getUnprocessedMessages(limit: number = 100): DbMessage[] {
 
 export function markMessagesProcessed(ids: number[]): void {
   if (ids.length === 0) return;
-  const placeholders = ids.map(() => '?').join(',');
-  const stmt = db.prepare(`UPDATE messages SET processed = 1 WHERE id IN (${placeholders})`);
+  const placeholders = ids.map(() => "?").join(",");
+  const stmt = db.prepare(
+    `UPDATE messages SET processed = 1 WHERE id IN (${placeholders})`,
+  );
   stmt.run(...ids);
 }
 
-export function getMessagesSince(groupFolder: string, messageId: number): DbMessage[] {
+export function getMessagesSince(
+  groupFolder: string,
+  messageId: number,
+): DbMessage[] {
   const stmt = db.prepare(`
     SELECT * FROM messages 
     WHERE chat_jid = (SELECT jid FROM registered_groups WHERE folder = ?)
@@ -165,63 +176,75 @@ export function setRegisteredGroup(jid: string, group: RegisteredGroup): void {
     group.trigger || null,
     group.isMain ? 1 : 0,
     group.added_at,
-    group.containerConfig ? JSON.stringify(group.containerConfig) : null
+    group.containerConfig ? JSON.stringify(group.containerConfig) : null,
   );
 }
 
 export function getRegisteredGroup(jid: string): RegisteredGroup | null {
-  const stmt = db.prepare('SELECT * FROM registered_groups WHERE jid = ?');
+  const stmt = db.prepare("SELECT * FROM registered_groups WHERE jid = ?");
   const row = stmt.get(jid) as any;
   if (!row) return null;
-  
+
   return {
     ...row,
     isMain: row.is_main === 1,
-    container_config: row.container_config ? JSON.parse(row.container_config) : undefined,
+    container_config: row.container_config
+      ? JSON.parse(row.container_config)
+      : undefined,
   } as RegisteredGroup;
 }
 
-export function getRegisteredGroupByFolder(folder: string): RegisteredGroup | null {
-  const stmt = db.prepare('SELECT * FROM registered_groups WHERE folder = ?');
+export function getRegisteredGroupByFolder(
+  folder: string,
+): RegisteredGroup | null {
+  const stmt = db.prepare("SELECT * FROM registered_groups WHERE folder = ?");
   const row = stmt.get(folder) as any;
   if (!row) return null;
-  
+
   return {
     ...row,
     isMain: row.is_main === 1,
-    container_config: row.container_config ? JSON.parse(row.container_config) : undefined,
+    container_config: row.container_config
+      ? JSON.parse(row.container_config)
+      : undefined,
   } as RegisteredGroup;
 }
 
 export function getAllRegisteredGroups(): RegisteredGroup[] {
-  const stmt = db.prepare('SELECT * FROM registered_groups ORDER BY added_at');
+  const stmt = db.prepare("SELECT * FROM registered_groups ORDER BY added_at");
   const rows = stmt.all() as any[];
-  return rows.map(row => ({
+  return rows.map((row) => ({
     ...row,
     isMain: row.is_main === 1,
-    container_config: row.container_config ? JSON.parse(row.container_config) : undefined,
+    container_config: row.container_config
+      ? JSON.parse(row.container_config)
+      : undefined,
   })) as RegisteredGroup[];
 }
 
 export function deleteRegisteredGroup(jid: string): void {
-  const stmt = db.prepare('DELETE FROM registered_groups WHERE jid = ?');
+  const stmt = db.prepare("DELETE FROM registered_groups WHERE jid = ?");
   stmt.run(jid);
 }
 
 export function getMainGroup(): RegisteredGroup | null {
-  const stmt = db.prepare('SELECT * FROM registered_groups WHERE is_main = 1 LIMIT 1');
+  const stmt = db.prepare(
+    "SELECT * FROM registered_groups WHERE is_main = 1 LIMIT 1",
+  );
   const row = stmt.get() as any;
   if (!row) return null;
-  
+
   return {
     ...row,
     isMain: true,
-    container_config: row.container_config ? JSON.parse(row.container_config) : undefined,
+    container_config: row.container_config
+      ? JSON.parse(row.container_config)
+      : undefined,
   } as RegisteredGroup;
 }
 
 // Scheduled tasks operations
-export function insertTask(task: Omit<ScheduledTask, 'id'>): number {
+export function insertTask(task: Omit<ScheduledTask, "id">): number {
   const stmt = db.prepare(`
     INSERT INTO scheduled_tasks (group_folder, prompt, schedule_type, schedule_value, is_paused, created_at, next_run_at)
     VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -233,7 +256,7 @@ export function insertTask(task: Omit<ScheduledTask, 'id'>): number {
     task.schedule_value,
     task.is_paused ? 1 : 0,
     task.created_at,
-    task.next_run_at || null
+    task.next_run_at || null,
   ).lastInsertRowid as number;
 }
 
@@ -246,7 +269,7 @@ export function getDueTasks(now: Date): ScheduledTask[] {
     ORDER BY next_run_at ASC
   `);
   const rows = stmt.all(now.toISOString()) as any[];
-  return rows.map(row => ({
+  return rows.map((row) => ({
     ...row,
     is_paused: row.is_paused === 1,
   })) as ScheduledTask[];
@@ -262,73 +285,82 @@ export function updateTaskNextRun(taskId: number, nextRunAt: string): void {
 }
 
 export function getTasksByGroup(groupFolder: string): ScheduledTask[] {
-  const stmt = db.prepare('SELECT * FROM scheduled_tasks WHERE group_folder = ? ORDER BY created_at');
+  const stmt = db.prepare(
+    "SELECT * FROM scheduled_tasks WHERE group_folder = ? ORDER BY created_at",
+  );
   const rows = stmt.all(groupFolder) as any[];
-  return rows.map(row => ({
+  return rows.map((row) => ({
     ...row,
     is_paused: row.is_paused === 1,
   })) as ScheduledTask[];
 }
 
 export function getAllTasks(): ScheduledTask[] {
-  const stmt = db.prepare('SELECT * FROM scheduled_tasks ORDER BY group_folder, created_at');
+  const stmt = db.prepare(
+    "SELECT * FROM scheduled_tasks ORDER BY group_folder, created_at",
+  );
   const rows = stmt.all() as any[];
-  return rows.map(row => ({
+  return rows.map((row) => ({
     ...row,
     is_paused: row.is_paused === 1,
   })) as ScheduledTask[];
 }
 
 export function getTask(taskId: number): ScheduledTask | null {
-  const stmt = db.prepare('SELECT * FROM scheduled_tasks WHERE id = ?');
+  const stmt = db.prepare("SELECT * FROM scheduled_tasks WHERE id = ?");
   const row = stmt.get(taskId) as any;
   if (!row) return null;
-  
+
   return {
     ...row,
     is_paused: row.is_paused === 1,
   } as ScheduledTask;
 }
 
-export function updateTask(taskId: number, updates: Partial<ScheduledTask>): void {
+export function updateTask(
+  taskId: number,
+  updates: Partial<ScheduledTask>,
+): void {
   const fields: string[] = [];
   const values: any[] = [];
-  
+
   if (updates.prompt !== undefined) {
-    fields.push('prompt = ?');
+    fields.push("prompt = ?");
     values.push(updates.prompt);
   }
   if (updates.schedule_type !== undefined) {
-    fields.push('schedule_type = ?');
+    fields.push("schedule_type = ?");
     values.push(updates.schedule_type);
   }
   if (updates.schedule_value !== undefined) {
-    fields.push('schedule_value = ?');
+    fields.push("schedule_value = ?");
     values.push(updates.schedule_value);
   }
   if (updates.is_paused !== undefined) {
-    fields.push('is_paused = ?');
+    fields.push("is_paused = ?");
     values.push(updates.is_paused ? 1 : 0);
   }
   if (updates.next_run_at !== undefined) {
-    fields.push('next_run_at = ?');
+    fields.push("next_run_at = ?");
     values.push(updates.next_run_at);
   }
-  
+
   if (fields.length === 0) return;
-  
+
   values.push(taskId);
-  const stmt = db.prepare(`UPDATE scheduled_tasks SET ${fields.join(', ')} WHERE id = ?`);
+  const stmt = db.prepare(
+    `UPDATE scheduled_tasks SET ${fields.join(", ")} WHERE id = ?`,
+  );
   stmt.run(...values);
 }
 
 export function deleteTask(taskId: number): void {
-  const stmt = db.prepare('DELETE FROM scheduled_tasks WHERE id = ?');
+  const stmt = db.prepare("DELETE FROM scheduled_tasks WHERE id = ?");
   stmt.run(taskId);
 }
 
 // Task run logs operations
-export function insertTaskLog(log: Omit<TaskRunLog, 'id'>): number {
+export function insertTaskLog(log: Omit<TaskRunLog, "id">): number {
   const stmt = db.prepare(`
     INSERT INTO task_run_logs (task_id, started_at, completed_at, result, error)
     VALUES (?, ?, ?, ?, ?)
@@ -338,12 +370,14 @@ export function insertTaskLog(log: Omit<TaskRunLog, 'id'>): number {
     log.started_at,
     log.completed_at || null,
     log.result || null,
-    log.error || null
+    log.error || null,
   ).lastInsertRowid as number;
 }
 
 export function getTaskLogs(taskId: number): TaskRunLog[] {
-  const stmt = db.prepare('SELECT * FROM task_run_logs WHERE task_id = ? ORDER BY started_at DESC');
+  const stmt = db.prepare(
+    "SELECT * FROM task_run_logs WHERE task_id = ? ORDER BY started_at DESC",
+  );
   return stmt.all(taskId) as TaskRunLog[];
 }
 
@@ -357,12 +391,15 @@ export function setSession(groupFolder: string, sessionId: string): void {
 }
 
 export function getSession(groupFolder: string): Session | null {
-  const stmt = db.prepare('SELECT * FROM sessions WHERE group_folder = ?');
+  const stmt = db.prepare("SELECT * FROM sessions WHERE group_folder = ?");
   return stmt.get(groupFolder) as Session | null;
 }
 
 // Router state operations
-export function setRouterState(groupFolder: string, lastMessageId: number): void {
+export function setRouterState(
+  groupFolder: string,
+  lastMessageId: number,
+): void {
   const stmt = db.prepare(`
     INSERT OR REPLACE INTO router_state (group_folder, last_agent_message_id, updated_at)
     VALUES (?, ?, datetime('now'))
@@ -371,7 +408,7 @@ export function setRouterState(groupFolder: string, lastMessageId: number): void
 }
 
 export function getRouterState(groupFolder: string): RouterState | null {
-  const stmt = db.prepare('SELECT * FROM router_state WHERE group_folder = ?');
+  const stmt = db.prepare("SELECT * FROM router_state WHERE group_folder = ?");
   return stmt.get(groupFolder) as RouterState | null;
 }
 
