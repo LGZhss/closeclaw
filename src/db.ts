@@ -136,9 +136,8 @@ export function getUnprocessedMessages(limit: number = 100): DbMessage[] {
 
 export function markMessagesProcessed(ids: number[]): void {
   if (ids.length === 0) return;
-  const placeholders = ids.map(() => '?').join(',');
-  const stmt = db.prepare(`UPDATE messages SET processed = 1 WHERE id IN (${placeholders})`);
-  stmt.run(...ids);
+  const stmt = db.prepare(`UPDATE messages SET processed = 1 WHERE id IN (SELECT value FROM json_each(?))`);
+  stmt.run(JSON.stringify(ids));
 }
 
 export function getMessagesSince(groupFolder: string, messageId: number): DbMessage[] {
