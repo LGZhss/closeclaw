@@ -1,5 +1,5 @@
-import { logger } from './logger.js';
-import { MAX_CONCURRENT_CONTAINERS } from './config.js';
+import { logger } from "./logger.js";
+import { MAX_CONCURRENT_CONTAINERS } from "./config.js";
 
 /**
  * Group queue item
@@ -25,7 +25,10 @@ export class GroupQueue {
   /**
    * Add a task to the group queue
    */
-  async enqueue(groupFolder: string, execute: () => Promise<void>): Promise<void> {
+  async enqueue(
+    groupFolder: string,
+    execute: () => Promise<void>,
+  ): Promise<void> {
     return new Promise((resolve, reject) => {
       const item: QueueItem = {
         groupFolder,
@@ -62,7 +65,9 @@ export class GroupQueue {
 
     // Check global concurrency limit
     if (this.activeContainers >= this.maxConcurrent) {
-      logger.debug(`Concurrency limit reached (${this.activeContainers}/${this.maxConcurrent})`);
+      logger.debug(
+        `Concurrency limit reached (${this.activeContainers}/${this.maxConcurrent})`,
+      );
       return;
     }
 
@@ -80,7 +85,9 @@ export class GroupQueue {
     this.activeContainers++;
 
     try {
-      logger.debug(`Executing task for group: ${groupFolder} (active: ${this.activeContainers})`);
+      logger.debug(
+        `Executing task for group: ${groupFolder} (active: ${this.activeContainers})`,
+      );
       await item.execute();
       item.resolve();
     } catch (error) {
@@ -89,7 +96,7 @@ export class GroupQueue {
     } finally {
       // Decrement active containers
       this.activeContainers--;
-      
+
       // Mark group as not processing
       this.groupProcessing.set(groupFolder, false);
 

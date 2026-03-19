@@ -1,8 +1,8 @@
-import cronParser from 'cron-parser';
-import { getDueTasks, updateTaskNextRun, insertTaskLog } from './db.js';
-import { logger } from './logger.js';
-import { ScheduledTask } from './types.js';
-import { SCHEDULER_POLL_INTERVAL } from './config.js';
+import cronParser from "cron-parser";
+import { getDueTasks, updateTaskNextRun, insertTaskLog } from "./db.js";
+import { logger } from "./logger.js";
+import { ScheduledTask } from "./types.js";
+import { SCHEDULER_POLL_INTERVAL } from "./config.js";
 
 /**
  * Calculate next run time for a task
@@ -10,15 +10,15 @@ import { SCHEDULER_POLL_INTERVAL } from './config.js';
 export function calculateNextRun(task: ScheduledTask): Date | null {
   try {
     switch (task.schedule_type) {
-      case 'cron':
+      case "cron":
         const interval = cronParser.parseExpression(task.schedule_value);
         return interval.next().toDate();
 
-      case 'interval':
+      case "interval":
         const intervalMs = parseInt(task.schedule_value, 10);
         return new Date(Date.now() + intervalMs);
 
-      case 'once':
+      case "once":
         return new Date(task.schedule_value);
 
       default:
@@ -35,7 +35,7 @@ export function calculateNextRun(task: ScheduledTask): Date | null {
  * Process due tasks
  */
 export async function processDueTasks(
-  executeTask: (task: ScheduledTask) => Promise<void>
+  executeTask: (task: ScheduledTask) => Promise<void>,
 ): Promise<void> {
   const now = new Date();
   const dueTasks = getDueTasks(now);
@@ -77,7 +77,7 @@ export async function processDueTasks(
         task_id: task.id,
         started_at: now.toISOString(),
         completed_at: new Date().toISOString(),
-        result: 'Completed successfully',
+        result: "Completed successfully",
         error: undefined,
       });
     } catch (error) {
@@ -89,7 +89,7 @@ export async function processDueTasks(
         started_at: now.toISOString(),
         completed_at: new Date().toISOString(),
         result: undefined,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       });
 
       // Still calculate next run for recurring tasks
@@ -105,9 +105,9 @@ export async function processDueTasks(
  * Start the scheduler loop
  */
 export function startScheduler(
-  executeTask: (task: ScheduledTask) => Promise<void>
+  executeTask: (task: ScheduledTask) => Promise<void>,
 ): () => void {
-  logger.info('Scheduler started');
+  logger.info("Scheduler started");
 
   // Process tasks immediately
   processDueTasks(executeTask);
@@ -122,7 +122,7 @@ export function startScheduler(
   // Return cleanup function
   return () => {
     clearInterval(intervalId);
-    logger.info('Scheduler stopped');
+    logger.info("Scheduler stopped");
   };
 }
 
