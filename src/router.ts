@@ -31,7 +31,7 @@ export function formatMessages(messages: DbMessage[]): string {
   return messages.map(msg => {
     const timeStr = dateFormatter.format(msg.timestamp);
     
-    return `[${timeStr}] ${msg.senderName}: ${msg.text}`;
+    return `[${timeStr}] ${msg.sender_name}: ${msg.text}`;
   }).join('\n');
 }
 
