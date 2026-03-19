@@ -57,9 +57,6 @@ export class Dispatcher {
                 const retryText = `系统指令执行异常。原因：${report.reason}。修复建议：${report.suggestion}。请基于此建议重新生成并执行正确的指令。`;
 
                 await channel.sendChatAction(chatId, 'typing');
-                // 这里需要集成模型调用
-                // const retryResult = await geminiChat(chatId, retryText);
-                // return this.dispatch({ ...event, text: retryResult.text }, context, retryCount + 1);
             }
 
             // 根据工具定义决定是否收录上下文
@@ -77,30 +74,6 @@ export class Dispatcher {
 
             // 使用统一 ToolRegistry 的工具定义
             const tools = toolRegistry.getToolsForLLM();
-            // 这里需要集成模型调用
-            // const aiResult = await geminiChat(chatId, text, tools);
-
-            // if (aiResult.functionCall) {
-            //     const fnName = aiResult.functionCall.name;
-            //     const fnArgs = aiResult.functionCall.args;
-
-            //     // 按需加载/技能映射感叹输出
-            //     const loadingMsg = `⏳ *[按需加载]* 我将调用 \`${fnName}\` 技能为您执行任务，正在准备上下文...`;
-            //     await channel.send(chatId, loadingMsg, { parse_mode: 'Markdown' });
-                
-            //     await channel.send(chatId, `⚙️ *[系统执行]* 启动后台技能工具：\`${fnName}\``, { parse_mode: 'Markdown' });
-
-            //     // 统一使用 ToolRegistry 执行 Function Calling
-            //     let funcResult = await toolRegistry.executeByName(fnName, fnArgs, execContext);
-
-            //     // 将执行结果包装回填给 LLM
-            //     sessionManager.appendFunctionResponse(chatId, fnName, funcResult);
-
-            //     // 递归：让 LLM 根据函数的返回生成最终文本
-            //     return this.dispatch({ ...event, text: { type: 'function_response', name: fnName, content: funcResult } }, context, retryCount + 1);
-            // }
-
-            // reply = aiResult?.text || '';
 
             // 后置钩子：无感安装技能拦截 (向后兼容旧的指令生成模式)
             const installMatch = reply.match(/\/install\s+(https:\/\/github\.com[^\s]+)/);
