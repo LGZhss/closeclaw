@@ -96,7 +96,8 @@ async function executeCliAnything(prompt, workDir, timeout) {
     /format/,
     /del\s+\/s/,
     /shutdown/,
-    /reboot/
+    /reboot/,
+    /[;&|<>$\`\n]/
   ];
   
   for (const pattern of dangerousPatterns) {

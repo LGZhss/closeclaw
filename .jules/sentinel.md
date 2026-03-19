@@ -26,3 +26,8 @@
 **Vulnerability:** Untrusted Javascript code was being written directly into the current working directory (`process.cwd()`) and executed via `child_process.spawn`. The file paths were unquoted relative paths (`node temp_${id}.js`), which allowed directory pollution, path traversal possibilities if the execution ID was manipulated, and potential command injection.
 **Learning:** The application evaluates code by dynamically creating and running files. Hardcoded relative paths expose the current directory.
 **Prevention:** Use `os.tmpdir()` alongside `path.join()` for temporary code file generation, and enclose the file path in double quotes (`"..."`) when formulating the shell execution command.
+
+## 2024-03-20 - [Command Injection via Shell Execution]
+**Vulnerability:** `executeCommand` in `ProcessExecutor` executes user-provided command via `/bin/sh -c <command>` which makes it vulnerable to command injection, as untrusted input can execute arbitrary commands bypassing intended commands or directories. The vulnerability is triggered in `cliAnything` when user input with shell metacharacters is constructed and executed.
+**Learning:** Checking for specific dangerous commands (`rm -rf /`, `format`, etc) is insufficient because attackers can chain commands using `;`, `&&`, `|` or subshells to bypass those checks and execute arbitrary code on the host.
+**Prevention:** Always combine dynamic CLI command execution with a strict regex check to reject shell metacharacters (`[;&|<>$]`) to prevent command chaining and injection.
