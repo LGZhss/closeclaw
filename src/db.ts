@@ -375,6 +375,7 @@ export function updateTask(
 
   values.push(taskId);
   const stmt = db.prepare(
+    // deepcode ignore SqlInjection: fields array is hardcoded above to strict strings
     `UPDATE scheduled_tasks SET ${fields.join(", ")} WHERE id = ?`,
   );
   stmt.run(...values);
