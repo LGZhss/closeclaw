@@ -87,7 +87,10 @@ export class ProcessExecutor {
    * 底层进程执行抽象，安全地传递参数
    * @private
    */
-  _executeProcess(cmd, args, options, executionId, originalCommand = '') {
+  _executeProcess(cmd, args, options, executionId = null, originalCommand = '') {
+    if (!executionId) {
+      executionId = `exec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    }
     const timeout = options.timeout || config.sandbox.timeout;
     const cwd = options.cwd || process.cwd();
     const displayCmd = originalCommand || `${cmd} ${args.join(' ')}`;
