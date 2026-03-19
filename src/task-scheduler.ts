@@ -1,4 +1,4 @@
-import cronParser from 'cron-parser';
+import * as cronParser from 'cron-parser';
 import { getDueTasks, updateTaskNextRun, insertTaskLog } from './db.js';
 import { logger } from './logger.js';
 import { ScheduledTask } from './types.js';
@@ -11,7 +11,7 @@ export function calculateNextRun(task: ScheduledTask): Date | null {
   try {
     switch (task.schedule_type) {
       case 'cron':
-        const interval = cronParser.parseExpression(task.schedule_value);
+        const interval = cronParser.CronExpressionParser.parse(task.schedule_value);
         return interval.next().toDate();
 
       case 'interval':
@@ -131,7 +131,7 @@ export function startScheduler(
  */
 export function validateCronExpression(expression: string): boolean {
   try {
-    cronParser.parseExpression(expression);
+    cronParser.CronExpressionParser.parse(expression);
     return true;
   } catch {
     return false;
