@@ -206,6 +206,10 @@ export class ToolRegistry {
     try {
       const { channel, chatId } = context;
 
+      if (!/^https?:\/\/[a-zA-Z0-9_\-\.\/]+$/.test(repoUrl)) {
+        return '❌ 非法的 URL 格式，存在安全风险';
+      }
+
       await execAsync(`git clone "${repoUrl}" "${targetPath}"`);
       if (channel && chatId) {
         await channel.send(chatId, `📦 *[1/3]* 源码克隆完成，正在检查依赖...`, { parse_mode: 'Markdown' });
