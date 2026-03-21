@@ -18,6 +18,7 @@ import { getMemoryReport } from '../../utils/memoryManager.js';
 import { cliAnything } from './cliAnything.js';
 import fs from 'fs/promises';
 import path from 'path';
+import { sandboxManager } from '../sandbox/sandboxManager.js';
 
 export class ToolRegistry {
   constructor() {
@@ -168,7 +169,12 @@ export class ToolRegistry {
 
   async execCommand({ command }, context) {
     if (!command) return '用法：/exec <PowerShell命令>';
-    return await executeSystemCommand(command);
+    try {
+      const result = await sandboxManager.executeCommand(command);
+      return result.stdout || result.stderr || '命令执行完成（无输出）';
+    } catch (error) {
+      return `❌ 命令执行失败: ${error.message}`;
+    }
   }
 
   async readFile({ filePath }, context) {
