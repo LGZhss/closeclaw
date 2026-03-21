@@ -38,6 +38,7 @@
 | **iFlow CLI** | iflow-cli | GLM-4.7, iFlow-ROME-30BA3B, DeepSeek-V3.2, GLM-5, Qwen3-Coder-Plus, Kimi-K2-Thinking, MiniMax-M2.5, Kimi-K2.5, Kimi-K2-0905 | 2026-03-14 |
 | **Zed** | zed | Gemini 3.1 Pro, Gemini 3 Pro, Gemini 3 Flash, Grok 4, Grok 4 Fast, Grok Code Fast 1, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5, GPT-5.4 Latest, GPT-5.3-Codex, GPT-5.2, GPT-5.2-Codex, GPT-5 mini | 2026-03-17 |
 | **CodeArts** | codearts | GLM-4.7, GLM-5, DeepSeek-V3.2, GLM-4.7-SFT-ARKTS | 2026-03-21 |
+| **CodeFlicker** | codeflicker | KAT-Coder-Pro V1, GLM-5, GLM-4.7, GPT-5.2, MiniMax M2.7, Kimi K2.5, MiniMax M2.5, MiniMax M2.1, DeepSeek-V3.2 | 2026-03-21 |
 
 ---
 
