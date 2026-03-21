@@ -8,6 +8,7 @@ import type {
   Session,
   RouterState,
   DbMessage,
+  TaskRunLog,
 } from "./types.js";
 
 // Ensure store directory exists
@@ -181,12 +182,15 @@ export function getMessagesSince(
 }
 
 // Registered groups operations
+let setRegisteredGroupStmt: ReturnType<typeof db.prepare>;
 export function setRegisteredGroup(jid: string, group: RegisteredGroup): void {
-  const stmt = db.prepare(`
-    INSERT OR REPLACE INTO registered_groups (jid, name, folder, channel, trigger, is_main, added_at, container_config)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `);
-  stmt.run(
+  if (!setRegisteredGroupStmt) {
+    setRegisteredGroupStmt = db.prepare(`
+      INSERT OR REPLACE INTO registered_groups (jid, name, folder, channel, trigger, is_main, added_at, container_config)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+  }
+  (setRegisteredGroupStmt as any).run(
     jid,
     group.name,
     group.folder,
@@ -236,9 +240,14 @@ export function getRegisteredGroupByFolder(
   } as RegisteredGroup;
 }
 
+let getAllRegisteredGroupsStmt: ReturnType<typeof db.prepare>;
 export function getAllRegisteredGroups(): RegisteredGroup[] {
-  const stmt = db.prepare("SELECT * FROM registered_groups ORDER BY added_at");
-  const rows = stmt.all() as any[];
+  if (!getAllRegisteredGroupsStmt) {
+    getAllRegisteredGroupsStmt = db.prepare(
+      "SELECT * FROM registered_groups ORDER BY added_at",
+    );
+  }
+  const rows = (getAllRegisteredGroupsStmt as any).all() as any[];
   return rows.map((row) => ({
     ...row,
     isMain: row.is_main === 1,
@@ -248,16 +257,24 @@ export function getAllRegisteredGroups(): RegisteredGroup[] {
   })) as RegisteredGroup[];
 }
 
+let deleteRegisteredGroupStmt: ReturnType<typeof db.prepare>;
 export function deleteRegisteredGroup(jid: string): void {
-  const stmt = db.prepare("DELETE FROM registered_groups WHERE jid = ?");
-  stmt.run(jid);
+  if (!deleteRegisteredGroupStmt) {
+    deleteRegisteredGroupStmt = db.prepare(
+      "DELETE FROM registered_groups WHERE jid = ?",
+    );
+  }
+  deleteRegisteredGroupStmt.run(jid);
 }
 
+let getMainGroupStmt: ReturnType<typeof db.prepare>;
 export function getMainGroup(): RegisteredGroup | null {
-  const stmt = db.prepare(
-    "SELECT * FROM registered_groups WHERE is_main = 1 LIMIT 1",
-  );
-  const row = stmt.get() as any;
+  if (!getMainGroupStmt) {
+    getMainGroupStmt = db.prepare(
+      "SELECT * FROM registered_groups WHERE is_main = 1 LIMIT 1",
+    );
+  }
+  const row = (getMainGroupStmt as any).get() as any;
   if (!row) return null;
 
   return {
@@ -270,12 +287,15 @@ export function getMainGroup(): RegisteredGroup | null {
 }
 
 // Scheduled tasks operations
+let insertTaskStmt: ReturnType<typeof db.prepare>;
 export function insertTask(task: Omit<ScheduledTask, "id">): number {
-  const stmt = db.prepare(`
-    INSERT INTO scheduled_tasks (group_folder, prompt, schedule_type, schedule_value, is_paused, created_at, next_run_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `);
-  return stmt.run(
+  if (!insertTaskStmt) {
+    insertTaskStmt = db.prepare(`
+      INSERT INTO scheduled_tasks (group_folder, prompt, schedule_type, schedule_value, is_paused, created_at, next_run_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `);
+  }
+  return (insertTaskStmt as any).run(
     task.group_folder,
     task.prompt,
     task.schedule_type,
@@ -286,55 +306,70 @@ export function insertTask(task: Omit<ScheduledTask, "id">): number {
   ).lastInsertRowid as number;
 }
 
+let getDueTasksStmt: ReturnType<typeof db.prepare>;
 export function getDueTasks(now: Date): ScheduledTask[] {
-  const stmt = db.prepare(`
-    SELECT * FROM scheduled_tasks 
-    WHERE is_paused = 0 
-    AND next_run_at IS NOT NULL 
-    AND next_run_at <= ?
-    ORDER BY next_run_at ASC
-  `);
-  const rows = stmt.all(now.toISOString()) as any[];
+  if (!getDueTasksStmt) {
+    getDueTasksStmt = db.prepare(`
+      SELECT * FROM scheduled_tasks
+      WHERE is_paused = 0
+      AND next_run_at IS NOT NULL
+      AND next_run_at <= ?
+      ORDER BY next_run_at ASC
+    `);
+  }
+  const rows = (getDueTasksStmt as any).all(now.toISOString()) as any[];
   return rows.map((row) => ({
     ...row,
     is_paused: row.is_paused === 1,
   })) as ScheduledTask[];
 }
 
+let updateTaskNextRunStmt: ReturnType<typeof db.prepare>;
 export function updateTaskNextRun(taskId: number, nextRunAt: string): void {
-  const stmt = db.prepare(`
-    UPDATE scheduled_tasks 
-    SET next_run_at = ?, last_run_at = datetime('now')
-    WHERE id = ?
-  `);
-  stmt.run(nextRunAt, taskId);
+  if (!updateTaskNextRunStmt) {
+    updateTaskNextRunStmt = db.prepare(`
+      UPDATE scheduled_tasks
+      SET next_run_at = ?, last_run_at = datetime('now')
+      WHERE id = ?
+    `);
+  }
+  (updateTaskNextRunStmt as any).run(nextRunAt, taskId);
 }
 
+let getTasksByGroupStmt: ReturnType<typeof db.prepare>;
 export function getTasksByGroup(groupFolder: string): ScheduledTask[] {
-  const stmt = db.prepare(
-    "SELECT * FROM scheduled_tasks WHERE group_folder = ? ORDER BY created_at",
-  );
-  const rows = stmt.all(groupFolder) as any[];
+  if (!getTasksByGroupStmt) {
+    getTasksByGroupStmt = db.prepare(
+      "SELECT * FROM scheduled_tasks WHERE group_folder = ? ORDER BY created_at",
+    );
+  }
+  const rows = (getTasksByGroupStmt as any).all(groupFolder) as any[];
   return rows.map((row) => ({
     ...row,
     is_paused: row.is_paused === 1,
   })) as ScheduledTask[];
 }
 
+let getAllTasksStmt: ReturnType<typeof db.prepare>;
 export function getAllTasks(): ScheduledTask[] {
-  const stmt = db.prepare(
-    "SELECT * FROM scheduled_tasks ORDER BY group_folder, created_at",
-  );
-  const rows = stmt.all() as any[];
+  if (!getAllTasksStmt) {
+    getAllTasksStmt = db.prepare(
+      "SELECT * FROM scheduled_tasks ORDER BY group_folder, created_at",
+    );
+  }
+  const rows = (getAllTasksStmt as any).all() as any[];
   return rows.map((row) => ({
     ...row,
     is_paused: row.is_paused === 1,
   })) as ScheduledTask[];
 }
 
+let getTaskStmt: ReturnType<typeof db.prepare>;
 export function getTask(taskId: number): ScheduledTask | null {
-  const stmt = db.prepare("SELECT * FROM scheduled_tasks WHERE id = ?");
-  const row = stmt.get(taskId) as any;
+  if (!getTaskStmt) {
+    getTaskStmt = db.prepare("SELECT * FROM scheduled_tasks WHERE id = ?");
+  }
+  const row = (getTaskStmt as any).get(taskId) as any;
   if (!row) return null;
 
   return {
@@ -381,18 +416,24 @@ export function updateTask(
   stmt.run(...values);
 }
 
+let deleteTaskStmt: ReturnType<typeof db.prepare>;
 export function deleteTask(taskId: number): void {
-  const stmt = db.prepare("DELETE FROM scheduled_tasks WHERE id = ?");
-  stmt.run(taskId);
+  if (!deleteTaskStmt) {
+    deleteTaskStmt = db.prepare("DELETE FROM scheduled_tasks WHERE id = ?");
+  }
+  (deleteTaskStmt as any).run(taskId);
 }
 
 // Task run logs operations
+let insertTaskLogStmt: ReturnType<typeof db.prepare>;
 export function insertTaskLog(log: Omit<TaskRunLog, "id">): number {
-  const stmt = db.prepare(`
-    INSERT INTO task_run_logs (task_id, started_at, completed_at, result, error)
-    VALUES (?, ?, ?, ?, ?)
-  `);
-  return stmt.run(
+  if (!insertTaskLogStmt) {
+    insertTaskLogStmt = db.prepare(`
+      INSERT INTO task_run_logs (task_id, started_at, completed_at, result, error)
+      VALUES (?, ?, ?, ?, ?)
+    `);
+  }
+  return (insertTaskLogStmt as any).run(
     log.task_id,
     log.started_at,
     log.completed_at || null,
@@ -401,42 +442,61 @@ export function insertTaskLog(log: Omit<TaskRunLog, "id">): number {
   ).lastInsertRowid as number;
 }
 
+let getTaskLogsStmt: ReturnType<typeof db.prepare>;
 export function getTaskLogs(taskId: number): TaskRunLog[] {
-  const stmt = db.prepare(
-    "SELECT * FROM task_run_logs WHERE task_id = ? ORDER BY started_at DESC",
-  );
-  return stmt.all(taskId) as TaskRunLog[];
+  if (!getTaskLogsStmt) {
+    getTaskLogsStmt = db.prepare(
+      "SELECT * FROM task_run_logs WHERE task_id = ? ORDER BY started_at DESC",
+    );
+  }
+  return (getTaskLogsStmt as any).all(taskId) as TaskRunLog[];
 }
 
 // Session operations
+let setSessionStmt: ReturnType<typeof db.prepare>;
 export function setSession(groupFolder: string, sessionId: string): void {
-  const stmt = db.prepare(`
-    INSERT OR REPLACE INTO sessions (group_folder, session_id, updated_at)
-    VALUES (?, ?, datetime('now'))
-  `);
-  stmt.run(groupFolder, sessionId);
+  if (!setSessionStmt) {
+    setSessionStmt = db.prepare(`
+      INSERT OR REPLACE INTO sessions (group_folder, session_id, updated_at)
+      VALUES (?, ?, datetime('now'))
+    `);
+  }
+  (setSessionStmt as any).run(groupFolder, sessionId);
 }
 
+let getSessionStmt: ReturnType<typeof db.prepare>;
 export function getSession(groupFolder: string): Session | null {
-  const stmt = db.prepare("SELECT * FROM sessions WHERE group_folder = ?");
-  return stmt.get(groupFolder) as Session | null;
+  if (!getSessionStmt) {
+    getSessionStmt = db.prepare(
+      "SELECT * FROM sessions WHERE group_folder = ?",
+    );
+  }
+  return (getSessionStmt as any).get(groupFolder) as Session | null;
 }
 
 // Router state operations
+let setRouterStateStmt: ReturnType<typeof db.prepare>;
 export function setRouterState(
   groupFolder: string,
   lastMessageId: number,
 ): void {
-  const stmt = db.prepare(`
-    INSERT OR REPLACE INTO router_state (group_folder, last_agent_message_id, updated_at)
-    VALUES (?, ?, datetime('now'))
-  `);
-  stmt.run(groupFolder, lastMessageId);
+  if (!setRouterStateStmt) {
+    setRouterStateStmt = db.prepare(`
+      INSERT OR REPLACE INTO router_state (group_folder, last_agent_message_id, updated_at)
+      VALUES (?, ?, datetime('now'))
+    `);
+  }
+  (setRouterStateStmt as any).run(groupFolder, lastMessageId);
 }
 
+let getRouterStateStmt: ReturnType<typeof db.prepare>;
 export function getRouterState(groupFolder: string): RouterState | null {
-  const stmt = db.prepare("SELECT * FROM router_state WHERE group_folder = ?");
-  return stmt.get(groupFolder) as RouterState | null;
+  if (!getRouterStateStmt) {
+    getRouterStateStmt = db.prepare(
+      "SELECT * FROM router_state WHERE group_folder = ?",
+    );
+  }
+  return (getRouterStateStmt as any).get(groupFolder) as RouterState | null;
 }
 
 // Initialize database on module load
