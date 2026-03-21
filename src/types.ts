@@ -97,7 +97,7 @@ export interface ScheduledTask {
   id: number;
   group_folder: string;
   prompt: string;
-  schedule_type: 'cron' | 'interval' | 'once';
+  schedule_type: "cron" | "interval" | "once";
   schedule_value: string;
   is_paused: boolean;
   created_at: string;
