@@ -1,5 +1,4 @@
-import { pino } from "pino";
-import { GROUPS_DIR } from "./config.js";
+import { pino } from 'pino';
 
 export const logger = pino({
   transport: {
@@ -20,9 +19,11 @@ export const logLevels = {
   FATAL: 50,
 };
 
-export function log(message: string, level: keyof typeof logLevels = "INFO") {
-  const logLevel = logLevels[level] || logLevels.INFO;
-  logger[level.toLowerCase() as keyof typeof logger]({ msg: message });
+export function log(message: string, level: keyof typeof logLevels = 'INFO') {
+  const logMethod = level.toLowerCase() as 'info' | 'warn' | 'error' | 'debug';
+  if (typeof logger[logMethod] === 'function') {
+    (logger[logMethod] as (msg: string) => void)(message);
+  }
 }
 
 export function groupLog(

@@ -17,7 +17,7 @@ interface QueueItem {
 export class GroupQueue {
   private groupQueues = new Map<string, QueueItem[]>();
   private groupProcessing = new Map<string, boolean>();
-  private activeContainers = 0;
+  private activeAgents = 0;
   private waitingQueue: QueueItem[] = [];
 
   constructor(private maxConcurrent: number = MAX_CONCURRENT_CONTAINERS) {}
@@ -64,10 +64,8 @@ export class GroupQueue {
     }
 
     // Check global concurrency limit
-    if (this.activeContainers >= this.maxConcurrent) {
-      logger.debug(
-        `Concurrency limit reached (${this.activeContainers}/${this.maxConcurrent})`,
-      );
+    if (this.activeAgents >= this.maxConcurrent) {
+      logger.debug(`Concurrency limit reached (${this.activeAgents}/${this.maxConcurrent})`);
       return;
     }
 
@@ -81,22 +79,20 @@ export class GroupQueue {
       return;
     }
 
-    // Increment active containers
-    this.activeContainers++;
+    // Increment active agents
+    this.activeAgents++;
 
     try {
-      logger.debug(
-        `Executing task for group: ${groupFolder} (active: ${this.activeContainers})`,
-      );
+      logger.debug(`Executing task for group: ${groupFolder} (active: ${this.activeAgents})`);
       await item.execute();
       item.resolve();
     } catch (error) {
       logger.error(`Task failed for group ${groupFolder}: ${error}`);
       item.reject(error as Error);
     } finally {
-      // Decrement active containers
-      this.activeContainers--;
-
+      // Decrement active agents
+      this.activeAgents--;
+      
       // Mark group as not processing
       this.groupProcessing.set(groupFolder, false);
 
@@ -116,7 +112,7 @@ export class GroupQueue {
       return;
     }
 
-    if (this.activeContainers >= this.maxConcurrent) {
+    if (this.activeAgents >= this.maxConcurrent) {
       return;
     }
 
@@ -137,7 +133,7 @@ export class GroupQueue {
    * Get queue statistics
    */
   getStats(): {
-    activeContainers: number;
+    activeAgents: number;
     maxConcurrent: number;
     groupQueues: Map<string, number>;
     waitingQueue: number;
@@ -148,7 +144,7 @@ export class GroupQueue {
     }
 
     return {
-      activeContainers: this.activeContainers,
+      activeAgents: this.activeAgents,
       maxConcurrent: this.maxConcurrent,
       groupQueues: groupQueueSizes,
       waitingQueue: this.waitingQueue.length,
@@ -162,7 +158,7 @@ export class GroupQueue {
     this.groupQueues.clear();
     this.groupProcessing.clear();
     this.waitingQueue = [];
-    this.activeContainers = 0;
+    this.activeAgents = 0;
   }
 }
 

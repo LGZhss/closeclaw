@@ -33,6 +33,21 @@ Desktop.ini
 *.tmp
 *.temp
 .cache/
+*_temp.*
+temp.*
+*_copy.*
+*_out.*
+
+# Root directory temporary files
+/*.txt
+/*.py
+/*.js
+/*.md
+!README.md
+!RULES.md
+!SECURITY.md
+!CHANGELOG.md
+logs-*.zip
 
 # Runtime data
 store/

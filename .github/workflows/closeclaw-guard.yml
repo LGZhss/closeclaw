@@ -24,162 +24,66 @@ jobs:
       - name: Compliance Check
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_NUMBER: ${{ github.event.pull_request.number || '' }}
           PR_TITLE: ${{ github.event.pull_request.title || '' }}
           PR_BODY: ${{ github.event.pull_request.body || '' }}
           ACTOR: ${{ github.actor }}
           REF_NAME: ${{ github.ref_name }}
-          HEAD_REF: ${{ github.event.pull_request.head.ref || '' }}
         run: |
           echo "======================================"
           echo "CloseClaw Guard — 合规检查"
           echo "触发者: $ACTOR | 分支: $REF_NAME"
           echo "======================================"
 
-          # ── 直接推送到 main：宽松检查 ────────────────────────────────
-          if [ "$REF_NAME" = "main" ]; then
-            COMMIT_MSG=$(git log -30 --pretty=%B)
-            PROPOSAL_ID=$(echo "$COMMIT_MSG" | grep -oi 'proposal-[0-9]\+' | head -1 || true)
-
-            if [ -z "$PROPOSAL_ID" ]; then
-              echo "⚠️  main 直接 push，无提案 ID — 跳过严格审计"
-              exit 0
-            fi
-
-            PROPOSAL_PATH=$(find votes/ -name "${PROPOSAL_ID}*.md" | head -1)
-            if [ -z "$PROPOSAL_PATH" ] || [ ! -f "$PROPOSAL_PATH" ]; then
-              echo "❌ 未找到提案文件：$PROPOSAL_ID"
-              exit 1
-            fi
-
-            if grep -qiE "✅ 已通过|Approved|Passed" "$PROPOSAL_PATH"; then
-              echo "✅ 合规通过：$PROPOSAL_ID 已通过"
-              exit 0
-            fi
-
-            echo "❌ 提案 $PROPOSAL_ID 尚未通过投票"
-            exit 1
+          # 1. 检查是否仅包含文档/配置等非核心变更
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            CHANGED_FILES=$(git diff --name-only origin/main..HEAD)
+          else
+            CHANGED_FILES=$(git diff --name-only HEAD^..HEAD || true)
+          fi
+          
+          NON_CODE_ONLY=true
+          if [ -z "$CHANGED_FILES" ]; then
+            NON_CODE_ONLY=false
+          else
+            for file in $CHANGED_FILES; do
+              if [[ ! $file =~ ^(docs/|.*\.md$|\.gitignore$|\.env\.example$|votes/) ]]; then
+                NON_CODE_ONLY=false
+                break
+              fi
+            done
           fi
 
-          # ── Pull Request ──────────────────────────────────────────────
-          COMMIT_MSGS=$(git log origin/main..HEAD --pretty=%B 2>/dev/null || true)
-          SEARCH_TEXT="$PR_TITLE $PR_BODY $COMMIT_MSGS"
-          PROPOSAL_ID=$(echo "$SEARCH_TEXT" | grep -oi 'proposal-[0-9]\+' | head -1 || true)
-
-          # ── Jules Bot PR：自动生成提案并立即特批 ──────────────────────
-          if [ -z "$PROPOSAL_ID" ] && echo "$ACTOR" | grep -qi "jules"; then
-            echo "🤖 Jules Bot PR #${PR_NUMBER} — 自动生成提案并特批..."
-
-            LAST_NUM=$(ls votes/proposal-[0-9]*.md 2>/dev/null \
-              | grep -oE 'proposal-[0-9]+' \
-              | grep -oE '[0-9]+' \
-              | sort -n | tail -1 || echo "0")
-            NEW_NUM=$(printf "%03d" $((LAST_NUM + 1)))
-            NEW_ID="proposal-${NEW_NUM}"
-            TODAY=$(date -u +%Y-%m-%d)
-            PROPOSAL_FILE="votes/${NEW_ID}-auto-jules-pr${PR_NUMBER}.md"
-
-            if echo "$PR_TITLE" | grep -qiE "CRITICAL|核心|重大|架构"; then
-              LEVEL="二级"
-            else
-              LEVEL="一级（简单类）"
-            fi
-
-            cat > "$PROPOSAL_FILE" << PROPOSAL_TEMPLATE
-# 自动生成提案：${PR_TITLE}
-
-> **提案 ID**: ${NEW_ID}
-> **提案级别**: ${LEVEL}
-> **发起者**: Jules Cloud Agent（CI 自动生成）
-> **关联 PR**: #${PR_NUMBER}
-> **发起日期**: ${TODAY}
-> **状态**: ✅ 已通过（用户特批）
-
----
-
-## 📋 提案背景
-
-本提案由 CloseClaw Guard 在 Jules Bot 创建 PR #${PR_NUMBER} 时自动生成。
-
-**PR 标题**: ${PR_TITLE}
-
-**PR 描述**:
-${PR_BODY}
-
----
-
-## 🛠️ 修改说明
-
-详见 PR #${PR_NUMBER} 的代码变更。
-
----
-
-## 🗳️ 协作主体投票
-
-| 协作主体 | 态度 | 得分 | 备注 |
-| :--- | :--- | :--- | :--- |
-| Jules（自动） | ✅ 赞同 | +1 | 发起者 |
-
----
-
-## 👤 用户投票
-
-| 用户 | 态度 | 得分 | 备注 |
-| :--- | :--- | :--- | :--- |
-| LGZhss | ✅ 赞同 | +13 | n=26，PR 合并即为最终审核，自动特批 |
-
----
-
-## 📌 特批记录
-
-- **特批日期**: ${TODAY}
-- **特批方式**: CI 自动特批，用户在 PR 合并环节完成人工审核
-- **关联 PR**: #${PR_NUMBER}
-
-> **最终决议**: ✅ 已通过（用户特批）
-PROPOSAL_TEMPLATE
-
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add "$PROPOSAL_FILE"
-            git commit -m "auto(ci): generate and approve ${NEW_ID} for Jules PR #${PR_NUMBER}
-
-Proposal-By: Jules Cloud Agent
-Implemented-By: Jules Cloud Agent"
-            git push origin HEAD:"$HEAD_REF"
-
-            gh pr comment "$PR_NUMBER" --body "## ✅ CloseClaw Guard — 提案已自动生成并特批
-
-**提案文件**：\`${PROPOSAL_FILE}\`
-**提案 ID**：\`${NEW_ID}\`
-
-Jules Bot PR 已通过自动合规检查。
-代码审核请在 PR 合并界面完成。
-
----
-*由 CloseClaw Guard 自动生成 · 遵循 [RULES.md](../blob/main/RULES.md)*" || true
-
-            echo "✅ 提案 $NEW_ID 已自动生成并特批，Guard 通过"
+          if [ "$NON_CODE_ONLY" = "true" ]; then
+            echo "✅ 仅包含文档、提案或非核心配置变更，跳过严格审计。"
             exit 0
           fi
 
-          # ── 常规 PR：必须有提案 ID ────────────────────────────────────
+          # 2. 提取提案 ID
+          COMMIT_MSGS=$(git log origin/main..HEAD --pretty=%B 2>/dev/null || git log -1 --pretty=%B)
+          SEARCH_TEXT="$PR_TITLE $PR_BODY $COMMIT_MSGS"
+          PROPOSAL_ID=$(echo "$SEARCH_TEXT" | grep -oi 'proposal-[0-9]\+' | head -1 || true)
+
           if [ -z "$PROPOSAL_ID" ]; then
-            echo "❌ 未找到提案 ID。请在 PR 标题、描述或 commit message 中包含 'proposal-xxx'"
+            if [ "$REF_NAME" = "main" ]; then
+              echo "⚠️  main 分支直接推送且无提案 ID，审计通过。"
+              exit 0
+            fi
+            echo "❌ 错误：未在提交信息或 PR 中找到提案 ID (例如 proposal-001)。"
+            echo "根据 RULES.md，所有代码变更必须关联一个已通过的提案。"
             exit 1
           fi
 
+          # 3. 验证提案状态
           PROPOSAL_PATH=$(find votes/ -name "${PROPOSAL_ID}*.md" | head -1)
           if [ -z "$PROPOSAL_PATH" ] || [ ! -f "$PROPOSAL_PATH" ]; then
-            echo "❌ 未找到提案文件：$PROPOSAL_ID（votes/ 目录中无匹配文件）"
+            echo "❌ 错误：未找到提案文件：$PROPOSAL_ID"
             exit 1
           fi
 
           echo "📄 找到提案文件：$PROPOSAL_PATH"
-
           if ! grep -qiE "✅ 已通过|Approved|Passed" "$PROPOSAL_PATH"; then
-            echo "❌ 提案 $PROPOSAL_ID 尚未通过投票"
+            echo "❌ 错误：提案 $PROPOSAL_ID 尚未通过投票（状态需为 ✅ 已通过）。"
             exit 1
           fi
 
-          echo "✅ 合规检查通过：$PROPOSAL_ID 已通过审批"
+          echo "✅ 合规检查通过：$PROPOSAL_ID 已审核通过。"
