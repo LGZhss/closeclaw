@@ -2,15 +2,18 @@
  * 协作主体 (Subject) 抽象适配器
  * 用于将外部生态集成到 CloseClaw 的投票系统中。
  */
-import { logger } from '../logger.js';
+import { logger } from "../logger.js";
 export interface SubjectAction {
-  type: 'proposal' | 'vote' | 'comment';
+  type: "proposal" | "vote" | "comment";
   proposalId?: string;
   content: string;
 }
 
 export abstract class SubjectAdapter {
-  constructor(public id: string, public type: string) {}
+  constructor(
+    public id: string,
+    public type: string,
+  ) {}
 
   /**
    * 拉取该主体的最新行动（如 Jules 的评审意见）
@@ -28,7 +31,7 @@ export abstract class SubjectAdapter {
  */
 export class JulesSubjectAdapter extends SubjectAdapter {
   constructor(id: string) {
-    super(id, 'jules');
+    super(id, "jules");
   }
 
   async pullActions(): Promise<SubjectAction[]> {
@@ -38,7 +41,9 @@ export class JulesSubjectAdapter extends SubjectAdapter {
 
   async syncContext(context: any): Promise<void> {
     // 将 votes/ 下的最新准则与投票状态同步给 Google Jules 上下文
-    logger.debug(`[JulesAdapter] Syncing project context to Jules environment... (Context size: ${JSON.stringify(context).length})`);
+    logger.debug(
+      `[JulesAdapter] Syncing project context to Jules environment... (Context size: ${JSON.stringify(context).length})`,
+    );
   }
 }
 
@@ -47,7 +52,7 @@ export class JulesSubjectAdapter extends SubjectAdapter {
  */
 export class ClaudeCodeSubjectAdapter extends SubjectAdapter {
   constructor(id: string) {
-    super(id, 'claudecode');
+    super(id, "claudecode");
   }
 
   async pullActions(): Promise<SubjectAction[]> {
@@ -56,6 +61,8 @@ export class ClaudeCodeSubjectAdapter extends SubjectAdapter {
   }
 
   async syncContext(context: any): Promise<void> {
-    logger.debug(`[ClaudeCodeAdapter] Pushing context via MCP bridge... (Length: ${JSON.stringify(context).length})`);
+    logger.debug(
+      `[ClaudeCodeAdapter] Pushing context via MCP bridge... (Length: ${JSON.stringify(context).length})`,
+    );
   }
 }

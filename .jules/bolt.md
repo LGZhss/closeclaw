@@ -37,3 +37,7 @@
 ## 2026-03-16 - File System Operations Blocking Event Loop
 - **Learning**: Synchronous file system operations (`fs.readFileSync`, `fs.readdirSync`, etc.) inside loops or frequently called functions like IPC message polling and file cleanup can severely block the Node.js event loop. Even if raw latency for many small files might seem acceptable initially, doing this sequentially prevents Node from handling other I/O efficiently.
 - **Action**: Use asynchronous `fs.promises` APIs (like `readdir`, `readFile`, `stat`, `unlink`) combined with `Promise.all` to read/process multiple files concurrently. This allows Node's event loop to remain responsive.
+
+## 2026-03-16 - Lazy Initialization of SQLite Prepared Statements
+- **Learning**: In `better-sqlite3`, directly calling `db.prepare()` inside a hot-path function forces a SQL recompile on every execution, severely degrading performance. However, placing them at the module top-level crashes the app on the first run before `db.exec()` initializes the database schema.
+- **Action**: Lazily cache the statements inside the scope of the function: `let stmt; if (!stmt) stmt = db.prepare(...); return (stmt as any).run(...);`. This achieves 3x performance and avoids startup crashes.

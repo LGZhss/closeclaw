@@ -1,26 +1,32 @@
-import { getRegisteredGroupByFolder, getMessagesSince, setRouterState, insertMessage, markMessagesProcessed } from './db.js';
-import { Channel, DbMessage, RegisteredGroup } from './types.js';
-import { TRIGGER_PATTERN, ASSISTANT_NAME } from './config.js';
-import { logger } from './logger.js';
+import {
+  getRegisteredGroupByFolder,
+  getMessagesSince,
+  setRouterState,
+  insertMessage,
+  markMessagesProcessed,
+} from "./db.js";
+import { Channel, DbMessage, RegisteredGroup } from "./types.js";
+import { TRIGGER_PATTERN, ASSISTANT_NAME } from "./config.js";
+import { logger } from "./logger.js";
 
 export function escapeXml(s: string): string {
-  if (!s) return '';
+  if (!s) return "";
   return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 // ⚡ Bolt Performance Optimization:
 // Cached Intl.DateTimeFormat instance to avoid the expensive Date.prototype.toLocaleString
 // parsing/instantiation overhead in the hot message formatting path.
 // Expected impact: formatting 1000 messages goes from ~100ms down to ~2ms (>50x speedup).
-const dateFormatter = new Intl.DateTimeFormat('zh-CN', {
-  month: 'short',
-  day: 'numeric',
-  hour: 'numeric',
-  minute: '2-digit',
+const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
+  month: "short",
+  day: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
   hour12: true,
 });
 
@@ -28,11 +34,13 @@ const dateFormatter = new Intl.DateTimeFormat('zh-CN', {
  * Format messages for the agent prompt
  */
 export function formatMessages(messages: DbMessage[]): string {
-  return messages.map(msg => {
-    const timeStr = dateFormatter.format(msg.timestamp);
-    
-    return `[${timeStr}] ${msg.sender_name}: ${msg.text}`;
-  }).join('\n');
+  return messages
+    .map((msg) => {
+      const timeStr = dateFormatter.format(msg.timestamp);
+
+      return `[${timeStr}] ${msg.sender_name}: ${msg.text}`;
+    })
+    .join("\n");
 }
 
 /**
@@ -46,7 +54,10 @@ export function shouldTrigger(message: DbMessage): boolean {
 /**
  * Find the channel that owns a JID
  */
-export function findChannelForJid(jid: string, channels: Channel[]): Channel | null {
+export function findChannelForJid(
+  jid: string,
+  channels: Channel[],
+): Channel | null {
   for (const channel of channels) {
     if (channel.ownsJid(jid)) {
       return channel;
@@ -68,10 +79,10 @@ export function getGroupFolderForJid(jid: string): string | null {
  */
 export function buildAgentPrompt(
   messages: DbMessage[],
-  group: RegisteredGroup
+  group: RegisteredGroup,
 ): string {
   const formattedMessages = formatMessages(messages);
-  
+
   return `You are ${ASSISTANT_NAME}, a helpful AI assistant.
 
 Conversation history:
@@ -85,7 +96,7 @@ Please respond to the latest messages above. Be helpful, concise, and natural.`;
  */
 export async function processGroupMessages(
   groupFolder: string,
-  channels: Channel[]
+  channels: Channel[],
 ): Promise<{ hasMessages: boolean; prompt?: string; channel?: Channel }> {
   try {
     const group = getRegisteredGroupByFolder(groupFolder);
@@ -100,7 +111,7 @@ export async function processGroupMessages(
 
     // Fetch messages since last agent interaction
     const messages = getMessagesSince(groupFolder, lastMessageId);
-    
+
     if (messages.length === 0) {
       return { hasMessages: false };
     }
@@ -109,7 +120,7 @@ export async function processGroupMessages(
     const triggeringMessage = messages.find(shouldTrigger);
     if (!triggeringMessage) {
       // Mark messages as processed but don't trigger agent
-      markMessagesProcessed(messages.map(m => m.id));
+      markMessagesProcessed(messages.map((m) => m.id));
       return { hasMessages: false };
     }
 
@@ -122,15 +133,15 @@ export async function processGroupMessages(
 
     // Update router state to current message
     setRouterState(groupFolder, messages[messages.length - 1].id);
-    
+
     // Mark messages as processed
-    markMessagesProcessed(messages.map(m => m.id));
+    markMessagesProcessed(messages.map((m) => m.id));
 
     // Build prompt with all messages (for context)
     const prompt = buildAgentPrompt(messages, group);
 
     logger.info(`Triggered agent for group: ${groupFolder}`);
-    
+
     return {
       hasMessages: true,
       prompt,
@@ -148,7 +159,7 @@ export async function processGroupMessages(
 export async function sendMessage(
   jid: string,
   text: string,
-  channels: Channel[]
+  channels: Channel[],
 ): Promise<void> {
   const channel = findChannelForJid(jid, channels);
   if (!channel) {

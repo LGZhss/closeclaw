@@ -128,7 +128,9 @@ async function processGroup(groupFolder: string): Promise<void> {
 
       // TODO: Implement agent execution without container
       // Placeholder: send acknowledgment
-      const response = formatResponse("Agent execution is not yet implemented after container removal.");
+      const response = formatResponse(
+        "Agent execution is not yet implemented after container removal.",
+      );
       await result.channel!.sendMessage(result.channel!.name, response);
     } catch (error) {
       logger.error(`Failed to process group ${groupFolder}: ${error}`);
