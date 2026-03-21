@@ -8,6 +8,7 @@ import type {
   Session,
   RouterState,
   DbMessage,
+  TaskRunLog,
 } from "./types.js";
 
 // Ensure store directory exists
@@ -368,7 +369,7 @@ export function getTask(taskId: number): ScheduledTask | null {
   if (!getTaskStmt) {
     getTaskStmt = db.prepare("SELECT * FROM scheduled_tasks WHERE id = ?");
   }
-  const row = getTaskStmt.get(taskId) as any;
+  const row = (getTaskStmt as any).get(taskId) as any;
   if (!row) return null;
 
   return {
@@ -425,7 +426,7 @@ export function deleteTask(taskId: number): void {
 
 // Task run logs operations
 let insertTaskLogStmt: ReturnType<typeof db.prepare>;
-export function insertTaskLog(log: Omit<any, "id">): number {
+export function insertTaskLog(log: Omit<TaskRunLog, "id">): number {
   if (!insertTaskLogStmt) {
     insertTaskLogStmt = db.prepare(`
       INSERT INTO task_run_logs (task_id, started_at, completed_at, result, error)
@@ -442,13 +443,13 @@ export function insertTaskLog(log: Omit<any, "id">): number {
 }
 
 let getTaskLogsStmt: ReturnType<typeof db.prepare>;
-export function getTaskLogs(taskId: number): any[] {
+export function getTaskLogs(taskId: number): TaskRunLog[] {
   if (!getTaskLogsStmt) {
     getTaskLogsStmt = db.prepare(
       "SELECT * FROM task_run_logs WHERE task_id = ? ORDER BY started_at DESC",
     );
   }
-  return (getTaskLogsStmt as any).all(taskId) as any[];
+  return (getTaskLogsStmt as any).all(taskId) as TaskRunLog[];
 }
 
 // Session operations
