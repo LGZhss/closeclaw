@@ -43,33 +43,29 @@ function ensureIpcDirs() {
 /**
  * Write a message to IPC
  */
-export async function writeMessage(message: IPCMessage): Promise<void> {
+export function writeMessage(message: IPCMessage): void {
   ensureIpcDirs();
   const filePath = path.join(MESSAGES_DIR, `${message.id}.json`);
-  await fs.promises.writeFile(filePath, JSON.stringify(message, null, 2));
+  fs.writeFileSync(filePath, JSON.stringify(message, null, 2));
   logger.debug(`IPC message written: ${message.id}`);
 }
 
 /**
  * Read and delete a message from IPC
  */
-export async function readMessage(
-  messageId: string,
-): Promise<IPCMessage | null> {
+export function readMessage(messageId: string): IPCMessage | null {
   const filePath = path.join(MESSAGES_DIR, `${messageId}.json`);
 
-  try {
-    await fs.promises.access(filePath);
-  } catch {
+  if (!fs.existsSync(filePath)) {
     return null;
   }
 
   try {
-    const content = await fs.promises.readFile(filePath, "utf8");
+    const content = fs.readFileSync(filePath, "utf8");
     const message = JSON.parse(content) as IPCMessage;
 
     // Delete the file after reading
-    await fs.promises.unlink(filePath);
+    fs.unlinkSync(filePath);
 
     return message;
   } catch (error) {
@@ -116,11 +112,11 @@ export async function getPendingMessages(): Promise<IPCMessage[]> {
 /**
  * Write a task result to IPC
  */
-export async function writeTaskResult(
+export function writeTaskResult(
   taskId: string,
   result: string,
   error?: string,
-): Promise<void> {
+): void {
   ensureIpcDirs();
   const filePath = path.join(TASKS_DIR, `${taskId}.json`);
 
@@ -135,28 +131,26 @@ export async function writeTaskResult(
     completedAt: Date.now(),
   };
 
-  await fs.promises.writeFile(filePath, JSON.stringify(task, null, 2));
+  fs.writeFileSync(filePath, JSON.stringify(task, null, 2));
   logger.debug(`IPC task result written: ${taskId}`);
 }
 
 /**
  * Read and delete a task result from IPC
  */
-export async function readTaskResult(taskId: string): Promise<IPCTask | null> {
+export function readTaskResult(taskId: string): IPCTask | null {
   const filePath = path.join(TASKS_DIR, `${taskId}.json`);
 
-  try {
-    await fs.promises.access(filePath);
-  } catch {
+  if (!fs.existsSync(filePath)) {
     return null;
   }
 
   try {
-    const content = await fs.promises.readFile(filePath, "utf8");
+    const content = fs.readFileSync(filePath, "utf8");
     const task = JSON.parse(content) as IPCTask;
 
     // Delete the file after reading
-    await fs.promises.unlink(filePath);
+    fs.unlinkSync(filePath);
 
     return task;
   } catch (error) {
@@ -179,20 +173,20 @@ export function watchIPC(
     ignoreInitial: true,
   });
 
-  watcher.on("add", async (filePath) => {
+  watcher.on("add", (filePath) => {
     const fileName = path.basename(filePath);
 
     if (MESSAGES_DIR.includes(filePath) && fileName.endsWith(".json")) {
       // New message
       const messageId = fileName.replace(".json", "");
-      const message = await readMessage(messageId);
+      const message = readMessage(messageId);
       if (message) {
         onMessage(message);
       }
     } else if (TASKS_DIR.includes(filePath) && fileName.endsWith(".json")) {
       // Task result
       const taskId = fileName.replace(".json", "");
-      const task = await readTaskResult(taskId);
+      const task = readTaskResult(taskId);
       if (task) {
         onTaskResult(task);
       }
