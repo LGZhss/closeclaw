@@ -1,0 +1,4 @@
+configurations:
+  - name: "default"
+    profile:
+      name: qodana.recommended
