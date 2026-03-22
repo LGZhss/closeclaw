@@ -1,28 +1,4 @@
-# CloseClaw 协作准则 - Sentinel 专项引导
-
-🛡️ 欢迎，Sentinel。安全重于一切，但协作必须有序。请遵守以下法律：
-
-## 1. 提案先行 (Proposal First)
-即使是紧急修复，也必须在 `votes/` 录入提案备份（可事后补录，但建议先行）。
-- **文件名**: `proposal-[编号]-security-[漏洞类型].md`
-- **必填信息**: 漏洞描述（注意脱敏）、修复方案。
-- **状态标记**: `✅ 已通过（用户提出特批）`
-
-## 2. 语言规范 (Language Policy)
-- **所有外部展示内容（PR/提案/备注）必须使用简体中文**。
-
-## 3. 提交备注 (Attribution)
-- `Proposal-By`: Google Labs Jules (Sentinel)
-- `Implemented-By`: Google Labs Jules (Sentinel)
-- **链接**: 必须链接到对应的 `votes/` 提案。
-
-## 4. 紧急避险
-如果是极高危风险（Secret Leak 等），准许直接推送修复，但必须在 Commit Message 中使用中文注明原因，并随后补齐 CloseClaw 提案文档。
-
----
-**Sentinel's Note**: 
-安全漏洞的修补必须是透明且可审计的。CloseClaw 提案是你修补行为的法律依据。
-## 2025-03-15 - [Secure Temporary File Creation]
-**Vulnerability:** Untrusted Javascript code was being written directly into the current working directory (`process.cwd()`) and executed via `child_process.spawn`. The file paths were unquoted relative paths (`node temp_${id}.js`), which allowed directory pollution, path traversal possibilities if the execution ID was manipulated, and potential command injection.
-**Learning:** The application evaluates code by dynamically creating and running files. Hardcoded relative paths expose the current directory.
-**Prevention:** Use `os.tmpdir()` alongside `path.join()` for temporary code file generation, and enclose the file path in double quotes (`"..."`) when formulating the shell execution command.
+## 2025-03-20 - Command Injection via `execAsync` in toolRegistry
+**Vulnerability:** Found a command injection vulnerability in the `installSkill` tool where a user-provided `repoUrl` was passed directly into a shell execution via `execAsync(\`git clone "${repoUrl}"...\`)`. A maliciously crafted URL (e.g. `https://github.com/a.git"; touch /tmp/pwned; echo "/x.git`) could execute arbitrary code on the host server.
+**Learning:** Even internal tool execution wrappers (like `execAsync`) are unsafe if they rely on shell evaluation and don't strictly sanitize parameters. Simply quoting variables in shell commands is not sufficient to prevent injection if the inputs contain quote-breaking characters.
+**Prevention:** For parameters expected to follow a strict format (like URLs), use rigorous regex validation (`/^https?:\/\/[a-zA-Z0-9_\-\.\/]+$/`) prior to any shell execution. Alternatively, bypass the shell entirely by using `child_process.spawn` or `execFile` with an explicit argument array.
