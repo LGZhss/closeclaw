@@ -70,24 +70,6 @@ export interface RegisteredGroup {
   trigger?: string;
   isMain?: boolean;
   added_at: string;
-  containerConfig?: ContainerConfig;
-}
-
-/**
- * Container configuration for additional mounts
- */
-export interface ContainerConfig {
-  additionalMounts?: MountConfig[];
-  timeout?: number;
-}
-
-/**
- * Mount configuration
- */
-export interface MountConfig {
-  hostPath: string;
-  containerPath: string;
-  readonly?: boolean;
 }
 
 /**

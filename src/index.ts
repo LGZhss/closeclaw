@@ -2,26 +2,28 @@ import {
   Channel,
   ChannelOpts,
   IncomingMessage,
-  RegisteredGroup,
 } from "./types.js";
 import {
   getChannelFactory,
   getRegisteredChannelNames,
 } from "./channels/registry.js";
 import "./channels/index.js"; // Trigger channel self-registration
+import "./adapters/openai.js"; // Trigger adapter self-registration
 import {
   insertMessage,
   getUnprocessedMessages,
   markMessagesProcessed,
   getMainGroup,
   setRegisteredGroup,
+  getRegisteredGroup,
 } from "./db.js";
 import { logger } from "./logger.js";
 import { POLL_INTERVAL, GROUPS_DIR, ASSISTANT_NAME } from "./config.js";
-import { processGroupMessages, sendMessage, formatResponse } from "./router.js";
+import { processGroupMessages, formatResponse } from "./router.js";
 import { groupQueue } from "./group-queue.js";
 import { startScheduler } from "./task-scheduler.js";
 import { ScheduledTask } from "./types.js";
+import { SandboxRunner } from "./agent/sandbox-runner.js";
 
 import { mkdirSync, existsSync } from "fs";
 import path from "path";
@@ -40,16 +42,16 @@ async function handleIncomingMessage(message: IncomingMessage): Promise<void> {
 
     // Store message in database
     const msgId = insertMessage({
-      id: message.id,
+      id: 0, // Will be auto-generated
       channel: message.channel,
-      chatJid: message.chatJid,
-      senderJid: message.senderJid,
-      senderName: message.senderName,
+      chat_jid: message.chatJid,
+      sender_jid: message.senderJid,
+      sender_name: message.senderName,
       text: message.text,
       timestamp: message.timestamp,
-      isGroup: message.isGroup,
+      is_group: message.isGroup,
       group_name: message.groupName,
-      processed: 0,
+      processed: false,
       created_at: new Date().toISOString(),
     });
 
@@ -126,12 +128,26 @@ async function processGroup(groupFolder: string): Promise<void> {
     try {
       logger.info(`Running agent for group: ${groupFolder}`);
 
-      // TODO: Implement agent execution without container
-      // Placeholder: send acknowledgment
-      const response = formatResponse(
-        "Agent execution is not yet implemented after container removal.",
-      );
-      await result.channel!.sendMessage(result.channel!.name, response);
+      // Create SandboxRunner instance
+      const runner = new SandboxRunner('openai');
+      
+      // Build execution context
+      const context = {
+        groupFolder,
+        prompt: result.prompt,
+        channel: result.channel,
+        history: []
+      };
+      
+      // Execute agent
+      const response = await runner.execute(context);
+      
+      // Send response through channel
+      const formattedResponse = formatResponse(response);
+      await result.channel.sendMessage(result.channel.name, formattedResponse);
+      
+      // Cleanup
+      await runner.close();
     } catch (error) {
       logger.error(`Failed to process group ${groupFolder}: ${error}`);
       if (result.channel) {
@@ -161,18 +177,22 @@ function startMessageLoop(): () => void {
       // Group messages by chat_jid
       const groupedMessages = new Map<string, typeof unprocessed>();
       for (const msg of unprocessed) {
-        const existing = groupedMessages.get(msg.chatJid) || [];
+        const existing = groupedMessages.get(msg.chat_jid) || [];
         existing.push(msg);
-        groupedMessages.set(msg.chatJid, existing);
+        groupedMessages.set(msg.chat_jid, existing);
       }
 
       // Process each group
       for (const [chatJid, messages] of groupedMessages.entries()) {
-        // Find the group folder for this chat
-        // This is simplified - in reality you'd look up the group by JID
-        const groupFolder = chatJid; // Simplified for now
+        // Look up the group by chatJid to get the correct folder
+        const group = getRegisteredGroup(chatJid);
+        if (!group) {
+          logger.warn(`No registered group found for chatJid: ${chatJid}`);
+          markMessagesProcessed(messages.map(m => m.id));
+          continue;
+        }
 
-        await processGroup(groupFolder);
+        await processGroup(group.folder);
       }
     } catch (error) {
       logger.error(`Message loop error: ${error}`);
@@ -193,9 +213,24 @@ async function executeScheduledTask(task: ScheduledTask): Promise<void> {
   logger.info(`Executing scheduled task ${task.id}`);
 
   try {
-    // TODO: Implement task execution without container
-    logger.info(`Task ${task.id} prompt: ${task.prompt}`);
-    logger.info(`Task ${task.id} completed (placeholder)`);
+    // Create SandboxRunner instance
+    const runner = new SandboxRunner('openai');
+    
+    // Build execution context (for scheduled tasks, we use a dummy channel)
+    const context = {
+      groupFolder: 'main',
+      prompt: task.prompt,
+      channel: channels[0] || ({} as Channel), // Use first available channel or dummy
+      history: []
+    };
+    
+    // Execute agent
+    const response = await runner.execute(context);
+    
+    logger.info(`Task ${task.id} completed with response: ${response.substring(0, 100)}...`);
+    
+    // Cleanup
+    await runner.close();
   } catch (error) {
     logger.error(`Task ${task.id} execution error: ${error}`);
     throw error;

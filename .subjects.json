@@ -4,7 +4,6 @@
     "collaborators": [
       "Antigravity",
       "Cursor",
-      "Windsurf",
       "PearAI",
       "Trae",
       "Trae-CN",
@@ -30,7 +29,8 @@
       "Zed",
       "CodeFlicker",
       "CodeArts",
-      "CodeRider"
+      "CodeRider",
+      "Junie"
     ],
     "cloud": ["Jules-Bolt", "Jules-Palette", "Jules-Sentinel"]
   },

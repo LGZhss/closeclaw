@@ -24,6 +24,18 @@ logs/
 *.sublime-workspace
 *.sublime-project
 
+# AI IDE assistant folders (统一规则)
+.arts/
+.codeartsdoer/
+.dropstone/
+.joycode/
+.iflow/
+.jules/
+.kiro/
+.lingma/
+.qoder/
+gha-creds-*.json
+
 # OS files
 .DS_Store
 Thumbs.db
@@ -33,6 +45,21 @@ Desktop.ini
 *.tmp
 *.temp
 .cache/
+*_temp.*
+temp.*
+*_copy.*
+*_out.*
+
+# Root directory temporary files
+/*.txt
+/*.py
+/*.js
+/*.md
+!README.md
+!RULES.md
+!SECURITY.md
+!CHANGELOG.md
+logs-*.zip
 
 # Runtime data
 store/
@@ -51,9 +78,4 @@ coverage/
 
 # TypeScript cache
 *.tsbuildinfo
-
-.joycode/
-.iflow/
-.lingma/
-.qoder/
-gha-creds-*.json
+.gitnexus
