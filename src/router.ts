@@ -1,13 +1,7 @@
-import {
-  getRegisteredGroupByFolder,
-  getMessagesSince,
-  setRouterState,
-  insertMessage,
-  markMessagesProcessed,
-} from "./db.js";
-import { Channel, DbMessage, RegisteredGroup } from "./types.js";
-import { TRIGGER_PATTERN, ASSISTANT_NAME } from "./config.js";
-import { logger } from "./logger.js";
+import { getRegisteredGroupByFolder, getMessagesSince, setRouterState, getRouterState, markMessagesProcessed } from './db.js';
+import { Channel, DbMessage, RegisteredGroup } from './types.js';
+import { TRIGGER_PATTERN, ASSISTANT_NAME } from './config.js';
+import { logger } from './logger.js';
 
 export function escapeXml(s: string): string {
   if (!s) return "";
@@ -79,7 +73,7 @@ export function getGroupFolderForJid(jid: string): string | null {
  */
 export function buildAgentPrompt(
   messages: DbMessage[],
-  group: RegisteredGroup,
+  _group: RegisteredGroup
 ): string {
   const formattedMessages = formatMessages(messages);
 
@@ -125,9 +119,9 @@ export async function processGroupMessages(
     }
 
     // Find the owning channel
-    const channel = findChannelForJid(triggeringMessage.chatJid, channels);
+    const channel = findChannelForJid(triggeringMessage.chat_jid, channels);
     if (!channel) {
-      logger.warn(`No channel found for JID: ${triggeringMessage.chatJid}`);
+      logger.warn(`No channel found for JID: ${triggeringMessage.chat_jid}`);
       return { hasMessages: false };
     }
 

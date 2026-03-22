@@ -10,7 +10,27 @@
 
 ## 🚀 快速开始
 
-### 安装
+### 方式一：一键启动（推荐）
+
+**Windows**:
+```bash
+# 开发模式（热重载）
+start-dev.bat
+
+# 生产模式
+start.bat
+```
+
+**Linux/Mac**:
+```bash
+# 开发模式（热重载）
+./start-dev.sh
+
+# 生产模式
+./start.sh
+```
+
+### 方式二：手动安装
 
 ```bash
 git clone <your-repo>/closeclaw.git
@@ -18,25 +38,45 @@ cd closeclaw
 .\scripts\init-dev-dir.ps1    # 初始化环境（Windows）
 ./scripts/init-dev-dir.sh     # 初始化环境（Linux/Mac）
 npm install                   # 安装依赖
-npm start                     # 启动
+npm run dev                   # 开发模式
+# 或
+npm run build && npm start    # 生产模式
 ```
 
 ### 配置
 
 编辑 `.env` 文件：
+
+#### 1. Telegram Bot Token（必需）
 ```bash
-# 免费 API 推荐（无需 Key）
-# OpenRouter 免费模型：NVIDIA Nemotron、Qwen、Gemma、Llama 等 26 种
-# GitHub Models：OpenAI GPT-4o、o1、o3、Phi-4 等 20+ 种
+# 获取方式：与 @BotFather 对话创建 Bot
+TELEGRAM_TOKEN=your-telegram-bot-token-here
+ALLOWED_USER_IDS=your-telegram-user-id
+```
 
-# 配置 API 密钥（可选，用于更多模型）
-GEMINI_API_KEY=...
-OPENROUTER_API_KEY=...  # 访问更多免费模型
-MISTRAL_API_KEY=...     # Mistral AI
-GROQ_API_KEY=...        # Groq 高速推理
+#### 2. LLM API Keys（至少配置一个）
+```bash
+# 推荐：Zhipu AI（免费，中文支持好）
+ZHIPU_API_KEY=your-zhipu-api-key
 
+# 其他免费选项
+OPENROUTER_API_KEY=...  # 350+ 免费模型
+SILICONFLOW_API_KEY=... # DeepSeek 免费
+CEREBRAS_API_KEY=...    # Llama 3.1 免费
+MODELSCOPE_API_KEY=...  # Qwen 系列
+
+# 系统配置
 ASSISTANT_NAME=CloseClaw
-WORKSPACE_DIR=E:\.lgzhssagent\workspace
+WORKSPACE_DIR=E:\.closeclaw\data
+```
+
+#### 3. 验证配置
+```bash
+# 测试 LLM API 可用性
+node scripts/test-llm-apis.js
+
+# 测试 Telegram Bot Token
+node scripts/test-zhipu-api.js
 ```
 
 ---

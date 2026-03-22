@@ -1,21 +1,15 @@
-import Database from "better-sqlite3";
-import path from "path";
-import { STORE_DIR } from "./config.js";
-import { logger } from "./logger.js";
-import type {
-  RegisteredGroup,
-  ScheduledTask,
-  Session,
-  RouterState,
-  DbMessage,
-} from "./types.js";
+import Database, { type Database as DatabaseType } from 'better-sqlite3';
+import path from 'path';
+import { STORE_DIR } from './config.js';
+import { logger } from './logger.js';
+import type { RegisteredGroup, ScheduledTask, Session, RouterState, DbMessage, TaskRunLog } from './types.js';
 
 // Ensure store directory exists
 import { mkdirSync } from "fs";
 mkdirSync(STORE_DIR, { recursive: true });
 
-const DB_PATH = path.join(STORE_DIR, "messages.db");
-const db = new Database(DB_PATH);
+const DB_PATH = path.join(STORE_DIR, 'messages.db');
+const db: DatabaseType = new Database(DB_PATH);
 
 // Enable WAL mode for better concurrency
 db.pragma("journal_mode = WAL");
@@ -47,8 +41,7 @@ function initializeDatabase() {
       channel TEXT NOT NULL,
       trigger TEXT,
       is_main INTEGER NOT NULL DEFAULT 0,
-      added_at TEXT NOT NULL,
-      container_config TEXT
+      added_at TEXT NOT NULL
     );
 
     -- Scheduled tasks table
@@ -183,8 +176,8 @@ export function getMessagesSince(
 // Registered groups operations
 export function setRegisteredGroup(jid: string, group: RegisteredGroup): void {
   const stmt = db.prepare(`
-    INSERT OR REPLACE INTO registered_groups (jid, name, folder, channel, trigger, is_main, added_at, container_config)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT OR REPLACE INTO registered_groups (jid, name, folder, channel, trigger, is_main, added_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `);
   stmt.run(
     jid,
@@ -193,8 +186,7 @@ export function setRegisteredGroup(jid: string, group: RegisteredGroup): void {
     group.channel,
     group.trigger || null,
     group.isMain ? 1 : 0,
-    group.added_at,
-    group.containerConfig ? JSON.stringify(group.containerConfig) : null,
+    group.added_at
   );
 }
 
@@ -210,9 +202,6 @@ export function getRegisteredGroup(jid: string): RegisteredGroup | null {
   return {
     ...row,
     isMain: row.is_main === 1,
-    container_config: row.container_config
-      ? JSON.parse(row.container_config)
-      : undefined,
   } as RegisteredGroup;
 }
 
@@ -230,9 +219,6 @@ export function getRegisteredGroupByFolder(
   return {
     ...row,
     isMain: row.is_main === 1,
-    container_config: row.container_config
-      ? JSON.parse(row.container_config)
-      : undefined,
   } as RegisteredGroup;
 }
 
@@ -242,9 +228,6 @@ export function getAllRegisteredGroups(): RegisteredGroup[] {
   return rows.map((row) => ({
     ...row,
     isMain: row.is_main === 1,
-    container_config: row.container_config
-      ? JSON.parse(row.container_config)
-      : undefined,
   })) as RegisteredGroup[];
 }
 
@@ -263,9 +246,6 @@ export function getMainGroup(): RegisteredGroup | null {
   return {
     ...row,
     isMain: true,
-    container_config: row.container_config
-      ? JSON.parse(row.container_config)
-      : undefined,
   } as RegisteredGroup;
 }
 
