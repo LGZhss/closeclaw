@@ -1,6 +1,26 @@
 import { describe, it, expect, vi } from 'vitest';
-import { routeOutbound, escapeXml, formatMessages } from '../src/router.js';
-import { Channel, DbMessage } from '../src/types.js';
+import { routeOutbound, escapeXml, formatResponse } from '../src/router.js';
+import { Channel } from '../src/types.js';
+import { ASSISTANT_NAME } from '../src/config.js';
+
+describe('formatResponse', () => {
+  it('should prefix response with assistant name', () => {
+    expect(formatResponse('Hello world')).toBe(`${ASSISTANT_NAME}: Hello world`);
+  });
+
+  it('should handle empty string correctly', () => {
+    expect(formatResponse('')).toBe(`${ASSISTANT_NAME}: `);
+  });
+
+  it('should handle whitespace strings', () => {
+    expect(formatResponse('   ')).toBe(`${ASSISTANT_NAME}:    `);
+  });
+
+  it('should handle multiple lines correctly', () => {
+    const multiLine = 'Line 1\nLine 2';
+    expect(formatResponse(multiLine)).toBe(`${ASSISTANT_NAME}: Line 1\nLine 2`);
+  });
+});
 
 describe('escapeXml', () => {
   it('should return empty string for falsy input', () => {
