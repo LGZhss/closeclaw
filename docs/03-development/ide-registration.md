@@ -100,7 +100,7 @@
 ```json
 {
   "subjects": {
-    "engineering": ["Cursor", "Windsurf", "Gemini-CLI"],
+    "engineering": ["Cursor", "Cascade", "Gemini-CLI"],
     "auditors": ["Lingma", "Comate"]
   }
 }

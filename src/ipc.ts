@@ -1,12 +1,11 @@
 import fs from 'fs';
 import path from 'path';
-import { watch } from 'chokidar';
-import { DATA_DIR, IPC_POLL_INTERVAL } from './config.js';
+import { DATA_DIR } from './config.js';
 import { logger } from './logger.js';
 
-const IPC_DIR = path.join(DATA_DIR, 'ipc');
-const MESSAGES_DIR = path.join(IPC_DIR, 'messages');
-const TASKS_DIR = path.join(IPC_DIR, 'tasks');
+const IPC_DIR = path.join(DATA_DIR, "ipc");
+const MESSAGES_DIR = path.join(IPC_DIR, "messages");
+const TASKS_DIR = path.join(IPC_DIR, "tasks");
 
 /**
  * IPC Message structure
@@ -25,7 +24,7 @@ export interface IPCTask {
   id: string;
   groupFolder: string;
   prompt: string;
-  status: 'pending' | 'running' | 'completed' | 'failed';
+  status: "pending" | "running" | "completed" | "failed";
   result?: string;
   error?: string;
   createdAt: number;
@@ -55,18 +54,18 @@ export function writeMessage(message: IPCMessage): void {
  */
 export function readMessage(messageId: string): IPCMessage | null {
   const filePath = path.join(MESSAGES_DIR, `${messageId}.json`);
-  
+
   if (!fs.existsSync(filePath)) {
     return null;
   }
 
   try {
-    const content = fs.readFileSync(filePath, 'utf8');
+    const content = fs.readFileSync(filePath, "utf8");
     const message = JSON.parse(content) as IPCMessage;
-    
+
     // Delete the file after reading
     fs.unlinkSync(filePath);
-    
+
     return message;
   } catch (error) {
     logger.error(`Failed to read IPC message ${messageId}: ${error}`);
@@ -86,11 +85,11 @@ export async function getPendingMessages(): Promise<IPCMessage[]> {
 
     // Process files concurrently to avoid blocking event loop
     const messagePromises = files
-      .filter(file => file.endsWith('.json'))
-      .map(async file => {
+      .filter((file) => file.endsWith(".json"))
+      .map(async (file) => {
         const filePath = path.join(MESSAGES_DIR, file);
         try {
-          const content = await fs.promises.readFile(filePath, 'utf8');
+          const content = await fs.promises.readFile(filePath, "utf8");
           return JSON.parse(content) as IPCMessage;
         } catch (error) {
           logger.warn(`Failed to read IPC message file ${file}: ${error}`);
@@ -112,15 +111,19 @@ export async function getPendingMessages(): Promise<IPCMessage[]> {
 /**
  * Write a task result to IPC
  */
-export function writeTaskResult(taskId: string, result: string, error?: string): void {
+export function writeTaskResult(
+  taskId: string,
+  result: string,
+  error?: string,
+): void {
   ensureIpcDirs();
   const filePath = path.join(TASKS_DIR, `${taskId}.json`);
-  
+
   const task: IPCTask = {
     id: taskId,
-    groupFolder: taskId.split('_')[0], // Extract group folder from task ID
-    prompt: '',
-    status: error ? 'failed' : 'completed',
+    groupFolder: taskId.split("_")[0], // Extract group folder from task ID
+    prompt: "",
+    status: error ? "failed" : "completed",
     result: error ? undefined : result,
     error: error,
     createdAt: Date.now(),
@@ -136,18 +139,18 @@ export function writeTaskResult(taskId: string, result: string, error?: string):
  */
 export function readTaskResult(taskId: string): IPCTask | null {
   const filePath = path.join(TASKS_DIR, `${taskId}.json`);
-  
+
   if (!fs.existsSync(filePath)) {
     return null;
   }
 
   try {
-    const content = fs.readFileSync(filePath, 'utf8');
+    const content = fs.readFileSync(filePath, "utf8");
     const task = JSON.parse(content) as IPCTask;
-    
+
     // Delete the file after reading
     fs.unlinkSync(filePath);
-    
+
     return task;
   } catch (error) {
     logger.error(`Failed to read IPC task result ${taskId}: ${error}`);
@@ -157,44 +160,23 @@ export function readTaskResult(taskId: string): IPCTask | null {
 
 /**
  * Watch IPC directories for changes
+ * 
+ * NOTE: This function is currently a no-op after chokidar removal.
+ * Use pollIPC() instead for checking IPC messages.
+ * 
+ * This function is kept for API compatibility but does not actively watch for changes.
  */
 export function watchIPC(
-  onMessage: (message: IPCMessage) => void,
-  onTaskResult: (task: IPCTask) => void
+  _onMessage: (message: IPCMessage) => void,
+  _onTaskResult: (task: IPCTask) => void
 ): () => void {
   ensureIpcDirs();
-
-  const watcher = watch([MESSAGES_DIR, TASKS_DIR], {
-    persistent: true,
-    ignoreInitial: true,
-  });
-
-  watcher.on('add', (filePath) => {
-    const fileName = path.basename(filePath);
-    
-    if (MESSAGES_DIR.includes(filePath) && fileName.endsWith('.json')) {
-      // New message
-      const messageId = fileName.replace('.json', '');
-      const message = readMessage(messageId);
-      if (message) {
-        onMessage(message);
-      }
-    } else if (TASKS_DIR.includes(filePath) && fileName.endsWith('.json')) {
-      // Task result
-      const taskId = fileName.replace('.json', '');
-      const task = readTaskResult(taskId);
-      if (task) {
-        onTaskResult(task);
-      }
-    }
-  });
-
-  logger.info('IPC watcher started');
-
-  // Return cleanup function
-  return async () => {
-    await watcher.close();
-    logger.info('IPC watcher stopped');
+  
+  logger.warn('IPC watcher is not implemented after chokidar removal. Use pollIPC instead.');
+  
+  // Return no-op cleanup function
+  return () => {
+    logger.info('IPC watcher stopped (no-op)');
   };
 }
 
@@ -203,7 +185,7 @@ export function watchIPC(
  */
 export async function pollIPC(
   onMessage: (message: IPCMessage) => void,
-  onTaskResult: (task: IPCTask) => void
+  _onTaskResult: (task: IPCTask) => void
 ): Promise<void> {
   const messages = await getPendingMessages();
   for (const message of messages) {
@@ -219,31 +201,33 @@ export async function pollIPC(
  */
 export async function cleanupIPC(maxAge: number = 3600000): Promise<void> {
   const now = Date.now();
-  
+
   const dirs = [MESSAGES_DIR, TASKS_DIR];
 
-  await Promise.all(dirs.map(async (dir) => {
-    try {
-      const files = await fs.promises.readdir(dir);
+  await Promise.all(
+    dirs.map(async (dir) => {
+      try {
+        const files = await fs.promises.readdir(dir);
 
-      const cleanupPromises = files
-        .filter(file => file.endsWith('.json'))
-        .map(async file => {
-          const filePath = path.join(dir, file);
-          try {
-            const stats = await fs.promises.stat(filePath);
-            if (now - stats.mtimeMs > maxAge) {
-              await fs.promises.unlink(filePath);
-              logger.debug(`Cleaned up old IPC file: ${file}`);
+        const cleanupPromises = files
+          .filter((file) => file.endsWith(".json"))
+          .map(async (file) => {
+            const filePath = path.join(dir, file);
+            try {
+              const stats = await fs.promises.stat(filePath);
+              if (now - stats.mtimeMs > maxAge) {
+                await fs.promises.unlink(filePath);
+                logger.debug(`Cleaned up old IPC file: ${file}`);
+              }
+            } catch (error) {
+              logger.warn(`Failed to stat IPC file ${file}: ${error}`);
             }
-          } catch (error) {
-            logger.warn(`Failed to stat IPC file ${file}: ${error}`);
-          }
-        });
+          });
 
-      await Promise.all(cleanupPromises);
-    } catch (error) {
-      logger.error(`Failed to cleanup IPC directory ${dir}: ${error}`);
-    }
-  }));
+        await Promise.all(cleanupPromises);
+      } catch (error) {
+        logger.error(`Failed to cleanup IPC directory ${dir}: ${error}`);
+      }
+    }),
+  );
 }
