@@ -1,68 +1,101 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { JulesSubjectAdapter, ClaudeCodeSubjectAdapter } from '../src/adapters/subject-adapter.js';
+import { describe, it, expect, vi } from 'vitest';
+import { SubjectAdapter, SubjectAction, JulesSubjectAdapter, ClaudeCodeSubjectAdapter } from '../src/adapters/subject-adapter.js';
 import { logger } from '../src/logger.js';
 
-// Mock logger to verify it's being called
-vi.mock('../src/logger.js', () => ({
-  logger: {
-    debug: vi.fn(),
-  },
-}));
+class TestSubjectAdapter extends SubjectAdapter {
+  constructor(id: string, type: string) {
+    super(id, type);
+  }
 
-describe('Subject Adapters', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
+  async pullActions(): Promise<SubjectAction[]> {
+    return [{ type: 'proposal', content: 'test content' }];
+  }
+
+  async syncContext(context: any): Promise<void> {
+    // dummy sync
+  }
+}
+
+describe('SubjectAdapter', () => {
+  it('should construct with id and type properly', () => {
+    const adapter = new TestSubjectAdapter('test-id', 'test-type');
+    expect(adapter.id).toBe('test-id');
+    expect(adapter.type).toBe('test-type');
   });
 
-  describe('JulesSubjectAdapter', () => {
-    it('should initialize with correct id and type', () => {
-      const adapter = new JulesSubjectAdapter('jules-1');
-      expect(adapter.id).toBe('jules-1');
-      expect(adapter.type).toBe('jules');
-    });
-
-    it('pullActions should return an empty array and log', async () => {
-      const adapter = new JulesSubjectAdapter('jules-1');
-      const actions = await adapter.pullActions();
-
-      expect(actions).toEqual([]);
-      expect(logger.debug).toHaveBeenCalledWith('[JulesAdapter] Pulling external critique from Jules...');
-    });
-
-    it('syncContext should log the context size', async () => {
-      const adapter = new JulesSubjectAdapter('jules-1');
-      const context = { foo: 'bar', baz: 123 };
-
-      await adapter.syncContext(context);
-
-      const expectedSize = JSON.stringify(context).length;
-      expect(logger.debug).toHaveBeenCalledWith(`[JulesAdapter] Syncing project context to Jules environment... (Context size: ${expectedSize})`);
-    });
+  it('should be able to pull actions', async () => {
+    const adapter = new TestSubjectAdapter('test-id', 'test-type');
+    const actions = await adapter.pullActions();
+    expect(actions).toEqual([{ type: 'proposal', content: 'test content' }]);
   });
 
-  describe('ClaudeCodeSubjectAdapter', () => {
-    it('should initialize with correct id and type', () => {
-      const adapter = new ClaudeCodeSubjectAdapter('claude-1');
-      expect(adapter.id).toBe('claude-1');
-      expect(adapter.type).toBe('claudecode');
-    });
+  it('should be able to sync context', async () => {
+    const adapter = new TestSubjectAdapter('test-id', 'test-type');
+    await expect(adapter.syncContext({ some: 'context' })).resolves.toBeUndefined();
+  });
+});
 
-    it('pullActions should return an empty array and log', async () => {
-      const adapter = new ClaudeCodeSubjectAdapter('claude-1');
-      const actions = await adapter.pullActions();
+describe('JulesSubjectAdapter', () => {
+  it('should set type to jules', () => {
+    const adapter = new JulesSubjectAdapter('jules-id');
+    expect(adapter.id).toBe('jules-id');
+    expect(adapter.type).toBe('jules');
+  });
 
-      expect(actions).toEqual([]);
-      expect(logger.debug).toHaveBeenCalledWith('[ClaudeCodeAdapter] Pulling MCP actions...');
-    });
+  it('should pull actions and return empty array', async () => {
+    const adapter = new JulesSubjectAdapter('jules-id');
 
-    it('syncContext should log the context size', async () => {
-      const adapter = new ClaudeCodeSubjectAdapter('claude-1');
-      const context = { mcp: true, data: [1, 2, 3] };
+    // Mock logger.debug to avoid spamming the console
+    const debugSpy = vi.spyOn(logger, 'debug').mockImplementation(() => {});
 
-      await adapter.syncContext(context);
+    const actions = await adapter.pullActions();
+    expect(actions).toEqual([]);
+    expect(debugSpy).toHaveBeenCalledWith('[JulesAdapter] Pulling external critique from Jules...');
 
-      const expectedSize = JSON.stringify(context).length;
-      expect(logger.debug).toHaveBeenCalledWith(`[ClaudeCodeAdapter] Pushing context via MCP bridge... (Length: ${expectedSize})`);
-    });
+    debugSpy.mockRestore();
+  });
+
+  it('should sync context', async () => {
+    const adapter = new JulesSubjectAdapter('jules-id');
+
+    const debugSpy = vi.spyOn(logger, 'debug').mockImplementation(() => {});
+
+    const context = { key: 'value' };
+    await adapter.syncContext(context);
+    expect(debugSpy).toHaveBeenCalledWith(`[JulesAdapter] Syncing project context to Jules environment... (Context size: ${JSON.stringify(context).length})`);
+
+    debugSpy.mockRestore();
+  });
+});
+
+describe('ClaudeCodeSubjectAdapter', () => {
+  it('should set type to claudecode', () => {
+    const adapter = new ClaudeCodeSubjectAdapter('claude-id');
+    expect(adapter.id).toBe('claude-id');
+    expect(adapter.type).toBe('claudecode');
+  });
+
+  it('should pull actions and return empty array', async () => {
+    const adapter = new ClaudeCodeSubjectAdapter('claude-id');
+
+    const debugSpy = vi.spyOn(logger, 'debug').mockImplementation(() => {});
+
+    const actions = await adapter.pullActions();
+    expect(actions).toEqual([]);
+    expect(debugSpy).toHaveBeenCalledWith('[ClaudeCodeAdapter] Pulling MCP actions...');
+
+    debugSpy.mockRestore();
+  });
+
+  it('should sync context', async () => {
+    const adapter = new ClaudeCodeSubjectAdapter('claude-id');
+
+    const debugSpy = vi.spyOn(logger, 'debug').mockImplementation(() => {});
+
+    const context = { data: 123 };
+    await adapter.syncContext(context);
+    expect(debugSpy).toHaveBeenCalledWith(`[ClaudeCodeAdapter] Pushing context via MCP bridge... (Length: ${JSON.stringify(context).length})`);
+
+    debugSpy.mockRestore();
   });
 });
