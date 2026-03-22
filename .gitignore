@@ -24,6 +24,18 @@ logs/
 *.sublime-workspace
 *.sublime-project
 
+# AI IDE assistant folders (统一规则)
+.arts/
+.codeartsdoer/
+.dropstone/
+.joycode/
+.iflow/
+.jules/
+.kiro/
+.lingma/
+.qoder/
+gha-creds-*.json
+
 # OS files
 .DS_Store
 Thumbs.db
@@ -66,9 +78,3 @@ coverage/
 
 # TypeScript cache
 *.tsbuildinfo
-
-.joycode/
-.iflow/
-.lingma/
-.qoder/
-gha-creds-*.json
