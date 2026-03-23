@@ -1,0 +1,134 @@
+// Copyright 2026 CloseClaw Authors. All rights reserved.
+// CloseClaw Ultra — 三语言异构微内核跨进程通信契约 (P027)
+// syntax = proto3, 向前兼容保留字段 100-199
+
+syntax = "proto3";
+
+package closeclaw.v1;
+
+option go_package = "closeclaw/kernel/proto;clawpb";
+
+// ─────────────────────────────────────────
+// § 1  分布式追踪上下文
+// ─────────────────────────────────────────
+
+// TraceContext 由 Dart 控制层在接收用户消息时生成，
+// 必须透传到所有下游 Go / TS 调用链，形成全链路追踪票据。
+message TraceContext {
+  string trace_id  = 1; // UUID v4，Dart 端生成
+  string span_id   = 2; // 当前操作 span（可选）
+  int64  created_at_ms = 3; // 毫秒时间戳，用于端到端延迟计算
+}
+
+// ─────────────────────────────────────────
+// § 2  核心任务结构
+// ─────────────────────────────────────────
+
+// TaskStatus 对应 src/db.ts scheduled_tasks.is_paused 语义，并扩展了分布式状态
+enum TaskStatus {
+  PENDING  = 0;
+  RUNNING  = 1;
+  DONE     = 2;
+  FAILED   = 3;
+  TIMEOUT  = 4; // Dart 层心跳超时时标记，触发 L2 降级
+  PAUSED   = 5; // 对应 is_paused = 1，沿用 TS 层的调度暂停概念
+}
+
+// Task 携带从 Dart 层下发至 Go 内核的全量业务信息。
+// 字段与 src/types.ts 中 ScheduledTask / DbMessage 保持语义对齐。
+message Task {
+  string      task_id     = 1; // 全局唯一票据（UUID v4）
+  TraceContext trace       = 2; // 分布式追踪上下文，必填
+  string      group_jid   = 3; // 对应 messages.chat_jid / registered_groups.jid
+  string      group_folder = 4; // 对应 registered_groups.folder
+  bytes       payload     = 5; // JSON 序列化的动态参数（工具调用等）
+  TaskStatus  status      = 6;
+  string      schedule_type  = 7;  // "cron" | "interval" | "once"
+  string      schedule_value = 8;  // cron 表达式 / 毫秒数
+  int64       created_at_ms  = 9;
+  int64       next_run_at_ms = 10;
+  // 预留 100-199 用于后续版本字段扩展，避免号码碰撞
+}
+
+// TaskResponse 由 Go 内核返回给 Dart 层，携带执行摘要。
+message TaskResponse {
+  string     task_id  = 1;
+  TaskStatus status   = 2;
+  string     error    = 3; // 仅在 FAILED 时非空
+  int64      elapsed_ms = 4; // 从 Dart 发起到 Go 处理完成的端到端耗时
+}
+
+// StatusUpdate 由 TS 沙盒完成工具调用后发送至 Go，回写结果。
+message StatusUpdate {
+  string     task_id  = 1;
+  string     trace_id = 2;
+  TaskStatus status   = 3;
+  bytes      result   = 4; // 工具调用原始返回 JSON
+  string     error    = 5;
+  int64      completed_at_ms = 6;
+}
+
+// Ack 通用确认回执
+message Ack {
+  bool   ok      = 1;
+  string message = 2;
+}
+
+// ─────────────────────────────────────────
+// § 3  消息通道结构（对应 src/db.ts messages 表）
+// ─────────────────────────────────────────
+
+// IncomingMessage 从 TS Telegram channel 经由 Go 写入 SQLite 后，
+// Dart 可通过 GetPending 接口轮询拉取。
+message IncomingMessage {
+  int64  id           = 1;
+  string channel      = 2; // "telegram" | "whatsapp" etc.
+  string chat_jid     = 3;
+  string sender_jid   = 4;
+  string sender_name  = 5;
+  string text         = 6;
+  int64  timestamp    = 7;
+  bool   is_group     = 8;
+  string group_name   = 9;
+  bool   processed    = 10;
+}
+
+// ─────────────────────────────────────────
+// § 4  心跳 / 降级探活
+// ─────────────────────────────────────────
+
+// HeartbeatRequest 由 Dart 守护进程每 5 秒向 Go 发送。
+// 若超时则 Dart 判定 Go 宕机，触发 L2 降级（npm start）。
+message HeartbeatRequest {
+  string trace_id = 1;
+  int64  sent_at_ms = 2;
+}
+
+// HeartbeatResponse 由 Go 内核实时返回，携带当前负载信息。
+message HeartbeatResponse {
+  bool   ok              = 1;
+  int32  queue_length    = 2; // SQLite WAL 队列中等待执行的任务数
+  int32  active_goroutines = 3;
+  string kernel_version  = 4; // 例如 "0.1.0-phase1"
+  int64  uptime_seconds  = 5;
+}
+
+// ─────────────────────────────────────────
+// § 5  gRPC Service 定义
+// ─────────────────────────────────────────
+
+// KernelBus 是 Dart 控制层与 Go 内核之间的总线服务。
+// 在 Windows 上通过 Named Pipe \\.\pipe\closeclaw_ipc 提供服务。
+service KernelBus {
+  // Dart → Go: 下发新任务或调度指令
+  rpc DispatchTask(Task) returns (TaskResponse);
+
+  // TS  → Go: 工具执行完成后回写状态
+  rpc SyncStatus(StatusUpdate) returns (Ack);
+
+  // Dart → Go: 心跳探活，用于 L2 容灾降级决策
+  rpc CheckHealth(HeartbeatRequest) returns (HeartbeatResponse);
+
+  // Dart → Go: 流式接收待处理消息（Server-Streaming）
+  rpc GetPendingMessages(Ack) returns (stream IncomingMessage);
+}
