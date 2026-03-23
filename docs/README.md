@@ -48,7 +48,7 @@ docs/
 ### 01-getting-started/ 新手入门
 
 - quickstart.md - 快速开始
-- contributing.md - 如何贡献 (原 COLLABORATOR_ONBOARDING.md)
+- README.md - 新手启动全指引 (含协作准则)
 
 ### 03-development/ 开发指南
 
