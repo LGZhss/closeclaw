@@ -56,46 +56,42 @@ git pull origin main
 
 ---
 
-## 📚 关键文档索引
+## 📋 核心协作定义 (Essential Definitions)
 
-### 协作机制
-- [完整协作规则](../02-collaboration/environment.md) - 环境提取与批判性思维
-- [批判性思维指南](../../RULES.md#-批判性思维要求所有协作主体必须遵循) - 投票时必须遵循的原则
-- [IDE 注册流程](../03-development/ide-registration.md) - 注册你的协作主体
+在 CloseClaw 体系中，所有参与方（包括 IDE、CLI、Cloud Agent）统一称为 **“协作主体 (Collaboration Subject)”**。
 
-### 技术参考
-- [项目架构](../05-architecture/overview.md) - 系统架构和核心模块
-- [文件结构](../04-reference/file-structure.md) - 项目文件组织和使用频率
-- [未来规划](../07-roadmap/future-plan.md) - 短期、中期、长期目标
-
-### 资源
-- [协作者注册表](../06-registry/collaborators.md) - 所有已注册协作主体列表
-- [提案记录](../../votes/) - 历史提案和投票记录
+- **进场宣告**: 每一轮新会话唤醒后，协作主体必须首先宣告自身身份及指纹（见 [RULES.md](../../RULES.md)）。
+- **零文本 IPC**: 严禁在进程间传递大语言模型上下文，仅允许传递信号与 Task_ID。
 
 ---
 
-## 💡 重要提醒
+## 📚 关键文档索引
 
-### 批判性思维是核心
-所有协作主体必须展现批判性思维，禁止一味顺从。投票时必须提供：
-- ✅ 技术理由（为什么支持/反对）
-- ✅ 风险评估（潜在风险是什么）
-- ✅ 改进建议（如何改进）
-- ✅ 替代方案（是否有更好的实现）
+### 协作机制
+- [环境拓扑与提取](../02-collaboration/environment.md) - 环境状态提取
+- [注册流程指引](../04-reference/registration-flow.md) - 如何注册新的协作主体
+- [工作树规范](../04-reference/worktree-location.md) - Worktree 存储位置
 
-### Worktree 是强制前置
-修改代码前**必须**创建 worktree，这是强制要求！
+### 技术参考
+- [三语言微内核架构](../05-architecture/overview.md) - 系统分层方案 (Dart+Go+TS)
+- [现存文件结构](../04-reference/file-structure.md) - 目录组织说明
+- [未来演进路线](../07-roadmap/future-plan.md) - 短期与长期目标规划
+
+---
+
+## 💡 协作准则
+
+### 1. 批判性思维是第一优先级
+投票时严禁一味顺从。必须提供：
+- ✅ **技术理由**: 为什么支持/反对。
+- ✅ **风险评估**: 识别出的潜在风险点。
+- ✅ **改进建议**: 具体的改进步骤或更好的替代方案。
+
+### 2. Worktree 强隔离开发
+严禁直接在 `main` 目录下修改代码。
 ```bash
-# ❌ 错误：直接在 main 分支开发
-cd main
-git checkout main
-# 修改代码...
-
-# ✅ 正确：使用 worktree
+# ✅ 标准操作：为每个提案建立独立工作树
 git worktree add ../worktrees/proposal-XXX -b proposal/XXX
-cd ../worktrees/proposal-XXX
-# 修改代码...
-```
 
 ### 并行审查提升效率
 多个协作主体可以同时审查不同提案，各自独立给出专业意见，投票通过后实施。
