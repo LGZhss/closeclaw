@@ -7,12 +7,14 @@ import 'dart:io';
 import 'package:args/args.dart';
 import '../lib/core/audit_relay.dart';
 import '../lib/core/logger.dart';
+import '../lib/core/mcp_server.dart';
 
 void main(List<String> arguments) async {
   final parser = ArgParser()
     ..addCommand('start')
     ..addCommand('stop')
     ..addCommand('doctor')
+    ..addCommand('mcp-serve')
     ..addFlag('verbose', abbr: 'v', defaultsTo: false, help: '开启详细日志');
 
   ArgResults results;
@@ -33,8 +35,13 @@ void main(List<String> arguments) async {
       await _cmdStop(log);
     case 'doctor':
       await _cmdDoctor(log);
+    case 'mcp-serve':
+      // MCP Server 必须保持 quiet，避免普通日志污染 stdout/json
+      final mcpLog = ClawLogger(verbose: results['verbose'] as bool, quiet: true);
+      final server = McpServer(log: mcpLog);
+      await server.run();
     default:
-      stderr.writeln('请指定子命令: start | stop | doctor');
+      stderr.writeln('请指定子命令: start | stop | doctor | mcp-serve');
       stderr.writeln(parser.usage);
       exit(1);
   }
