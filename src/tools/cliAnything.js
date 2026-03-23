@@ -5,14 +5,11 @@
  * 提供命令行界面交互能力，支持自然语言到CLI命令的转换
  */
 
-import { exec } from 'child_process';
-import { promisify } from 'util';
 import path from 'path';
 import fs from 'fs/promises';
 import { log } from '../../utils/logger.js';
 import { resolveSafePath } from '../../config/config.js';
-
-const execAsync = promisify(exec);
+import { sandboxManager } from '../sandbox/sandboxManager.js';
 
 /**
  * CLI-Anything 工具处理器
@@ -92,8 +89,26 @@ async function executeCliAnything(prompt, workDir, timeout) {
       break;
     }
   }
+
+  // 提取基础命令（第一个token）
+  const baseCommand = command.trim().split(/\s+/)[0];
+
+  // 防止命令注入：禁止使用 shell 元字符进行命令拼接或重定向
+  if (/[;&|`<>$]/.test(command)) {
+    throw new Error(`检测到非法的 shell 元字符: ${command}`);
+  }
+
+  // 白名单：仅允许执行的命令列表
+  const allowedCommands = new Set([
+    'ls', 'pwd', 'mkdir', 'rm', 'cp', 'mv',
+    'echo', 'cat', 'touch', 'grep', 'find'
+  ]);
+
+  if (!allowedCommands.has(baseCommand)) {
+    throw new Error(`命令不在白名单中: ${baseCommand}`);
+  }
   
-  // 安全检查：禁止危险命令
+  // 安全检查：禁止危险命令 (黑名单)
   const dangerousPatterns = [
     /rm\s+-rf\s+\//,
     /format/,
@@ -108,14 +123,16 @@ async function executeCliAnything(prompt, workDir, timeout) {
     }
   }
   
-  // 执行命令
-  const result = await execAsync(command, {
-    cwd: workDir,
-    timeout,
-    maxBuffer: 1024 * 1024 // 1MB buffer
-  });
-  
-  return result;
+  // 执行命令通过sandboxManager路由
+  try {
+    const result = await sandboxManager.executeCommand(command, {
+      cwd: workDir,
+      timeout
+    });
+    return result;
+  } catch (error) {
+    throw new Error(`命令执行失败: ${error.message}`);
+  }
 }
 
 /**

@@ -33,11 +33,8 @@ export class ProcessExecutor {
         // 写入代码到临时文件
         fs.writeFileSync(tempFile, code);
 
-        // 生成命令
-        const command = `node "${tempFile}"`;
-        
-        // 执行命令
-        this.executeCommand(command, { timeout }).then(result => {
+        // 安全地使用 spawn 执行 node 命令，而不是通过 shell
+        this._executeProcess('node', [tempFile], { timeout }, executionId).then(result => {
           // 清理临时文件
           try {
             fs.unlinkSync(tempFile);
@@ -68,27 +65,40 @@ export class ProcessExecutor {
    */
   async executeCommand(command, options = {}) {
     const executionId = `exec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    // 解析命令
+    let cmd = command;
+    let args = [];
+
+    if (process.platform === 'win32') {
+      // Windows 平台
+      cmd = 'cmd.exe';
+      args = ['/c', command];
+    } else {
+      // Unix 平台
+      cmd = '/bin/sh';
+      args = ['-c', command];
+    }
+
+    return this._executeProcess(cmd, args, options, executionId, command);
+  }
+
+  /**
+   * 底层进程执行抽象，安全地传递参数
+   * @private
+   */
+  _executeProcess(cmd, args, options, executionId = null, originalCommand = '') {
+    if (!executionId) {
+      executionId = `exec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    }
     const timeout = options.timeout || config.sandbox.timeout;
     const cwd = options.cwd || process.cwd();
+    const displayCmd = originalCommand || `${cmd} ${args.join(' ')}`;
 
     return new Promise((resolve, reject) => {
       let stdout = '';
       let stderr = '';
       let timeoutId = null;
-
-      // 解析命令
-      let cmd = command;
-      let args = [];
-
-      if (process.platform === 'win32') {
-        // Windows 平台
-        cmd = 'cmd.exe';
-        args = ['/c', command];
-      } else {
-        // Unix 平台
-        cmd = '/bin/sh';
-        args = ['-c', command];
-      }
 
       // 启动子进程
       const process = spawn(cmd, args, {
@@ -139,7 +149,7 @@ export class ProcessExecutor {
           exitCode
         };
 
-        log(`[ProcessExecutor] 命令执行完成: ${command}，退出码: ${exitCode}`, 'DEBUG');
+        log(`[ProcessExecutor] 命令执行完成: ${displayCmd}，退出码: ${exitCode}`, 'DEBUG');
         resolve(result);
       });
 
