@@ -16,7 +16,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"closeclaw-kernel/db"
 	pb "closeclaw-kernel/proto"
+	"closeclaw-kernel/router"
 )
 
 const (
@@ -87,20 +89,39 @@ func (s *KernelBusServer) CheckHealth(ctx context.Context, req *pb.HeartbeatRequ
 
 // GetPendingMessages 流式推送待处理消息给 Dart。
 func (s *KernelBusServer) GetPendingMessages(req *pb.Ack, stream pb.KernelBus_GetPendingMessagesServer) error {
-	// Phase1 POC：每秒推送一条 Mock 消息，供 Dart 端客户端验证流式接收
+	// Phase2 POC：结合 router 进行消息过滤和 Prompt 拼装
+	cfg := router.DefaultConfig("Andy")
+	
 	for i := 0; i < 3; i++ {
-		msg := &pb.IncomingMessage{
+		// Mock DB fetch
+		dbMsg := db.Message{
 			Id:         int64(i + 1),
 			Channel:    "telegram",
 			ChatJid:    "test@g.us",
 			SenderJid:  "sender@s.com",
 			SenderName: "测试用户",
-			Text:       fmt.Sprintf("Phase1 POC 消息 #%d", i+1),
-			Timestamp:  time.Now().UnixMilli(),
+			Text:       fmt.Sprintf("@Andy 请看第 %d 条 Phase2 POC", i+1),
+			Timestamp:  time.Now().Format(time.RFC3339),
 			IsGroup:    true,
 		}
-		if err := stream.Send(msg); err != nil {
-			return fmt.Errorf("流式发送失败: %w", err)
+
+		if router.ShouldTrigger(cfg, dbMsg.Text) {
+			prompt := router.BuildAgentPrompt(cfg, []db.Message{dbMsg})
+			
+			// 发送给 Dart 的就是构建好的 Prompt
+			msg := &pb.IncomingMessage{
+				Id:         dbMsg.Id,
+				Channel:    dbMsg.Channel,
+				ChatJid:    dbMsg.ChatJid,
+				SenderJid:  dbMsg.SenderJid,
+				SenderName: dbMsg.SenderName,
+				Text:       prompt, // 最终发送加工后的 prompt
+				Timestamp:  time.Now().UnixMilli(),
+				IsGroup:    dbMsg.IsGroup,
+			}
+			if err := stream.Send(msg); err != nil {
+				return fmt.Errorf("流式发送失败: %w", err)
+			}
 		}
 		time.Sleep(200 * time.Millisecond)
 	}
