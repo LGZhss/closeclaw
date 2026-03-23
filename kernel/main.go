@@ -5,8 +5,10 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"time"
 
 	"closeclaw-kernel/db"
+	"closeclaw-kernel/scheduler"
 	"closeclaw-kernel/server"
 )
 
@@ -27,6 +29,12 @@ func main() {
 		slog.Error("SQLite 初始化失败", "err", err)
 		os.Exit(1)
 	}
+
+	// 启动 Go 任务调度器 (Phase 2)
+	pool := scheduler.NewGroupPool(5) // max 5 concurrent tasks globally
+	sched := scheduler.NewScheduler(pool)
+	sched.Start(time.Minute) // 对应 SCHEDULER_POLL_INTERVAL = 60000ms
+	defer sched.Stop()
 
 	// 启动 gRPC 服务（阻塞）
 	if err := server.Start(); err != nil {
