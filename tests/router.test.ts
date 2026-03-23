@@ -1,68 +1,128 @@
-import { describe, it, expect, vi } from 'vitest';
-import { routeOutbound, escapeXml, formatResponse } from '../src/router.js';
-import { Channel } from '../src/types.js';
-import { ASSISTANT_NAME } from '../src/config.js';
+import { describe, it, expect, vi } from "vitest";
+import { routeOutbound, escapeXml, findChannelForJid } from "../src/router.js";
+import { Channel } from "../src/types.js";
 
-describe('formatResponse', () => {
-  it('should prefix response with assistant name', () => {
-    expect(formatResponse('Hello world')).toBe(`${ASSISTANT_NAME}: Hello world`);
+describe("findChannelForJid", () => {
+  it("should return the matching channel when one owns the JID", () => {
+    const channel1 = {
+      name: "channel1",
+      connect: vi.fn(),
+      sendMessage: vi.fn(),
+      isConnected: vi.fn(),
+      ownsJid: vi.fn().mockReturnValue(false),
+      disconnect: vi.fn(),
+    } as unknown as Channel;
+
+    const channel2 = {
+      name: "channel2",
+      connect: vi.fn(),
+      sendMessage: vi.fn(),
+      isConnected: vi.fn(),
+      ownsJid: vi.fn().mockReturnValue(true),
+      disconnect: vi.fn(),
+    } as unknown as Channel;
+
+    const channels = [channel1, channel2];
+    const result = findChannelForJid("user@test.com", channels);
+
+    expect(result).toBe(channel2);
+    expect(channel1.ownsJid).toHaveBeenCalledWith("user@test.com");
+    expect(channel2.ownsJid).toHaveBeenCalledWith("user@test.com");
   });
 
-  it('should handle empty string correctly', () => {
-    expect(formatResponse('')).toBe(`${ASSISTANT_NAME}: `);
+  it("should return null when no channel owns the JID", () => {
+    const channel1 = {
+      name: "channel1",
+      connect: vi.fn(),
+      sendMessage: vi.fn(),
+      isConnected: vi.fn(),
+      ownsJid: vi.fn().mockReturnValue(false),
+      disconnect: vi.fn(),
+    } as unknown as Channel;
+
+    const channels = [channel1];
+    const result = findChannelForJid("user@test.com", channels);
+
+    expect(result).toBeNull();
+    expect(channel1.ownsJid).toHaveBeenCalledWith("user@test.com");
   });
 
-  it('should handle whitespace strings', () => {
-    expect(formatResponse('   ')).toBe(`${ASSISTANT_NAME}:    `);
+  it("should return null when channels array is empty", () => {
+    const result = findChannelForJid("user@test.com", []);
+    expect(result).toBeNull();
   });
 
-  it('should handle multiple lines correctly', () => {
-    const multiLine = 'Line 1\nLine 2';
-    expect(formatResponse(multiLine)).toBe(`${ASSISTANT_NAME}: Line 1\nLine 2`);
+  it("should return the first matching channel when multiple channels own the JID", () => {
+    const channel1 = {
+      name: "channel1",
+      connect: vi.fn(),
+      sendMessage: vi.fn(),
+      isConnected: vi.fn(),
+      ownsJid: vi.fn().mockReturnValue(true),
+      disconnect: vi.fn(),
+    } as unknown as Channel;
+
+    const channel2 = {
+      name: "channel2",
+      connect: vi.fn(),
+      sendMessage: vi.fn(),
+      isConnected: vi.fn(),
+      ownsJid: vi.fn().mockReturnValue(true),
+      disconnect: vi.fn(),
+    } as unknown as Channel;
+
+    const channels = [channel1, channel2];
+    const result = findChannelForJid("user@test.com", channels);
+
+    expect(result).toBe(channel1);
+    expect(channel1.ownsJid).toHaveBeenCalledWith("user@test.com");
+    // The second channel shouldn't be checked because the first one matched
+    expect(channel2.ownsJid).not.toHaveBeenCalled();
   });
 });
 
-describe('escapeXml', () => {
-  it('should return empty string for falsy input', () => {
-    expect(escapeXml('')).toBe('');
-    expect(escapeXml(null as any)).toBe('');
-    expect(escapeXml(undefined as any)).toBe('');
+describe("escapeXml", () => {
+  it("should return empty string for falsy input", () => {
+    expect(escapeXml("")).toBe("");
+    expect(escapeXml(null as any)).toBe("");
+    expect(escapeXml(undefined as any)).toBe("");
   });
 
-  it('should return the original string if no special characters are present', () => {
-    const input = 'Hello World 123';
+  it("should return the original string if no special characters are present", () => {
+    const input = "Hello World 123";
     expect(escapeXml(input)).toBe(input);
   });
 
-  it('should escape & correctly', () => {
-    expect(escapeXml('Mac & Cheese')).toBe('Mac &amp; Cheese');
+  it("should escape & correctly", () => {
+    expect(escapeXml("Mac & Cheese")).toBe("Mac &amp; Cheese");
   });
 
-  it('should escape < and > correctly', () => {
-    expect(escapeXml('<html>')).toBe('&lt;html&gt;');
+  it("should escape < and > correctly", () => {
+    expect(escapeXml("<html>")).toBe("&lt;html&gt;");
   });
 
   it('should escape " correctly', () => {
-    expect(escapeXml('"Hello"')).toBe('&quot;Hello&quot;');
+    expect(escapeXml('"Hello"')).toBe("&quot;Hello&quot;");
   });
 
-  it('should escape multiple occurrences of the same character', () => {
-    expect(escapeXml('A & B & C')).toBe('A &amp; B &amp; C');
-    expect(escapeXml('<tag></tag>')).toBe('&lt;tag&gt;&lt;/tag&gt;');
-    expect(escapeXml('"""""')).toBe('&quot;&quot;&quot;&quot;&quot;');
+  it("should escape multiple occurrences of the same character", () => {
+    expect(escapeXml("A & B & C")).toBe("A &amp; B &amp; C");
+    expect(escapeXml("<tag></tag>")).toBe("&lt;tag&gt;&lt;/tag&gt;");
+    expect(escapeXml('"""""')).toBe("&quot;&quot;&quot;&quot;&quot;");
   });
 
-  it('should escape a mix of special characters', () => {
+  it("should escape a mix of special characters", () => {
     const input = '<div class="content">Me & You</div>';
-    const expected = '&lt;div class=&quot;content&quot;&gt;Me &amp; You&lt;/div&gt;';
+    const expected =
+      "&lt;div class=&quot;content&quot;&gt;Me &amp; You&lt;/div&gt;";
     expect(escapeXml(input)).toBe(expected);
   });
 });
 
-describe('routeOutbound', () => {
-  it('should send a message via the correct connected channel', async () => {
+describe("routeOutbound", () => {
+  it("should send a message via the correct connected channel", async () => {
     const channel1: Channel = {
-      name: 'channel1',
+      name: "channel1",
       connect: vi.fn(),
       sendMessage: vi.fn().mockResolvedValue(undefined),
       isConnected: vi.fn().mockReturnValue(true),
@@ -71,7 +131,7 @@ describe('routeOutbound', () => {
     };
 
     const channel2: Channel = {
-      name: 'channel2',
+      name: "channel2",
       connect: vi.fn(),
       sendMessage: vi.fn().mockResolvedValue(undefined),
       isConnected: vi.fn().mockReturnValue(true),
@@ -80,8 +140,8 @@ describe('routeOutbound', () => {
     };
 
     const channels = [channel1, channel2];
-    const jid = 'user@test.com';
-    const text = 'Hello world!';
+    const jid = "user@test.com";
+    const text = "Hello world!";
 
     await routeOutbound(channels, jid, text);
 
@@ -93,9 +153,9 @@ describe('routeOutbound', () => {
     expect(channel2.sendMessage).toHaveBeenCalledWith(jid, text);
   });
 
-  it('should skip a channel if it owns the JID but is not connected', async () => {
+  it("should skip a channel if it owns the JID but is not connected", async () => {
     const channel1: Channel = {
-      name: 'channel1',
+      name: "channel1",
       connect: vi.fn(),
       sendMessage: vi.fn().mockResolvedValue(undefined),
       isConnected: vi.fn().mockReturnValue(false),
@@ -104,7 +164,7 @@ describe('routeOutbound', () => {
     };
 
     const channel2: Channel = {
-      name: 'channel2',
+      name: "channel2",
       connect: vi.fn(),
       sendMessage: vi.fn().mockResolvedValue(undefined),
       isConnected: vi.fn().mockReturnValue(true),
@@ -113,8 +173,8 @@ describe('routeOutbound', () => {
     };
 
     const channels = [channel1, channel2];
-    const jid = 'user@test.com';
-    const text = 'Hello world!';
+    const jid = "user@test.com";
+    const text = "Hello world!";
 
     await routeOutbound(channels, jid, text);
 
@@ -122,9 +182,9 @@ describe('routeOutbound', () => {
     expect(channel2.sendMessage).toHaveBeenCalledWith(jid, text);
   });
 
-  it('should throw an error if no channel owns the JID', () => {
+  it("should throw an error if no channel owns the JID", () => {
     const channel1: Channel = {
-      name: 'channel1',
+      name: "channel1",
       connect: vi.fn(),
       sendMessage: vi.fn().mockResolvedValue(undefined),
       isConnected: vi.fn().mockReturnValue(true),
@@ -133,17 +193,17 @@ describe('routeOutbound', () => {
     };
 
     const channels = [channel1];
-    const jid = 'user@test.com';
-    const text = 'Hello world!';
+    const jid = "user@test.com";
+    const text = "Hello world!";
 
     expect(() => routeOutbound(channels, jid, text)).toThrowError(
-      `No channel for JID: ${jid}`
+      `No channel for JID: ${jid}`,
     );
   });
 
-  it('should throw an error if a channel owns the JID but is not connected and no other connected channels match', () => {
+  it("should throw an error if a channel owns the JID but is not connected and no other connected channels match", () => {
     const channel1: Channel = {
-      name: 'channel1',
+      name: "channel1",
       connect: vi.fn(),
       sendMessage: vi.fn().mockResolvedValue(undefined),
       isConnected: vi.fn().mockReturnValue(false),
@@ -152,11 +212,11 @@ describe('routeOutbound', () => {
     };
 
     const channels = [channel1];
-    const jid = 'user@test.com';
-    const text = 'Hello world!';
+    const jid = "user@test.com";
+    const text = "Hello world!";
 
     expect(() => routeOutbound(channels, jid, text)).toThrowError(
-      `No channel for JID: ${jid}`
+      `No channel for JID: ${jid}`,
     );
   });
 });
