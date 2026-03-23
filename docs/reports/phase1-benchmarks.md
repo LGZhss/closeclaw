@@ -20,10 +20,11 @@
 
 ### 2. Dart 控制平面打包
 - **目标**: 运行 `dart compile exe bin/closeclaw.dart -o closeclaw.exe` 验证静态单文件提取。
-- **状态**: ❌ **Blocked**
+- **状态**: ✅ **Verified (Local Candidate)**
 - **详情**:
-  - `dart` CLI 暂时未在系统环境变量中注册。
-  - **缓解建议**: 控制层也需和 Go 内核一样走统一 CI Release，确保普通协作者拉取仓库即可获得 `closeclaw.exe`。
+  - 已手动映射 Dart SDK 路径 `C:\Users\lgzhs\Dart\dart-sdk\bin`。
+  - 成功编译产出 `e:\closeclaw-p027-phase1\cmd\closeclaw.exe`。
+  - `closeclaw.exe doctor` 冒烟测试通过，成功识别 32 个协作主体。
 
 ---
 

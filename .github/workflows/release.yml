@@ -1,0 +1,67 @@
+name: CloseClaw Ultra CI/CD
+
+on:
+  push:
+    branches: [ main, "proposal/**" ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-release:
+    name: Build Kernel (Go) and Control Plane (Dart)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: true
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Install GCC (MinGW-w64 via MSYS2)
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: mingw-w64-x86_64-gcc
+
+      - name: Go Kernel - Download Dependencies
+        run: |
+          cd kernel
+          go mod tidy
+
+      - name: Go Kernel - Run Benchmarks
+        shell: msys2 {0}
+        run: |
+          cd kernel
+          CGO_ENABLED=1 go test -v -bench . -benchmem ./db
+
+      - name: Go Kernel - Build Binary
+        shell: msys2 {0}
+        run: |
+          cd kernel
+          CGO_ENABLED=1 go build -o ../build/closeclaw-kernel.exe main.go
+
+      - name: Dart Control Plane - Download Dependencies
+        run: |
+          cd cmd
+          dart pub get
+
+      - name: Dart Control Plane - Build AOT Binary
+        run: |
+          cd cmd
+          dart compile exe bin/closeclaw.dart -o ../build/closeclaw.exe
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: closeclaw-binaries
+          path: build/*.exe
