@@ -15,7 +15,7 @@ export interface ChatParams {
     parameters: Record<string, unknown>;
   }>;
   /** 优先模型级别 */
-  preferredLevel?: 'pro' | 'flash' | 'lite';
+  preferredLevel?: 'pro' | 'flash' | 'lite' | 'mini';
 }
 
 /**

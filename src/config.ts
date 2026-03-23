@@ -13,3 +13,10 @@ export const DATA_DIR = path.resolve(PROJECT_ROOT, "data");
 export const MAX_CONCURRENT_CONTAINERS = Math.max(1, parseInt(process.env.MAX_CONCURRENT_CONTAINERS || '5', 10) || 5);
 
 export const TRIGGER_PATTERN = new RegExp(`^@${ASSISTANT_NAME}\\b`, "i");
+
+export const config = {
+  sandbox: {
+    timeout: 30000, // 30 seconds
+    memoryLimit: '512m'
+  }
+};
