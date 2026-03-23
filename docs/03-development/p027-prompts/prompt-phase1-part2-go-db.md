@@ -1,22 +1,12 @@
-# P027 Phase 1 拆解任务 B: Go 内核与 WAL 大并发压测
+# P027 Phase 1: Go 内核总线与 SQLite WAL 极限并发压测
 
-## 🎯 任务背景
-P027 决策以 `mattn/go-sqlite3` 构建底层状态神经中枢，取代以往低效的 TS 方案和高门槛的 Rust 方案。此环节为整个架构最核心的数据持久底座验证。
+## 📌 核心目标
+建立 `kernel/` 并引入 `mattn/go-sqlite3`（需 CGO），重写核心表结构（如 tasks/groups），并编写高并发压测代码 `kernel/db/bench_test.go`。验收线：10k 混合查询 ≤ 0.8ms，1000条批量插入 ≤ 150ms。
 
-## 📋 你的职责
-你是一名 Go 并发优化专家（512K 上下文）。你的唯一战场是 `kernel/` 目录。不必关心外部的 Dart 守护和 TS 沙盒执行。
+## ⚠️ 强制性纪律 (ANTI-LAZINESS)
+本环境信任你的自主架构推演能力，但你**必须严格遵守**以下红线：
+1. **[禁止占位符]**：不要输出诸如 `func InitDB() { // TODO: 真实连接池配置 }` 的废物代码。你必须提交完整的、开启了 `PRAGMA journal_mode=WAL;` 和精调连接并发数的**真实生产级代码**。
+2. **[硬核凭证]**：在交付报告或 PR 中，必须包含通过真实执行 `go test -bench .` 所获得的真实并发耗时与 allocs 数据。严禁捏造虚假性能日志。
+3. **[独立解题]**：如果在 Windows 下遇到 CGO 编译地狱，不要把问题抛回给用户。你自己查文档、写解决脚本或提出可行的替代方案并代码化。
 
-### 具体要求：
-1. 在根目录创建 `kernel/` 目录，并初始化 Go mod (`go mod init closeclaw-kernel`)。
-2. 建立 `kernel/db/schema.go`，设计包含 `groups`, `tasks`, `sessions`, `messages` 的初始建表语句。
-   - **关键**: 必须在初始化时开启 `PRAGMA journal_mode=WAL;` 和 `PRAGMA synchronous=NORMAL;`。
-3. 建立并实现压测入口 `kernel/db/bench_test.go`：
-   - 使用 Go 内置的 `testing` 模块。
-   - 编写 `BenchmarkSQLiteWrite` 和 `BenchmarkSQLiteBatchInsert`。
-   - 实现高并发下 `sqlite3` driver 争用的压测（例如 100个 goroutine 齐射插入 task，测试驱动在 WAL 模式下是否报错 `database is locked`，验证超时重试的最佳连接池大小 `SetMaxOpenConns(1)` 方案或更优配置）。
-   - **验收及格线**: 1000条批量插入 ≤ 150ms，10k次单查询或混合读写尽量逼近 0.8ms 量级。
-
-## ⚠️ 提交交付
-- 提交 PR 到 `proposal/027-phase1-part2` 分支。
-- 你必须在本地运行并附上 `go test -bench .` 的结果日志，验证符合 P027 的通过线。
-- 请说明如果是 Windows 系统下，CGO 库依赖是否编译顺畅。
+完成开发后，提交至 `proposal/027-phase1-part2` 分支。
