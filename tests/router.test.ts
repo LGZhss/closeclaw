@@ -1,6 +1,26 @@
 import { describe, it, expect, vi } from 'vitest';
-import { routeOutbound, escapeXml } from '../src/router.js';
+import { routeOutbound, escapeXml, formatResponse } from '../src/router.js';
 import { Channel } from '../src/types.js';
+import { ASSISTANT_NAME } from '../src/config.js';
+
+describe('formatResponse', () => {
+  it('should prefix response with assistant name', () => {
+    expect(formatResponse('Hello world')).toBe(`${ASSISTANT_NAME}: Hello world`);
+  });
+
+  it('should handle empty string correctly', () => {
+    expect(formatResponse('')).toBe(`${ASSISTANT_NAME}: `);
+  });
+
+  it('should handle whitespace strings', () => {
+    expect(formatResponse('   ')).toBe(`${ASSISTANT_NAME}:    `);
+  });
+
+  it('should handle multiple lines correctly', () => {
+    const multiLine = 'Line 1\nLine 2';
+    expect(formatResponse(multiLine)).toBe(`${ASSISTANT_NAME}: Line 1\nLine 2`);
+  });
+});
 
 describe('escapeXml', () => {
   it('should return empty string for falsy input', () => {
@@ -138,5 +158,61 @@ describe('routeOutbound', () => {
     expect(() => routeOutbound(channels, jid, text)).toThrowError(
       `No channel for JID: ${jid}`
     );
+  });
+});
+
+describe('formatMessages', () => {
+  const dateFormatter = new Intl.DateTimeFormat('zh-CN', {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+
+  const createMockDbMessage = (overrides: Partial<DbMessage> = {}): DbMessage => ({
+    id: 1,
+    channel: 'test-channel',
+    chat_jid: 'test@g.us',
+    sender_jid: 'sender@s.whatsapp.net',
+    sender_name: 'TestUser',
+    text: 'Hello',
+    timestamp: 1620000000000,
+    is_group: true,
+    processed: false,
+    created_at: new Date().toISOString(),
+    ...overrides,
+  });
+
+  it('should return empty string for an empty array', () => {
+    expect(formatMessages([])).toBe('');
+  });
+
+  it('should format a single message correctly', () => {
+    const msg = createMockDbMessage({ timestamp: 1620000000000, sender_name: 'Alice', text: 'Hi there' });
+    const timeStr = dateFormatter.format(msg.timestamp);
+    const expected = `[${timeStr}] Alice: Hi there`;
+
+    expect(formatMessages([msg])).toBe(expected);
+  });
+
+  it('should join multiple messages with a newline', () => {
+    const msg1 = createMockDbMessage({ timestamp: 1620000000000, sender_name: 'Alice', text: 'Hi' });
+    const msg2 = createMockDbMessage({ timestamp: 1620000060000, sender_name: 'Bob', text: 'Hello Alice' });
+
+    const timeStr1 = dateFormatter.format(msg1.timestamp);
+    const timeStr2 = dateFormatter.format(msg2.timestamp);
+
+    const expected = `[${timeStr1}] Alice: Hi\n[${timeStr2}] Bob: Hello Alice`;
+
+    expect(formatMessages([msg1, msg2])).toBe(expected);
+  });
+
+  it('should handle messages with empty text', () => {
+    const msg = createMockDbMessage({ text: '' });
+    const timeStr = dateFormatter.format(msg.timestamp);
+    const expected = `[${timeStr}] TestUser: `;
+
+    expect(formatMessages([msg])).toBe(expected);
   });
 });
