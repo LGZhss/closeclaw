@@ -47,7 +47,7 @@ docs/
 
 ### 01-getting-started/ 新手入门
 
-- quickstart.md - 快速开始（待创建）
+- quickstart.md - 快速开始
 - contributing.md - 如何贡献（待创建）
 
 ### 02-collaboration/ 协作机制
