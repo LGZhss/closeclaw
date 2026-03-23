@@ -16,14 +16,14 @@
 ```
 docs/
 ├── README.md              # 📍 本文档索引
-├── 01-getting-started/    #  新手入门
+├── 01-getting-started/    #  新手入门 (含 contributing.md)
 ├── 02-collaboration/      # 🤝 协作机制
 ├── 03-development/        # 💻 开发指南
 ├── 04-reference/          # 📚 技术参考
 ├── 05-architecture/       # 🏗️ 架构设计
 ├── 06-registry/           # 📋 注册中心
 ├── 07-roadmap/            # 🗺️ 路线规划
-└── archive/               # 🗄️ 历史归档
+└── archive/               # 🗄️ 历史归档与技术分析
 ```
 
 ---
@@ -48,12 +48,7 @@ docs/
 ### 01-getting-started/ 新手入门
 
 - quickstart.md - 快速开始
-- contributing.md - 如何贡献（待创建）
-
-### 02-collaboration/ 协作机制
-
-- workflow.md - 工作流程
-- environment.md - 环境规则
+- contributing.md - 如何贡献 (原 COLLABORATOR_ONBOARDING.md)
 
 ### 03-development/ 开发指南
 
@@ -78,6 +73,13 @@ docs/
 
 - future-plan.md - 未来发展规划
 - tasks.md - 任务清单
+
+### archive/ 历史归档与技术分析
+
+- impl-plan-020.md - P020 原始实施规划 (已废弃)
+- CODEBASE_ANALYSIS.md - 早期代码库分析
+- TELEGRAM_IMPL_COMPARISON.md - Telegram 实现对比
+- PHASE_3_COMPREHENSIVE_PLAN.md - Phase 3 综合计划 (历史)
 
 ---
 
