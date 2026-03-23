@@ -2,7 +2,6 @@ import {
   Channel,
   ChannelOpts,
   IncomingMessage,
-  RegisteredGroup,
 } from "./types.js";
 import {
   getChannelFactory,
@@ -12,13 +11,12 @@ import "./channels/index.js"; // Trigger channel self-registration
 import {
   insertMessage,
   getUnprocessedMessages,
-  markMessagesProcessed,
   getMainGroup,
   setRegisteredGroup,
 } from "./db.js";
 import { logger } from "./logger.js";
 import { POLL_INTERVAL, GROUPS_DIR, ASSISTANT_NAME } from "./config.js";
-import { processGroupMessages, sendMessage, formatResponse } from "./router.js";
+import { processGroupMessages, formatResponse } from "./router.js";
 import { groupQueue } from "./group-queue.js";
 import { startScheduler } from "./task-scheduler.js";
 import { ScheduledTask } from "./types.js";
@@ -40,16 +38,16 @@ async function handleIncomingMessage(message: IncomingMessage): Promise<void> {
 
     // Store message in database
     const msgId = insertMessage({
-      id: message.id,
+      id: message.id as unknown as number,
       channel: message.channel,
-      chatJid: message.chatJid,
-      senderJid: message.senderJid,
-      senderName: message.senderName,
+      chat_jid: message.chatJid,
+      sender_jid: message.senderJid,
+      sender_name: message.senderName,
       text: message.text,
       timestamp: message.timestamp,
-      isGroup: message.isGroup,
+      is_group: message.isGroup,
       group_name: message.groupName,
-      processed: 0,
+      processed: false,
       created_at: new Date().toISOString(),
     });
 
@@ -161,13 +159,13 @@ function startMessageLoop(): () => void {
       // Group messages by chat_jid
       const groupedMessages = new Map<string, typeof unprocessed>();
       for (const msg of unprocessed) {
-        const existing = groupedMessages.get(msg.chatJid) || [];
+        const existing = groupedMessages.get(msg.chat_jid) || [];
         existing.push(msg);
-        groupedMessages.set(msg.chatJid, existing);
+        groupedMessages.set(msg.chat_jid, existing);
       }
 
       // Process each group
-      for (const [chatJid, messages] of groupedMessages.entries()) {
+      for (const [chatJid, _messages] of groupedMessages.entries()) {
         // Find the group folder for this chat
         // This is simplified - in reality you'd look up the group by JID
         const groupFolder = chatJid; // Simplified for now

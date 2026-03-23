@@ -2,7 +2,7 @@ import {
   getRegisteredGroupByFolder,
   getMessagesSince,
   setRouterState,
-  insertMessage,
+  getRouterState,
   markMessagesProcessed,
 } from "./db.js";
 import { Channel, DbMessage, RegisteredGroup } from "./types.js";
@@ -38,7 +38,7 @@ export function formatMessages(messages: DbMessage[]): string {
     .map((msg) => {
       const timeStr = dateFormatter.format(msg.timestamp);
 
-      return `[${timeStr}] ${msg.senderName}: ${msg.text}`;
+      return `[${timeStr}] ${msg.sender_name}: ${msg.text}`;
     })
     .join("\n");
 }
@@ -79,7 +79,7 @@ export function getGroupFolderForJid(jid: string): string | null {
  */
 export function buildAgentPrompt(
   messages: DbMessage[],
-  group: RegisteredGroup,
+  _group: RegisteredGroup,
 ): string {
   const formattedMessages = formatMessages(messages);
 
@@ -125,9 +125,9 @@ export async function processGroupMessages(
     }
 
     // Find the owning channel
-    const channel = findChannelForJid(triggeringMessage.chatJid, channels);
+    const channel = findChannelForJid(triggeringMessage.chat_jid, channels);
     if (!channel) {
-      logger.warn(`No channel found for JID: ${triggeringMessage.chatJid}`);
+      logger.warn(`No channel found for JID: ${triggeringMessage.chat_jid}`);
       return { hasMessages: false };
     }
 

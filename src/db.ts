@@ -1,4 +1,4 @@
-import Database from "better-sqlite3";
+import Database, { type Database as BetterSqlite3Database } from "better-sqlite3";
 import path from "path";
 import { STORE_DIR } from "./config.js";
 import { logger } from "./logger.js";
@@ -8,6 +8,7 @@ import type {
   Session,
   RouterState,
   DbMessage,
+  TaskRunLog,
 } from "./types.js";
 
 // Ensure store directory exists
@@ -15,7 +16,7 @@ import { mkdirSync } from "fs";
 mkdirSync(STORE_DIR, { recursive: true });
 
 const DB_PATH = path.join(STORE_DIR, "messages.db");
-const db = new Database(DB_PATH);
+export const db: BetterSqlite3Database = new Database(DB_PATH);
 
 // Enable WAL mode for better concurrency
 db.pragma("journal_mode = WAL");
@@ -414,5 +415,3 @@ export function getRouterState(groupFolder: string): RouterState | null {
 
 // Initialize database on module load
 initializeDatabase();
-
-export { db };

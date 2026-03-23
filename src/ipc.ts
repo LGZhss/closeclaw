@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
-import { watch } from "chokidar";
-import { DATA_DIR, IPC_POLL_INTERVAL } from "./config.js";
+import * as chokidar from "chokidar";
+import { DATA_DIR } from "./config.js";
 import { logger } from "./logger.js";
 
 const IPC_DIR = path.join(DATA_DIR, "ipc");
@@ -168,12 +168,12 @@ export function watchIPC(
 ): () => void {
   ensureIpcDirs();
 
-  const watcher = watch([MESSAGES_DIR, TASKS_DIR], {
+  const watcher = chokidar.watch([MESSAGES_DIR, TASKS_DIR], {
     persistent: true,
     ignoreInitial: true,
   });
 
-  watcher.on("add", (filePath) => {
+  watcher.on("add", (filePath: string) => {
     const fileName = path.basename(filePath);
 
     if (MESSAGES_DIR.includes(filePath) && fileName.endsWith(".json")) {
@@ -207,7 +207,7 @@ export function watchIPC(
  */
 export async function pollIPC(
   onMessage: (message: IPCMessage) => void,
-  onTaskResult: (task: IPCTask) => void,
+  _onTaskResult: (task: IPCTask) => void,
 ): Promise<void> {
   const messages = await getPendingMessages();
   for (const message of messages) {

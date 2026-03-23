@@ -1,4 +1,4 @@
-import { Channel, ChannelFactory, ChannelOpts } from "../types.js";
+import { ChannelFactory } from '../types.js';
 
 const registry = new Map<string, ChannelFactory>();
 
