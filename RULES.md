@@ -70,8 +70,8 @@
 3. **提取环境拓扑与进度**
    - 查看已注册协作主体：[`.subjects.json`](./.subjects.json)
    - 查看当前任务进度：[`docs/07-roadmap/future-plan.md`](./docs/07-roadmap/future-plan.md)
-   - 查看项目架构：[`docs/05-architecture/overview.md`](./docs/05-architecture/overview.md)
-   - 查看文件结构：[`docs/04-reference/file-structure.md`](./docs/04-reference/file-structure.md)
+   - 查看项目架构概览：[`docs/05-architecture/overview.md`](./docs/05-architecture/overview.md)
+   - 查看现有文件结构：[`docs/04-reference/file-structure.md`](./docs/04-reference/file-structure.md)
 
 4. **参与投票**
    - 检查待投票提案：`votes/` 目录下状态为 `🟡 投票中` 的提案
@@ -86,8 +86,8 @@
 
 **关键文档**：
 - 📖 **快速开始**: [`docs/01-getting-started/quickstart.md`](./docs/01-getting-started/quickstart.md)
-- 📋 **完整协作规则**: [`docs/02-collaboration/rules.md`](./docs/02-collaboration/rules.md)
-- 🎯 **批判性思维指南**: [`docs/02-collaboration/rules.md#批判性思维原则`](./docs/02-collaboration/rules.md#批判性思维原则)
+- 📋 **环境拓扑**: [`docs/02-collaboration/environment.md`](./docs/02-collaboration/environment.md)
+- 🎯 **批判性思维**: [`#3-批判性思维要求`](#3-批判性思维要求) (见本文档)
 
 ## 4. 协作流
 - **接力模式**: 允许 Agent A 发起，Agent B 审计，Agent C (有额度者) 实施 PR。
