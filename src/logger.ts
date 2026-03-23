@@ -20,8 +20,13 @@ export const logLevels = {
 };
 
 export function log(message: string, level: keyof typeof logLevels = "INFO") {
-  const method = level.toLowerCase() as 'debug' | 'info' | 'warn' | 'error' | 'fatal';
-  if (typeof logger[method] === 'function') {
+  const method = level.toLowerCase() as
+    | "debug"
+    | "info"
+    | "warn"
+    | "error"
+    | "fatal";
+  if (typeof logger[method] === "function") {
     logger[method](message);
   }
 }

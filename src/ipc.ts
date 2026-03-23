@@ -196,9 +196,14 @@ export function watchIPC(
   logger.info("IPC watcher started");
 
   // Return cleanup function
-  return async () => {
-    await watcher.close();
-    logger.info("IPC watcher stopped");
+  return () => {
+    watcher.close()
+      .then(() => {
+        logger.info("IPC watcher stopped");
+      })
+      .catch((err: Error) => {
+        logger.error(`Error closing IPC watcher: ${err.message}`);
+      });
   };
 }
 

@@ -12,10 +12,10 @@ import { logger } from "./logger.js";
 export function escapeXml(s: string): string {
   if (!s) return "";
   return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
 }
 
 // ⚡ Bolt Performance Optimization:
@@ -132,7 +132,10 @@ export async function processGroupMessages(
     }
 
     // Update router state to current message
-    setRouterState(groupFolder, messages[messages.length - 1].id);
+    const lastMessage = messages.at(-1);
+    if (lastMessage) {
+      setRouterState(groupFolder, lastMessage.id);
+    }
 
     // Mark messages as processed
     markMessagesProcessed(messages.map((m) => m.id));

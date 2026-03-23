@@ -11,17 +11,17 @@ import { SCHEDULER_POLL_INTERVAL } from "./config.js";
 export function calculateNextRun(task: ScheduledTask): Date | null {
   try {
     switch (task.schedule_type) {
-      case "cron":
+      case "cron": {
         const interval = parseExpression(task.schedule_value);
         return interval.next().toDate();
-
-      case "interval":
+      }
+      case "interval": {
         const intervalMs = parseInt(task.schedule_value, 10);
         return new Date(Date.now() + intervalMs);
-
-      case "once":
+      }
+      case "once": {
         return new Date(task.schedule_value);
-
+      }
       default:
         logger.warn(`Unknown schedule type: ${task.schedule_type}`);
         return null;

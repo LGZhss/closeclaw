@@ -1,7 +1,10 @@
-import Database, { type Database as BetterSqlite3Database } from "better-sqlite3";
+import Database, {
+  type Database as BetterSqlite3Database,
+} from "better-sqlite3";
 import path from "path";
 import { STORE_DIR } from "./config.js";
 import { logger } from "./logger.js";
+import { mkdirSync } from "fs";
 import type {
   RegisteredGroup,
   ScheduledTask,
@@ -12,7 +15,6 @@ import type {
 } from "./types.js";
 
 // Ensure store directory exists
-import { mkdirSync } from "fs";
 mkdirSync(STORE_DIR, { recursive: true });
 
 const DB_PATH = path.join(STORE_DIR, "messages.db");
@@ -143,11 +145,10 @@ export function getUnprocessedMessages(limit: number = 100): DbMessage[] {
 
 export function markMessagesProcessed(ids: number[]): void {
   if (ids.length === 0) return;
-  const placeholders = ids.map(() => "?").join(",");
   const stmt = db.prepare(
-    `UPDATE messages SET processed = 1 WHERE id IN (${placeholders})`,
+    `UPDATE messages SET processed = 1 WHERE id IN (SELECT value FROM json_each(?))`
   );
-  stmt.run(...ids);
+  stmt.run(JSON.stringify(ids));
 }
 
 export function getMessagesSince(
@@ -183,6 +184,7 @@ export function setRegisteredGroup(jid: string, group: RegisteredGroup): void {
 
 export function getRegisteredGroup(jid: string): RegisteredGroup | null {
   const stmt = db.prepare("SELECT * FROM registered_groups WHERE jid = ?");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const row = stmt.get(jid) as any;
   if (!row) return null;
 
@@ -192,13 +194,14 @@ export function getRegisteredGroup(jid: string): RegisteredGroup | null {
     container_config: row.container_config
       ? JSON.parse(row.container_config)
       : undefined,
-  } as RegisteredGroup;
+  } as unknown as RegisteredGroup;
 }
 
 export function getRegisteredGroupByFolder(
   folder: string,
 ): RegisteredGroup | null {
   const stmt = db.prepare("SELECT * FROM registered_groups WHERE folder = ?");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const row = stmt.get(folder) as any;
   if (!row) return null;
 
@@ -208,11 +211,12 @@ export function getRegisteredGroupByFolder(
     container_config: row.container_config
       ? JSON.parse(row.container_config)
       : undefined,
-  } as RegisteredGroup;
+  } as unknown as RegisteredGroup;
 }
 
 export function getAllRegisteredGroups(): RegisteredGroup[] {
   const stmt = db.prepare("SELECT * FROM registered_groups ORDER BY added_at");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rows = stmt.all() as any[];
   return rows.map((row) => ({
     ...row,
@@ -220,7 +224,7 @@ export function getAllRegisteredGroups(): RegisteredGroup[] {
     container_config: row.container_config
       ? JSON.parse(row.container_config)
       : undefined,
-  })) as RegisteredGroup[];
+  })) as unknown as RegisteredGroup[];
 }
 
 export function deleteRegisteredGroup(jid: string): void {
@@ -232,6 +236,7 @@ export function getMainGroup(): RegisteredGroup | null {
   const stmt = db.prepare(
     "SELECT * FROM registered_groups WHERE is_main = 1 LIMIT 1",
   );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const row = stmt.get() as any;
   if (!row) return null;
 
@@ -241,7 +246,7 @@ export function getMainGroup(): RegisteredGroup | null {
     container_config: row.container_config
       ? JSON.parse(row.container_config)
       : undefined,
-  } as RegisteredGroup;
+  } as unknown as RegisteredGroup;
 }
 
 // Scheduled tasks operations
@@ -309,13 +314,14 @@ export function getAllTasks(): ScheduledTask[] {
 
 export function getTask(taskId: number): ScheduledTask | null {
   const stmt = db.prepare("SELECT * FROM scheduled_tasks WHERE id = ?");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const row = stmt.get(taskId) as any;
   if (!row) return null;
 
   return {
     ...row,
     is_paused: row.is_paused === 1,
-  } as ScheduledTask;
+  } as unknown as ScheduledTask;
 }
 
 export function updateTask(
@@ -349,9 +355,8 @@ export function updateTask(
   if (fields.length === 0) return;
 
   values.push(taskId);
-  const stmt = db.prepare(
-    `UPDATE scheduled_tasks SET ${fields.join(", ")} WHERE id = ?`,
-  );
+  const stmtStr = `UPDATE scheduled_tasks SET ${fields.join(", ")} WHERE id = ?`;
+  const stmt = db.prepare(stmtStr);
   stmt.run(...values);
 }
 

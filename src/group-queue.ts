@@ -15,12 +15,12 @@ interface QueueItem {
  * Per-group queue with global concurrency limit
  */
 export class GroupQueue {
-  private groupQueues = new Map<string, QueueItem[]>();
-  private groupProcessing = new Map<string, boolean>();
+  private readonly groupQueues = new Map<string, QueueItem[]>();
+  private readonly groupProcessing = new Map<string, boolean>();
   private activeContainers = 0;
   private waitingQueue: QueueItem[] = [];
 
-  constructor(private maxConcurrent: number = MAX_CONCURRENT_CONTAINERS) {}
+  constructor(private readonly maxConcurrent: number = MAX_CONCURRENT_CONTAINERS) {}
 
   /**
    * Add a task to the group queue

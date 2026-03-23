@@ -1,8 +1,4 @@
-import {
-  Channel,
-  ChannelOpts,
-  IncomingMessage,
-} from "./types.js";
+import { Channel, IncomingMessage, ChannelOpts, ChatMetadata, RegisteredGroup, ScheduledTask } from "./types.js";
 import {
   getChannelFactory,
   getRegisteredChannelNames,
@@ -19,7 +15,6 @@ import { POLL_INTERVAL, GROUPS_DIR, ASSISTANT_NAME } from "./config.js";
 import { processGroupMessages, formatResponse } from "./router.js";
 import { groupQueue } from "./group-queue.js";
 import { startScheduler } from "./task-scheduler.js";
-import { ScheduledTask } from "./types.js";
 
 import { mkdirSync, existsSync } from "fs";
 import path from "path";
@@ -63,10 +58,10 @@ async function handleIncomingMessage(message: IncomingMessage): Promise<void> {
 function buildChannelOpts(): ChannelOpts {
   return {
     onMessage: handleIncomingMessage,
-    onChatMetadata: (metadata) => {
+    onChatMetadata: (metadata: ChatMetadata) => {
       logger.debug(`Chat metadata: ${metadata.name} (${metadata.jid})`);
     },
-    registeredGroups: (groups) => {
+    registeredGroups: (groups: RegisteredGroup[]) => {
       logger.debug(`Registered groups updated: ${groups.length} groups`);
     },
   };
@@ -124,7 +119,6 @@ async function processGroup(groupFolder: string): Promise<void> {
     try {
       logger.info(`Running agent for group: ${groupFolder}`);
 
-      // TODO: Implement agent execution without container
       // Placeholder: send acknowledgment
       const response = formatResponse(
         "Agent execution is not yet implemented after container removal.",
@@ -165,7 +159,7 @@ function startMessageLoop(): () => void {
       }
 
       // Process each group
-      for (const [chatJid, _messages] of groupedMessages.entries()) {
+      for (const chatJid of groupedMessages.keys()) {
         // Find the group folder for this chat
         // This is simplified - in reality you'd look up the group by JID
         const groupFolder = chatJid; // Simplified for now
@@ -191,7 +185,6 @@ async function executeScheduledTask(task: ScheduledTask): Promise<void> {
   logger.info(`Executing scheduled task ${task.id}`);
 
   try {
-    // TODO: Implement task execution without container
     logger.info(`Task ${task.id} prompt: ${task.prompt}`);
     logger.info(`Task ${task.id} completed (placeholder)`);
   } catch (error) {
