@@ -1,18 +1,12 @@
-# P027 Phase 1 拆解任务 C: Dart 控制平面与 Daemon 骨架
+# P027 Phase 1: Dart 控制平面与 CLI 骨架拦截
 
-## 🎯 任务背景
-Dart 被选定为系统的控制层（Phase 1），主要用于处理生命周期、CLI 交互入口和充当最高级别的审计中继与 TraceID 生成。本任务需建立一个精简、强类型的入口载体。
+## 📌 核心目标
+建立 `cmd/` 目录并初始化 Dart AOT 控制台项目。实现包含 `start/doctor` 的 CLI 入口，并编写轻量化的 `audit_relay.dart`（替代庞大的 JS 仲裁系统），作为 L1 层生命周期守卫。
 
-## 📋 你的职责
-你是一名资深 Dart 开发者（512K 上下文）。你只需关注项目在 Dart 侧的基础设施搭建。不需要关心 TS 沙盒。
+## ⚠️ 强制性纪律 (ANTI-LAZINESS)
+请利用你的前端抽象与系统编程混合能力，自由发挥实施细节，但**必定不可违背**：
+1. **[零待办清单]**：不准在 CLI 交互或中继模型中留有 `// FIXME 之后对接真实逻辑` 的占位符。涉及读取 `.subjects.json` 就写出真实可运行的解析代码。
+2. **[二进制落地]**：你必须保证最终代码可以通过 `dart compile exe bin/closeclaw.dart` 被无痛编译成 Windows 二进制。如果有类型阻断或动态特性报错，必须在你的本次任务上下文中解决完，绝不留到下个阶段。
+3. **[自闭环测试]**：不强求 100% 测试覆盖率，但核心控制命令（如 `doctor`）被模拟调用时，必须立刻返回完整的终端结构文本。
 
-### 具体要求：
-1. 通过 `dart create -t console cmd` 初始化 Dart 项目，修改 `pubspec.yaml` 确保名称和依赖合理（如 uuid, args 等）。
-2. 在 `cmd/bin/closeclaw.dart` 提供基础 CLI 入口（解析 `start`, `stop`, `doctor` 参数）。
-3. 建立 `cmd/lib/core/audit_relay.dart` 的骨架类，目前只需定义出“接收请求 -> 签名 TraceID -> 中继调度”的抽象接口，暂不需要实现底层网络。
-4. **最核心的验证**: 测试并提供自动化脚本（可以是简单的 `Taskfile` 或 bash/ps1 脚本），使用 `dart compile exe bin/closeclaw.dart` 成功编译为独立可执行文件。
-
-## ⚠️ 提交交付
-- 提交 PR 到 `proposal/027-phase1-part3` 分支。
-- 确保没有引入无用的大型依赖，核心理念为极速轻量。
-- 保证构建出 `closeclaw.exe` 并在本地测试一下 `closeclaw doctor` 命令能正常返回一些假数据或状态。
+完成开发后，提交至 `proposal/027-phase1-part3` 分支。

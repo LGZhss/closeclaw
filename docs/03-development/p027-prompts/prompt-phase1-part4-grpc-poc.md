@@ -1,18 +1,12 @@
-# P027 Phase 1 拆解任务 D: gRPC Named Pipe POC 验证 (Dart ↔ Go)
+# P027 Phase 1: gRPC Named Pipe IPC 极限性能靶测
 
-## 🎯 任务背景
-在 CloseClaw 三语言架构中，Dart 作为控制层，将与 Go 作为状态神经中枢通过 gRPC (因平台主要为 Windows，故采用 Named Pipe) 进行底层二进制通信，以此取代过往 JSON API 轮询带来的损耗。此性能对整个系统命脉至关重要。
+## 📌 核心目标
+在 `proto/messages.proto` 的指导下，建立 Go gRPC Server 与 Dart gRPC Client，利用基于 Windows 平台的 Named Pipe 建立通信连接，测试 10,000 条 Task 的 RTT (往返延迟) 必须控制在 ≤ 2ms。
 
-## 📋 你的职责
-你熟悉 Dart 和 Go 网络编程底层（512K 上下文）。你需要验证跨界 IPC 的效率。
+## ⚠️ 强制性纪律 (ANTI-LAZINESS)
+你作为该环节性能的终极把关者，有全权决定 IPC 通道（如 gopkg.in/natefinch/npipe.v2 或标准库）与收发逻辑，但**绝对禁止**以下懒惰行为：
+1. **[纸上谈兵]**：禁止仅编写抽象接口代码而在关键测试环节抛出 `throw UnimplementedError('等待后续压测接入')`。你必须提交完整的靶测 Client 和模拟回复 Server 代码，并执行出结果。
+2. **[欺瞒日志]**：你必须真实跑满万级请求并提供 `docs/reports/phase1-benchmarks.md`。如果是系统权限拒绝，请解决并文档化；如果被杀软拦截导致超限 2ms，写下来证明。
+3. **[敷衍协议]**：必须真实加载生成的 protobuf 桩，携带 `trace_id` 来回交互，不允许降级使用普通 socket 字串冒充。
 
-### 具体要求：
-1. 先查阅根目录刚刚生成的 `proto/messages.proto` (不要修改它，仅依赖以编译桩代码)。
-2. 在 `kernel/` 下补充 gRPC Server 处理骨架，实现极简的回显（Echo）或模拟状态写入。
-3. 在 `cmd/` 下补充 gRPC Client 连接端代码，通过指定的 Named Pipe (例如 `\\.\pipe\closeclaw_ipc`) 向 Go 狂发请求。
-4. **验证门槛**: 在 Windows 下实测 Named Pipe RTT，必须包含明确的 Bench 追踪日志：确认 P50/P95 RTT 参数均 `≤ 2ms` 才能通过验收线。
-
-## ⚠️ 提交交付
-- 提交 PR 到 `proposal/027-phase1-part4` 分支。
-- 你必须同时提供测试脚本和相应的性能报告文档记录（建议为 `docs/reports/phase1-benchmarks.md`），明确写出测试环境与得到的 RTT 值。
-- 如果发现在部分杀毒软件拦截或 Windows Defender 开启状态下 RTT 飙升，需要在这份报告中给出环境配置避坑指南。
+完成开发后，提交至 `proposal/027-phase1-part4` 分支。
