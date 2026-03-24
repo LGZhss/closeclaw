@@ -4,7 +4,7 @@ import { resolve } from 'path';
 import { SandboxRunner } from './agent/sandbox-runner.js';
 import { logger } from './logger.js';
 import { ASSISTANT_NAME } from './config.js';
-import './adapters/openai.js'; // 确保适配器自动注册
+// 确保适配器自动注册（目前仅保留协作主体适配器，由其自身注册）
 
 /**
  * GrpcKernelBusClient - 正式 gRPC 客户端连接 Go 内核
