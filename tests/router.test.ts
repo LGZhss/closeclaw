@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
-import { routeOutbound, escapeXml, findChannelForJid, formatMessages } from "../src/router.js";
+import { routeOutbound, escapeXml, findChannelForJid, formatMessages, shouldTrigger } from "../src/router.js";
 import { Channel, DbMessage } from "../src/types.js";
+import { ASSISTANT_NAME } from "../src/config.js";
 
 describe("findChannelForJid", () => {
   it("should return the matching channel when one owns the JID", () => {
@@ -274,5 +275,48 @@ describe('formatMessages', () => {
     const expected = `[${timeStr}] TestUser: `;
 
     expect(formatMessages([msg])).toBe(expected);
+  });
+});
+
+describe("shouldTrigger", () => {
+  const createMockMessage = (text: string | undefined): DbMessage => ({
+    id: 1,
+    channel: "test",
+    chat_jid: "group@g.us",
+    sender_jid: "user@s.whatsapp.net",
+    sender_name: "TestUser",
+    text: text as string,
+    timestamp: Date.now(),
+    is_group: true,
+    processed: false,
+    created_at: new Date().toISOString(),
+  });
+
+  it(`should return true when text exactly matches @${ASSISTANT_NAME}`, () => {
+    expect(shouldTrigger(createMockMessage(`@${ASSISTANT_NAME}`))).toBe(true);
+  });
+
+  it(`should return true when text contains @${ASSISTANT_NAME}`, () => {
+    expect(
+      shouldTrigger(createMockMessage(`hello @${ASSISTANT_NAME} how are you?`))
+    ).toBe(true);
+  });
+
+  it(`should return false when @${ASSISTANT_NAME} is part of another word`, () => {
+    expect(shouldTrigger(createMockMessage(`@${ASSISTANT_NAME}123`))).toBe(
+      false
+    );
+  });
+
+  it("should return false for empty text", () => {
+    expect(shouldTrigger(createMockMessage(""))).toBe(false);
+  });
+
+  it("should return false for null or undefined text", () => {
+    expect(shouldTrigger(createMockMessage(undefined))).toBe(false);
+  });
+
+  it(`should be case-insensitive for @${ASSISTANT_NAME}`, () => {
+    expect(shouldTrigger(createMockMessage(`@${ASSISTANT_NAME.toLowerCase()}`))).toBe(true);
   });
 });

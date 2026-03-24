@@ -1,0 +1,56 @@
+---
+# Codacy Configuration
+# Documentation: https://docs.codacy.com/repositories-configure/codacy-configuration-file/
+
+# 💡 核心策略：聚焦安全与错误，禁止检查“注释和文档”
+repository_full_name: LGZhss/closeclaw
+
+# 1. 忽略不需要扫描的目录 (减少噪音)
+exclude_paths:
+  - 'node_modules/**'
+  - 'dist/**'
+  - 'groups/**'        # 过滤群组记忆目录
+  - 'tests/**'         # 测试用例通常不需要严格的 lint
+  - 'scripts/**'       # 临时工具脚本
+  - 'worktrees/**'     # 过滤 Git worktrees 副本
+
+# 2. 工具配置
+engines:
+  # 开启安全核心工具
+  bandit:
+    enabled: true
+  gosec:
+    enabled: true
+  eslint:
+    enabled: true
+  
+  # 直接禁用那些只会叫你写注释的工具
+  pylint:
+    enabled: false      # Python 注释报错的大头，直接关掉
+  tslint:
+    enabled: false      # 已过时的 TS 工具，关掉
+  remark-lint:
+    enabled: false      # Markdown 格式检查，没必要
+
+# 3. 覆盖规则 (按语言过滤)
+languages:
+  typescript:
+    ext:
+      - .ts
+      - .tsx
+  go:
+    ext:
+      - .go
+
+# 4. 强制忽略“文档”类警告
+patterns:
+  eslint:
+    exclude:
+      - "valid-jsdoc"
+      - "require-jsdoc"
+  # 如果不小心启用了其它工具，这里是二次保险
+  pylint:
+    exclude:
+      - "C0114" # missing-module-docstring
+      - "C0115" # missing-class-docstring
+      - "C0116" # missing-function-docstring
