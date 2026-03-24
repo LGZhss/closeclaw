@@ -35,7 +35,7 @@ export class ProcessExecutor {
    * @returns 执行结果
    */
   async execute(code: string, options: ExecutionOptions = {}): Promise<ExecutionResult> {
-    const executionId = `exec_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+    const executionId = `exec_${Date.now()}_${Math.random().toString(36).substring(2, 11)}_${process.hrtime.bigint()}`;
     const timeout = options.timeout || config.sandbox.timeout;
 
     return new Promise((resolve, reject) => {
@@ -82,7 +82,7 @@ export class ProcessExecutor {
     const executionId = `exec_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 
     // 解析命令
-    let cmd = command;
+    let cmd: string;
     let args: string[] = [];
 
     if (process.platform === 'win32') {
@@ -206,8 +206,9 @@ export class ProcessExecutor {
       this.runningProcesses.delete(executionId);
       logger.info(`[ProcessExecutor] 已停止执行: ${executionId}`);
       return true;
-    } catch (error: any) {
-      logger.error(`[ProcessExecutor] 停止执行失败: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      logger.error(`[ProcessExecutor] 停止执行失败: ${message}`);
       return false;
     }
   }
@@ -221,8 +222,9 @@ export class ProcessExecutor {
       try {
         childProcess.kill();
         logger.info(`[ProcessExecutor] 关闭时停止执行: ${executionId}`);
-      } catch (error: any) {
-        logger.error(`[ProcessExecutor] 关闭时停止执行失败: ${error.message}`);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        logger.error(`[ProcessExecutor] 关闭时停止执行失败: ${message}`);
       }
     }
 

@@ -54,8 +54,9 @@ export class SandboxManager {
       const result = await this.executors.process.execute(code, options);
       this._updateExecutionStatus(executionId, 'completed', result);
       return result;
-    } catch (error: any) {
-      this._updateExecutionStatus(executionId, 'failed', { error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      this._updateExecutionStatus(executionId, 'failed', { error: message });
       throw error;
     }
   }
@@ -105,8 +106,9 @@ export class SandboxManager {
       await this.executors.process.stop(executionId);
       this._updateExecutionStatus(executionId, 'stopped');
       return true;
-    } catch (error: any) {
-      logger.error(`[Sandbox] 停止执行失败: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      logger.error(`[Sandbox] 停止执行失败: ${message}`);
       return false;
     }
   }
@@ -147,8 +149,9 @@ export class SandboxManager {
     try {
       await this.executors.process.close();
       logger.info('[Sandbox] 沙盒管理器已关闭');
-    } catch (error: any) {
-      logger.error(`[Sandbox] 关闭沙盒管理器失败: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      logger.error(`[Sandbox] 关闭沙盒管理器失败: ${message}`);
     }
   }
 
@@ -156,7 +159,7 @@ export class SandboxManager {
    * 更新执行状态
    * @private
    */
-  private _updateExecutionStatus(executionId: string, status: ExecutionHistoryEntry['status'], result: any = null): void {
+  private _updateExecutionStatus(executionId: string, status: ExecutionHistoryEntry['status'], result: ExecutionResult | { error: string } | null = null): void {
     const execution = this.executionHistory.get(executionId);
     if (execution) {
       execution.status = status;

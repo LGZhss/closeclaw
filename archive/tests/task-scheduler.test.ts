@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { taskScheduler, calculateNextRun, validateCronExpression } from '../src/task-scheduler.js';
-import { logger } from '../src/logger.js';
-import { ScheduledTask } from '../src/types.js';
+import { taskScheduler, calculateNextRun, validateCronExpression } from '../src/task-scheduler';
+import { logger } from '../src/logger';
+import { ScheduledTask } from '../src/types';
 
 vi.mock('cron-parser', async () => {
   const actual = await vi.importActual<any>('cron-parser');
@@ -12,7 +12,7 @@ vi.mock('cron-parser', async () => {
   };
 });
 
-vi.mock('../src/logger.js', () => ({
+vi.mock('../src/logger', () => ({
   logger: {
     warn: vi.fn(),
     error: vi.fn(),

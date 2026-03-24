@@ -19,7 +19,7 @@ export class SandboxRunner implements AgentRunner {
       // 构造 gRPC 请求
       const chatRequest = {
         trace: {
-          trace_id: (context as any).trace_id || 'manual-' + Date.now(),
+          trace_id: (context as ExecutionContext & { trace_id?: string }).trace_id || 'manual-' + Date.now(),
           created_at_ms: Date.now()
         },
         message: context.prompt,
@@ -31,7 +31,7 @@ export class SandboxRunner implements AgentRunner {
 
       // 调用 Go 内核的 Chat RPC
       return new Promise((resolve) => {
-        this.client.Chat(chatRequest, (err: any, response: any) => {
+        this.client.Chat(chatRequest, (err: Error | null, response: { status?: number | string; text: string; error?: string }) => {
           if (err) {
             logger.error(`[SandboxRunner] gRPC Chat failed: ${err.message}`);
             resolve(`Error: ${err.message}`);
@@ -48,7 +48,7 @@ export class SandboxRunner implements AgentRunner {
           }
         });
       });
-    } catch (error) {
+    } catch (error: unknown) {
       const errorMsg = error instanceof Error ? error.message : String(error);
       logger.error(`[SandboxRunner] Execution failed: ${errorMsg}`);
       return `Error: ${errorMsg}`;

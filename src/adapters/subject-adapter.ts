@@ -10,7 +10,7 @@ export interface SubjectAction {
 }
 
 export abstract class SubjectAdapter {
-  constructor(
+  protected constructor(
     public id: string,
     public type: string,
   ) {}

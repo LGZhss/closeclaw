@@ -50,11 +50,12 @@ export async function execAsync(command: string): Promise<{ stdout: string; stde
  * 读取工作区文件
  */
 export async function readWsFile(filePath: string): Promise<string> {
-  const fullPath = path.resolve(WORKSPACE, filePath);
+  const fullPath = resolveSafePath(filePath);
   try {
     return await fs.readFile(fullPath, 'utf8');
-  } catch (error: any) {
-    logger.error(`Error reading ${filePath}: ${error.message}`);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    logger.error(`Error reading ${filePath}: ${message}`);
     throw error;
   }
 }
@@ -63,15 +64,16 @@ export async function readWsFile(filePath: string): Promise<string> {
  * 写入工作区文件
  */
 export async function writeWsFile(filePath: string, content: string): Promise<string> {
-  const fullPath = path.resolve(WORKSPACE, filePath);
+  const fullPath = resolveSafePath(filePath);
   try {
     const dir = path.dirname(fullPath);
     await fs.mkdir(dir, { recursive: true });
     await fs.writeFile(fullPath, content, 'utf8');
     return 'OK';
-  } catch (error: any) {
-    logger.error(`Error writing ${filePath}: ${error.message}`);
-    return error.message;
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    logger.error(`Error writing ${filePath}: ${message}`);
+    return message;
   }
 }
 
@@ -83,8 +85,9 @@ export async function fetchUrl(url: string): Promise<string> {
     const response = await fetch(url);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     return await response.text();
-  } catch (error: any) {
-    logger.error(`Fetch error ${url}: ${error.message}`);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    logger.error(`Fetch error ${url}: ${message}`);
     throw error;
   }
 }
@@ -121,9 +124,10 @@ export async function runGit(action: 'backup' | 'sync', message?: string): Promi
         });
       });
     }
-  } catch (error: any) {
-    logger.error(`Git error: ${error.message}`);
-    return `❌ Git failed: ${error.message}`;
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    logger.error(`Git error: ${message}`);
+    return `❌ Git failed: ${message}`;
   }
 }
 

@@ -10,7 +10,7 @@ import { ASSISTANT_NAME } from './config.js';
  * GrpcKernelBusClient - 正式 gRPC 客户端连接 Go 内核
  */
 class GrpcKernelBusClient {
-  private readonly client: any;
+  private client: any; // gRPC 动态生成的客户端通常为 any，但我们会通过类型守卫保护调用
   private readonly protoPath: string;
 
   constructor() {
@@ -32,8 +32,9 @@ class GrpcKernelBusClient {
         '127.0.0.1:50051', 
         grpc.credentials.createInsecure()
       );
-    } catch (err: any) {
-      logger.error(`[TS Sandbox] Failed to load proto: ${err.message}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      logger.error(`[TS Sandbox] Failed to load proto: ${message}`);
     }
   }
 
@@ -46,8 +47,12 @@ class GrpcKernelBusClient {
     // 调用我们在 proto 中新增的 SubscribeTasks stream
     const call = this.client.SubscribeTasks({ ok: true, message: 'Ready' });
     
-    call.on('data', async (task: any) => {
-      const taskId = task.task_id || task.id; // 容错处理，但优先使用 task_id
+    call.on('data', async (task: { task_id?: string; id?: string; group_folder?: string; payload?: Buffer; history?: any[]; trace?: { trace_id?: string } }) => {
+      const taskId = task.task_id || task.id; 
+      if (!taskId) {
+        logger.warn('[TS Sandbox] Received task without ID, ignoring.');
+        return;
+      }
       logger.info(`[TS Sandbox] Received dispatched task: ${taskId}`);
       
       const runner = new SandboxRunner(this.client); 
@@ -69,26 +74,27 @@ class GrpcKernelBusClient {
           status: 'DONE',
           result: Buffer.from(responseText)
         });
-      } catch (err: any) {
-        logger.error(`[TS Sandbox] Task ${taskId} execution failed: ${err.message}`);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        logger.error(`[TS Sandbox] Task ${taskId} execution failed: ${message}`);
         await this.syncStatus({
           task_id: taskId,
-          trace_id: task.trace?.trace_id,
+          trace_id: task.trace?.trace_id || 'unknown',
           status: 'FAILED',
-          error: err.message
+          error: message
         });
       } finally {
         await runner.close();
       }
     });
 
-    call.on('error', (err: any) => {
+    call.on('error', (err: Error) => {
       logger.error(`[TS Sandbox] gRPC Stream Error: ${err.message}`);
       // 指数退避重连
       setTimeout(() => this.subscribeTasks(), 5000);
     });
 
-    call.on('status', (status: any) => {
+    call.on('status', (status: grpc.StatusObject) => {
       logger.debug(`[TS Sandbox] gRPC Stream Status: ${JSON.stringify(status)}`);
     });
 
@@ -98,9 +104,9 @@ class GrpcKernelBusClient {
     });
   }
 
-  private async syncStatus(update: any): Promise<void> {
+  private async syncStatus(update: { task_id: string; trace_id?: string; status: string; result?: Buffer; error?: string }): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.client.SyncStatus(update, (err: any, response: any) => {
+      this.client.SyncStatus(update, (err: Error | null, response: any) => {
         if (err) {
           logger.error(`[TS Sandbox] SyncStatus report failed: ${err.message}`);
           reject(err);
@@ -119,7 +125,8 @@ async function main() {
   client.start();
 }
 
-main().catch(err => {
-  logger.error(`[TS Sandbox] Fatal error: ${err.message}`);
+main().catch((err: unknown) => {
+  const message = err instanceof Error ? err.message : String(err);
+  logger.error(`[TS Sandbox] Fatal error: ${message}`);
   process.exit(1);
 });

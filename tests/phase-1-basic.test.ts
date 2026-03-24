@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { registerAdapter, getAdapter, getRegisteredAdapterNames, clearRegistry } from '../src/adapters/registry.js';
 import { LLMAdapter, ChatParams, ChatResponse } from '../src/adapters/base.js';
 import { SandboxRunner } from '../src/agent/sandbox-runner.js';
+import { ExecutionContext } from '../src/agent/runner.js';
 
 // Mock LLM Adapter for testing
 class MockAdapter extends LLMAdapter {
@@ -52,13 +53,13 @@ describe('Phase 1: Agent Execution Chain', () => {
 
   describe('SandboxRunner', () => {
     it('should execute with available adapter', async () => {
-      registerAdapter('mock', () => new MockAdapter());
-      
-      const runner = new SandboxRunner('mock');
-      const context = {
+      const mockClient = {
+        Chat: (req: any, cb: any) => cb(null, { status: 2, text: 'Mock response to: Hello' })
+      };
+      const runner = new SandboxRunner(mockClient);
+      const context: ExecutionContext = {
         groupFolder: 'test',
         prompt: 'Hello',
-        channel: {} as any,
         history: []
       };
       
@@ -66,8 +67,11 @@ describe('Phase 1: Agent Execution Chain', () => {
       expect(response).toContain('Mock response to: Hello');
     });
 
-    it('should return error when adapter is not available', async () => {
-      const runner = new SandboxRunner('nonexistent');
+    it('should return error when gRPC call fails', async () => {
+      const mockClient = {
+        Chat: (req: any, cb: any) => cb(new Error('Connection failed'))
+      };
+      const runner = new SandboxRunner(mockClient);
       const context = {
         groupFolder: 'test',
         prompt: 'Hello',
@@ -76,13 +80,11 @@ describe('Phase 1: Agent Execution Chain', () => {
       };
       
       const response = await runner.execute(context);
-      expect(response).toContain('Error: No LLM adapter available');
+      expect(response).toContain('Error: Connection failed');
     });
 
     it('should close without errors', async () => {
-      registerAdapter('mock', () => new MockAdapter());
-      
-      const runner = new SandboxRunner('mock');
+      const runner = new SandboxRunner({});
       await expect(runner.close()).resolves.toBeUndefined();
     });
   });
