@@ -1,13 +1,13 @@
 {
   "repoPath": "E:\\.closeclaw",
-  "lastCommit": "ccee161725a6daa73e275d9ba4870a38b61f2072",
-  "indexedAt": "2026-03-24T12:23:26.573Z",
+  "lastCommit": "df32c26b0b057592a3130e0d2be4270dda9b2bae",
+  "indexedAt": "2026-03-24T17:33:17.692Z",
   "stats": {
-    "files": 307,
-    "nodes": 1368,
-    "edges": 2915,
-    "communities": 118,
-    "processes": 74,
+    "files": 143,
+    "nodes": 614,
+    "edges": 1313,
+    "communities": 56,
+    "processes": 23,
     "embeddings": 0
   }
 }
