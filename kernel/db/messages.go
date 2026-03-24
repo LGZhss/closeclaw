@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -53,6 +54,9 @@ type ScheduledTask struct {
 	Status        string `json:"status"`
 	DependsOn     string `json:"depends_on"`
 }
+
+// Message は DbMessage のエイリアス（kernel/router と kernel/server が参照する互換名）
+type Message = DbMessage
 
 // ─────────────────────────────────────────
 // 消息操作
@@ -153,13 +157,16 @@ func CheckDependenciesMet(db *sql.DB, dependsOn string) (bool, error) {
 	if dependsOn == "" {
 		return true, nil
 	}
-	// dependsOn 是逗号分隔的 ID 列表
-	query := fmt.Sprintf(
-		"SELECT COUNT(*) FROM scheduled_tasks WHERE id IN (%s) AND status != 'DONE'",
-		dependsOn, // 注意：在真实生产中应使用正则或参数化，此处假设 dependsOn 格式由系统控制
-	)
+	// dependsOn 是逗号分隔的 ID 列表，转换为 JSON 数组以便安全查询
+	ids := strings.Split(dependsOn, ",")
+	jsonIDs, _ := json.Marshal(ids)
+
+	query := `SELECT COUNT(*) FROM scheduled_tasks 
+	          WHERE id IN (SELECT value FROM json_each(?)) 
+	          AND status != 'DONE'`
+
 	var count int
-	err := db.QueryRow(query).Scan(&count)
+	err := db.QueryRow(query, string(jsonIDs)).Scan(&count)
 	if err != nil {
 		return false, err
 	}

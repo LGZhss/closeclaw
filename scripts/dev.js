@@ -69,7 +69,6 @@ const processes = [];
 const devServer = spawn('npm', ['run', 'dev'], {
   cwd: ROOT,
   stdio: 'inherit',
-  shell: true,
   env: { ...process.env, LOG_LEVEL: 'debug', NODE_ENV: 'development' },
 });
 processes.push(devServer);
@@ -81,7 +80,6 @@ if (WITH_TESTS) {
   const testWatcher = spawn('npm', ['run', 'test', '--', '--watch'], {
     cwd: ROOT,
     stdio: 'inherit',
-    shell: true,
   });
   processes.push(testWatcher);
   if (VERBOSE) console.log(`  ${C.dim}已启动 test 进程 PID: ${testWatcher.pid}${C.reset}`);

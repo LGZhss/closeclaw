@@ -97,9 +97,10 @@ function parseProposal(filePath) {
       const cells = parseTableRow(line);
       if (cells.length >= 2) {
         const subject = cells[0].replace(/^[✅❌⚪]\s*/, '').trim();
-        const attitude = cells[1].includes('赞同') ? '赞同' : 
-                        cells[1].includes('反对') ? '反对' : '弃权';
-        const score = attitude === '赞同' ? 1 : attitude === '反对' ? -2 : 0; // 反对为 -2
+        const rawAttitude = cells[1].trim();
+        const attitude = /赞同|同意|PASS/i.test(rawAttitude) ? '赞同' : 
+                        /反对|拒绝|REJECT/i.test(rawAttitude) ? '反对' : '弃权';
+        const score = attitude === '赞同' ? 1 : attitude === '反对' ? -2 : 0; 
         
         result.votes.push({ subject, attitude, score, note: cells[3] || '' });
         result.ideTotalScore += (attitude === '赞同' ? 1 : 0);

@@ -9,10 +9,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/robfig/cron/v3"
-
 	"closeclaw-kernel/db"
-	pb "closeclaw-kernel/proto"
 	"closeclaw-kernel/scheduler"
 	"closeclaw-kernel/server"
 )
@@ -28,9 +25,22 @@ func main() {
 	// 初始化数据库
 	storeDir := os.Getenv("WORKSPACE_DIR")
 	if storeDir == "" {
-		storeDir = filepath.Join(os.TempDir(), "closeclaw-data")
+		if configDir, err := os.UserConfigDir(); err == nil {
+			storeDir = filepath.Join(configDir, "closeclaw", "data")
+		} else {
+			// 回退到当前目录，避免使用公共临时目录
+			storeDir = "./data"
+		}
 	}
-	if _, err := db.InitDB(storeDir); err != nil {
+	// 确保目录存在
+	if err := os.MkdirAll(storeDir, 0755); err != nil {
+		slog.Error("无法创建数据目录", "dir", storeDir, "err", err)
+		os.Exit(1)
+	}
+
+	// 1. 初始化数据库
+	_, err := db.InitDB(storeDir)
+	if err != nil {
 		slog.Error("SQLite 初始化失败", "err", err)
 		os.Exit(1)
 	}

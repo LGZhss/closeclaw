@@ -56,7 +56,6 @@ class GrpcKernelBusClient {
         const context = {
           groupFolder: task.group_jid || 'global',
           prompt: task.payload || '',
-          channel: null as any,
           history: [] // 后续可由 Go 侧下发历史片段
         };
         

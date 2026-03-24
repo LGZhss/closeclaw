@@ -119,5 +119,5 @@ if (DRY_RUN) {
 }
 
 // 用 spawn 替代 execSync，保持进程持续运行
-const child = spawn('npm', ['start'], { cwd: ROOT, stdio: 'inherit', shell: true });
+const child = spawn('npm', ['start'], { cwd: ROOT, stdio: 'inherit' });
 child.on('exit', (code) => process.exit(code ?? 0));

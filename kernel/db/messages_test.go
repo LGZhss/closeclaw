@@ -6,20 +6,24 @@
 package db
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
-	"path/filepath"
 	"testing"
 	"time"
 )
 
+// ensure sql is used (for pool field in DB struct)
+var _ *sql.DB
+
 // setupBenchDB 在临时目录创建一个独立的测试 DB，避免污染生产数据。
-func setupBenchDB(b *testing.B) *DB {
+func setupBenchDB(b *testing.B) *sql.DB {
 	b.Helper()
 	dir := b.TempDir()
-	db, err := InitDB(filepath.Join(dir, "bench.db"))
+	// 使用 OpenDB 而非 InitDB 以绕过全局单例
+	db, err := OpenDB(dir)
 	if err != nil {
-		b.Fatalf("InitDB 失败: %v", err)
+		b.Fatalf("OpenDB 失败: %v", err)
 	}
 	return db
 }
@@ -28,8 +32,9 @@ func setupBenchDB(b *testing.B) *DB {
 // 目标：完成时间 ≤ 150ms。
 func BenchmarkBatchInsert1000(b *testing.B) {
 	db := setupBenchDB(b)
-	// 预先注册一个群组以满足外键约束
-	if _, err := db.pool.Exec(
+	defer db.Close()
+	// 预筹注册一个群组以满足外键约束
+	if _, err := db.Exec(
 		`INSERT OR IGNORE INTO registered_groups (jid, name, folder, channel, added_at)
 		 VALUES ('bench@g.us', 'bench', 'bench', 'telegram', datetime('now'))`,
 	); err != nil {
@@ -39,7 +44,7 @@ func BenchmarkBatchInsert1000(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		// 使用事务批量插入，模拟真实消息入库场景
-		tx, err := db.pool.Begin()
+		tx, err := db.Begin()
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -70,13 +75,14 @@ func BenchmarkBatchInsert1000(b *testing.B) {
 // 目标（P027 门控）：ns/op ≤ 800,000（即 ≤ 0.8ms）。
 func BenchmarkSingleQuery(b *testing.B) {
 	db := setupBenchDB(b)
+	defer db.Close()
 	// 预热：写入 10k 条数据
 	seedMessages(b, db, 10000)
 
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			msgs, err := GetUnprocessedMessages(db.pool, 100)
+			msgs, err := GetUnprocessedMessages(db, 100)
 			if err != nil {
 				b.Fatal(err)
 			}
@@ -89,7 +95,9 @@ func BenchmarkSingleQuery(b *testing.B) {
 // BenchmarkConcurrentWrite 100 goroutine 同时插入，验证 WAL 无死锁。
 func BenchmarkConcurrentWrite(b *testing.B) {
 	db := setupBenchDB(b)
-	if _, err := db.pool.Exec(
+	defer db.Close()
+	// 预筹注册一个群组以满足外键约束
+	if _, err := db.Exec(
 		`INSERT OR IGNORE INTO registered_groups (jid, name, folder, channel, added_at)
 		 VALUES ('conc@g.us', 'conc', 'conc', 'telegram', datetime('now'))`,
 	); err != nil {
@@ -106,7 +114,7 @@ func BenchmarkConcurrentWrite(b *testing.B) {
 				Text: "并发测试消息", Timestamp: time.Now().UnixMilli(),
 				IsGroup: true,
 			}
-			if _, err := InsertMessage(db.pool, msg); err != nil {
+			if _, err := InsertMessage(db, msg); err != nil {
 				// WAL 下不允许出现 "database is locked" 错误
 				b.Errorf("并发写入失败（可能是锁争用）: %v", err)
 			}
@@ -116,9 +124,9 @@ func BenchmarkConcurrentWrite(b *testing.B) {
 }
 
 // seedMessages 向测试 DB 写入 n 条假数据。
-func seedMessages(b *testing.B, db *DB, n int) {
+func seedMessages(b *testing.B, db *sql.DB, n int) {
 	b.Helper()
-	tx, _ := db.pool.Begin()
+	tx, _ := db.Begin()
 	stmt, _ := tx.Prepare(
 		`INSERT INTO messages (channel, chat_jid, sender_jid, sender_name, text, timestamp, is_group, processed)
 		 VALUES ('telegram','seed@g.us','seed@s.com','种子用户',?,?,1,0)`,
@@ -130,12 +138,7 @@ func seedMessages(b *testing.B, db *DB, n int) {
 	tx.Commit()
 }
 
-// DB 包装 sql.DB 以便 bench 调用，见 schema.go 定义
-type DB struct {
-	pool *sql.DB // 暴露给 bench，生产代码通过 GetDB() 访问
-}
-
-// 重新导出 InitDB 适配 bench 的 DB 包装类型
+// seedMessages seeds n messages into the bench DB.
 func init() {
 	// 屏蔽 os 未使用警告（os.Exit 用于非 benchmark 测试入口）
 	_ = os.Stderr

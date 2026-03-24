@@ -143,13 +143,13 @@ func (s *KernelBusServer) GetPendingMessages(req *pb.Ack, stream pb.KernelBus_Ge
 	for i := 0; i < 3; i++ {
 		// Mock DB fetch
 		dbMsg := db.Message{
-			Id:         int64(i + 1),
+			ID:         int64(i + 1),
 			Channel:    "telegram",
-			ChatJid:    "test@g.us",
-			SenderJid:  "sender@s.com",
+			ChatJID:    "test@g.us",
+			SenderJID:  "sender@s.com",
 			SenderName: "测试用户",
 			Text:       fmt.Sprintf("@Andy 请看第 %d 条 Phase2 POC", i+1),
-			Timestamp:  time.Now().Format(time.RFC3339),
+			Timestamp:  time.Now().UnixMilli(),
 			IsGroup:    true,
 		}
 
@@ -158,10 +158,10 @@ func (s *KernelBusServer) GetPendingMessages(req *pb.Ack, stream pb.KernelBus_Ge
 			
 			// 发送给 Dart 的就是构建好的 Prompt
 			msg := &pb.IncomingMessage{
-				Id:         dbMsg.Id,
+				Id:         dbMsg.ID,
 				Channel:    dbMsg.Channel,
-				ChatJid:    dbMsg.ChatJid,
-				SenderJid:  dbMsg.SenderJid,
+				ChatJid:    dbMsg.ChatJID,
+				SenderJid:  dbMsg.SenderJID,
 				SenderName: dbMsg.SenderName,
 				Text:       prompt, // 最终发送加工后的 prompt
 				Timestamp:  time.Now().UnixMilli(),

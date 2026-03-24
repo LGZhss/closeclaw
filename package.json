@@ -2,6 +2,7 @@
   "name": "closeclaw",
   "version": "1.0.0",
   "description": "CloseClaw - 个人 AI 助手，轻量级、安全、可定制",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {

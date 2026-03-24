@@ -2,9 +2,9 @@
 
 > 模型必读：请先阅读 [RULES.md](./RULES.md)
 >
-> **版本**: 2.0.0  
+> **版本**: 3.0.0 (P027 三语言架构)  
 > **基于**: NanoClaw 架构  
-> **状态**: 🟢 开发中
+> **状态**: 🟢 P027 Phase 1 实施中
 
 ---
 
@@ -83,7 +83,8 @@ node scripts/test-zhipu-api.js
 
 ## ✨ 特性
 
-- 🏗️ **微内核架构** - 单进程编排，易于定制
+- 🏗️ **三语言微内核架构** - Dart(控制平面) + Go(状态总线) + TS(沙盒执行)
+- 🔒 **三级容灾降级** - L1/L2/L3 自动故障转移，确保 P021 基线始终可用
 - 📱 **多通道支持** - Telegram、WhatsApp 等（通过技能添加）
 - 🧠 **分层记忆** - 每个群组独立的 CONTEXT.md
 - ⏰ **任务调度** - 定时任务和周期性任务
@@ -104,8 +105,9 @@ node scripts/test-zhipu-api.js
 | 文档 | 说明 |
 |------|------|
 | [docs/04-reference/file-structure.md](./docs/04-reference/file-structure.md) | 文件结构详解 |
-| [docs/05-architecture/overview.md](./docs/05-architecture/overview.md) | 系统架构设计 |
+| [docs/05-architecture/overview.md](./docs/05-architecture/overview.md) | 三语言系统架构设计 |
 | [docs/07-roadmap/future-plan.md](./docs/07-roadmap/future-plan.md) | 未来发展规划 |
+| [docs/07-roadmap/P027-summary.md](./docs/07-roadmap/P027-summary.md) | ⭐ P027 提案总结 |
 | [RULES.md](./RULES.md) | 协作规则 |
 | [docs/06-registry/collaborators.md](./docs/06-registry/collaborators.md) | 协作主体注册 |
 
@@ -153,12 +155,22 @@ node scripts/test-zhipu-api.js
 
 ```
 closeclaw/
-├── src/                      # 源代码（TypeScript）
-│   ├── index.ts              # 核心编排器
-│   ├── db.ts                 # 数据库层
-│   ├── router.ts             # 消息路由
-│   ├── task-scheduler.ts     # 任务调度器
-│   └── channels/             # 通道系统
+├── cmd/                      # 【新增】Dart 控制平面 (P027)
+│   ├── bin/closeclaw.dart    # 主入口 → dart compile exe
+│   ├── lib/core/             # 守护进程 & 审计中继
+│   └── lib/mcp/              # MCP Server (mcp_dart)
+├── kernel/                   # 【新增】Go 网络与状态总线 (P027)
+│   ├── db/                   # SQLite 总线 (go-sqlite3)
+│   ├── llm/                  # LLM API 适配器
+│   ├── scheduler/            # 毫秒级任务调度器
+│   └── router/               # 消息路由
+├── src/                      # TypeScript 沙盒执行层
+│   ├── index.ts              # L2/L3 降级入口
+│   ├── adapters/             # LLM 适配器 (逐步迁入 kernel)
+│   ├── channels/             # Telegram 等通道
+│   └── sandbox/              # NPM 生态执行器
+├── proto/                    # 【新增】跨语言协议定义 (P027)
+│   └── messages.proto        # 含 trace_id 分布式追踪
 ├── votes/                    # ⭐ 投票决议区域
 ├── templates/                # 提案模板
 ├── scripts/                  # 工具脚本
@@ -166,7 +178,7 @@ closeclaw/
 ├── groups/                   # 群组记忆
 │   ├── global/CONTEXT.md      # 全局记忆
 │   └── main/CONTEXT.md        # 主通道记忆
-└── tests/                    # 测试
+└── tests/                    # 测试 (92 测试用例全部通过)
 ```
 
 详细说明：[docs/04-reference/file-structure.md](./docs/04-reference/file-structure.md)
@@ -215,7 +227,7 @@ npm run format
 
 ## 📜 许可证
 
-MIT License
+Apache License 2.0
 
 ## 🙏 致谢
 

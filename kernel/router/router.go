@@ -60,12 +60,8 @@ func FormatTimeZHCN(t time.Time) string {
 func FormatMessages(messages []db.Message) string {
 	var builder strings.Builder
 	for i, msg := range messages {
-		// TS version parses msg.timestamp (RFC3339) -> format
-		t, err := time.Parse(time.RFC3339, msg.Timestamp)
-		if err != nil {
-			// fallback
-			t = time.Now()
-		}
+		// TS version stores timestamp as int64 (milliseconds)
+		t := time.UnixMilli(msg.Timestamp)
 		timeStr := FormatTimeZHCN(t)
 		builder.WriteString(fmt.Sprintf("[%s] %s: %s", timeStr, msg.SenderName, msg.Text))
 		if i < len(messages)-1 {

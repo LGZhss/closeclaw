@@ -31,7 +31,7 @@
 
 ***
 
-## 🏗️ 三语言异构微内核架构 (P027)
+## 🏗️ 三语言异构微内核架构 (P027 ✅ 已通过)
 
 基于 P027 决议，系统采用了高度分离的 `Dart + Go + TypeScript` 栈：
 
@@ -135,12 +135,12 @@
 2. ✅ `src/` TS 层单体运转稳定 (92 测试用例通过)。
 3. ✅ Telegram 管道与多维调度成功生效。
 
-### Phase 1 核心分离 POC (实施中)
+### Phase 1 核心分离 POC (P027 Phase 1 - 待实施)
 1. ⏳ 验证 gRPC Named Pipe 于 Windows 环境下 <2ms 门控参数。
 2. ⏳ Go 内核 WAL 并发与精确调度能力构建并提供稳定 CI 编译脚手架。
 3. ⏳ 建立最小可用跨语言 Protobuf 控制单元。
 
-### Phase 2 大迁移与废弃 (规划中 / 强依赖 Phase 1)
+### Phase 2 大迁移与废弃 (P027 Phase 2 - 规划中 / 强依赖 Phase 1)
 1. ⏳ TS 侧高耗能控制核心 (router / schedule) 全部迁入 Go 运行层。
 2. ⏳ 彻底抛弃旧版 js `core/` 孤立机制，并对接基于 Dart 的 MCP 服务体系。
 

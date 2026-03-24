@@ -1,5 +1,3 @@
-import { Channel } from '../types.js';
-
 /**
  * Agent 执行上下文
  */
@@ -8,8 +6,6 @@ export interface ExecutionContext {
   groupFolder: string;
   /** 发送给 LLM 的 prompt */
   prompt: string;
-  /** 消息通道（用于发送响应） */
-  channel: Channel;
   /** 消息历史（可选） */
   history?: Array<{role: string; parts: Array<{text: string}>}>;
 }

@@ -20,34 +20,43 @@ var (
 	once     sync.Once
 )
 
-// InitDB 初始化 SQLite 连接并应用严格的并发调优参数。
-// storeDir 对应 src/config.ts 中的 STORE_DIR 环境变量。
+// OpenDB 创建一个独立的 SQLite 连接并应用严格的并发调优参数。
+// 主要供测试和 Benchmark 使用，生产环境应使用 InitDB。
+func OpenDB(storeDir string) (*sql.DB, error) {
+	dbPath := filepath.Join(storeDir, "messages.db")
+	// SQLite WAL 模式：读写并发互不阻塞
+	dsn := fmt.Sprintf(
+		"%s?_journal_mode=WAL&_synchronous=NORMAL&_busy_timeout=5000&_foreign_keys=ON",
+		dbPath,
+	)
+	db, err := sql.Open("sqlite3", dsn)
+	if err != nil {
+		return nil, fmt.Errorf("打开 SQLite 连接失败: %w", err)
+	}
+	// WAL 模式下最佳实践：单写连接避免"database is locked"
+	// 读取可用多连接，写入内部通过 Go channel 序列化
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
+	db.SetConnMaxLifetime(30 * time.Minute)
+
+	if err := createSchema(db); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("建表失败: %w", err)
+	}
+	return db, nil
+}
+
+// InitDB 初始化全局单例连接。
 func InitDB(storeDir string) (*sql.DB, error) {
 	var initErr error
 	once.Do(func() {
-		dbPath := filepath.Join(storeDir, "messages.db")
-		// SQLite WAL 模式：读写并发互不阻塞
-		dsn := fmt.Sprintf(
-			"%s?_journal_mode=WAL&_synchronous=NORMAL&_busy_timeout=5000&_foreign_keys=ON",
-			dbPath,
-		)
-		db, err := sql.Open("sqlite3", dsn)
+		db, err := OpenDB(storeDir)
 		if err != nil {
-			initErr = fmt.Errorf("打开 SQLite 连接失败: %w", err)
-			return
-		}
-		// WAL 模式下最佳实践：单写连接避免"database is locked"
-		// 读取可用多连接，写入内部通过 Go channel 序列化
-		db.SetMaxOpenConns(1)
-		db.SetMaxIdleConns(1)
-		db.SetConnMaxLifetime(30 * time.Minute)
-
-		if err := createSchema(db); err != nil {
-			initErr = fmt.Errorf("建表失败: %w", err)
+			initErr = err
 			return
 		}
 		globalDB = db
-		slog.Info("SQLite 内核总线就绪", "path", dbPath)
+		slog.Info("SQLite 内核总线全局单例就绪", "dir", storeDir)
 	})
 	if initErr != nil {
 		return nil, initErr
