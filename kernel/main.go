@@ -2,11 +2,13 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"log/slog"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 
 	"closeclaw-kernel/db"
@@ -14,7 +16,33 @@ import (
 	"closeclaw-kernel/server"
 )
 
+// loadEnv 手动解析 .env 文件（避免引入外部依赖）
+func loadEnv(path string) {
+	file, err := os.Open(path)
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		parts := strings.SplitN(line, "=", 2)
+		if len(parts) == 2 {
+			key := strings.TrimSpace(parts[0])
+			val := strings.TrimSpace(parts[1])
+			os.Setenv(key, val)
+		}
+	}
+}
+
 func main() {
+	// 加载根目录 .env
+	loadEnv("../.env")
+
 	// 日志格式化
 	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelInfo,

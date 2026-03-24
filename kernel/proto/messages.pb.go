@@ -731,6 +731,134 @@ func (x *HeartbeatResponse) GetUptimeSeconds() int64 {
 	return 0
 }
 
+type ChatRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Trace         *TraceContext          `protobuf:"bytes,1,opt,name=trace,proto3" json:"trace,omitempty"`
+	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	History       []string               `protobuf:"bytes,3,rep,name=history,proto3" json:"history,omitempty"`                                                                           // 简化为字符串数组，后续可扩展
+	Options       map[string]string      `protobuf:"bytes,4,rep,name=options,proto3" json:"options,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"` // 模型选择、温度等参数
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ChatRequest) Reset() {
+	*x = ChatRequest{}
+	mi := &file_messages_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ChatRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChatRequest) ProtoMessage() {}
+
+func (x *ChatRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_messages_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChatRequest.ProtoReflect.Descriptor instead.
+func (*ChatRequest) Descriptor() ([]byte, []int) {
+	return file_messages_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *ChatRequest) GetTrace() *TraceContext {
+	if x != nil {
+		return x.Trace
+	}
+	return nil
+}
+
+func (x *ChatRequest) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+func (x *ChatRequest) GetHistory() []string {
+	if x != nil {
+		return x.History
+	}
+	return nil
+}
+
+func (x *ChatRequest) GetOptions() map[string]string {
+	if x != nil {
+		return x.Options
+	}
+	return nil
+}
+
+type ChatResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Text          string                 `protobuf:"bytes,1,opt,name=text,proto3" json:"text,omitempty"`
+	Status        TaskStatus             `protobuf:"varint,2,opt,name=status,proto3,enum=closeclaw.v1.TaskStatus" json:"status,omitempty"`
+	Error         string                 `protobuf:"bytes,3,opt,name=error,proto3" json:"error,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ChatResponse) Reset() {
+	*x = ChatResponse{}
+	mi := &file_messages_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ChatResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChatResponse) ProtoMessage() {}
+
+func (x *ChatResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_messages_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChatResponse.ProtoReflect.Descriptor instead.
+func (*ChatResponse) Descriptor() ([]byte, []int) {
+	return file_messages_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *ChatResponse) GetText() string {
+	if x != nil {
+		return x.Text
+	}
+	return ""
+}
+
+func (x *ChatResponse) GetStatus() TaskStatus {
+	if x != nil {
+		return x.Status
+	}
+	return TaskStatus_PENDING
+}
+
+func (x *ChatResponse) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
+}
+
 var File_messages_proto protoreflect.FileDescriptor
 
 const file_messages_proto_rawDesc = "" +
@@ -799,7 +927,19 @@ const file_messages_proto_rawDesc = "" +
 	"\fqueue_length\x18\x02 \x01(\x05R\vqueueLength\x12+\n" +
 	"\x11active_goroutines\x18\x03 \x01(\x05R\x10activeGoroutines\x12%\n" +
 	"\x0ekernel_version\x18\x04 \x01(\tR\rkernelVersion\x12%\n" +
-	"\x0euptime_seconds\x18\x05 \x01(\x03R\ruptimeSeconds*U\n" +
+	"\x0euptime_seconds\x18\x05 \x01(\x03R\ruptimeSeconds\"\xf1\x01\n" +
+	"\vChatRequest\x120\n" +
+	"\x05trace\x18\x01 \x01(\v2\x1a.closeclaw.v1.TraceContextR\x05trace\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\x12\x18\n" +
+	"\ahistory\x18\x03 \x03(\tR\ahistory\x12@\n" +
+	"\aoptions\x18\x04 \x03(\v2&.closeclaw.v1.ChatRequest.OptionsEntryR\aoptions\x1a:\n" +
+	"\fOptionsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"j\n" +
+	"\fChatResponse\x12\x12\n" +
+	"\x04text\x18\x01 \x01(\tR\x04text\x120\n" +
+	"\x06status\x18\x02 \x01(\x0e2\x18.closeclaw.v1.TaskStatusR\x06status\x12\x14\n" +
+	"\x05error\x18\x03 \x01(\tR\x05error*U\n" +
 	"\n" +
 	"TaskStatus\x12\v\n" +
 	"\aPENDING\x10\x00\x12\v\n" +
@@ -809,14 +949,15 @@ const file_messages_proto_rawDesc = "" +
 	"\x06FAILED\x10\x03\x12\v\n" +
 	"\aTIMEOUT\x10\x04\x12\n" +
 	"\n" +
-	"\x06PAUSED\x10\x052\xdd\x02\n" +
+	"\x06PAUSED\x10\x052\x9c\x03\n" +
 	"\tKernelBus\x12>\n" +
 	"\fDispatchTask\x12\x12.closeclaw.v1.Task\x1a\x1a.closeclaw.v1.TaskResponse\x12;\n" +
 	"\n" +
 	"SyncStatus\x12\x1a.closeclaw.v1.StatusUpdate\x1a\x11.closeclaw.v1.Ack\x12N\n" +
 	"\vCheckHealth\x12\x1e.closeclaw.v1.HeartbeatRequest\x1a\x1f.closeclaw.v1.HeartbeatResponse\x12H\n" +
 	"\x12GetPendingMessages\x12\x11.closeclaw.v1.Ack\x1a\x1d.closeclaw.v1.IncomingMessage0\x01\x129\n" +
-	"\x0eSubscribeTasks\x12\x11.closeclaw.v1.Ack\x1a\x12.closeclaw.v1.Task0\x01B\x1fZ\x1dcloseclaw/kernel/proto;clawpbb\x06proto3"
+	"\x0eSubscribeTasks\x12\x11.closeclaw.v1.Ack\x1a\x12.closeclaw.v1.Task0\x01\x12=\n" +
+	"\x04Chat\x12\x19.closeclaw.v1.ChatRequest\x1a\x1a.closeclaw.v1.ChatResponseB\x1fZ\x1dcloseclaw/kernel/proto;clawpbb\x06proto3"
 
 var (
 	file_messages_proto_rawDescOnce sync.Once
@@ -831,7 +972,7 @@ func file_messages_proto_rawDescGZIP() []byte {
 }
 
 var file_messages_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_messages_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_messages_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_messages_proto_goTypes = []any{
 	(TaskStatus)(0),           // 0: closeclaw.v1.TaskStatus
 	(*TraceContext)(nil),      // 1: closeclaw.v1.TraceContext
@@ -842,29 +983,37 @@ var file_messages_proto_goTypes = []any{
 	(*IncomingMessage)(nil),   // 6: closeclaw.v1.IncomingMessage
 	(*HeartbeatRequest)(nil),  // 7: closeclaw.v1.HeartbeatRequest
 	(*HeartbeatResponse)(nil), // 8: closeclaw.v1.HeartbeatResponse
-	nil,                       // 9: closeclaw.v1.TaskResponse.MetadataEntry
+	(*ChatRequest)(nil),       // 9: closeclaw.v1.ChatRequest
+	(*ChatResponse)(nil),      // 10: closeclaw.v1.ChatResponse
+	nil,                       // 11: closeclaw.v1.TaskResponse.MetadataEntry
+	nil,                       // 12: closeclaw.v1.ChatRequest.OptionsEntry
 }
 var file_messages_proto_depIdxs = []int32{
 	1,  // 0: closeclaw.v1.Task.trace:type_name -> closeclaw.v1.TraceContext
 	0,  // 1: closeclaw.v1.Task.status:type_name -> closeclaw.v1.TaskStatus
 	0,  // 2: closeclaw.v1.TaskResponse.status:type_name -> closeclaw.v1.TaskStatus
-	9,  // 3: closeclaw.v1.TaskResponse.metadata:type_name -> closeclaw.v1.TaskResponse.MetadataEntry
+	11, // 3: closeclaw.v1.TaskResponse.metadata:type_name -> closeclaw.v1.TaskResponse.MetadataEntry
 	0,  // 4: closeclaw.v1.StatusUpdate.status:type_name -> closeclaw.v1.TaskStatus
-	2,  // 5: closeclaw.v1.KernelBus.DispatchTask:input_type -> closeclaw.v1.Task
-	4,  // 6: closeclaw.v1.KernelBus.SyncStatus:input_type -> closeclaw.v1.StatusUpdate
-	7,  // 7: closeclaw.v1.KernelBus.CheckHealth:input_type -> closeclaw.v1.HeartbeatRequest
-	5,  // 8: closeclaw.v1.KernelBus.GetPendingMessages:input_type -> closeclaw.v1.Ack
-	5,  // 9: closeclaw.v1.KernelBus.SubscribeTasks:input_type -> closeclaw.v1.Ack
-	3,  // 10: closeclaw.v1.KernelBus.DispatchTask:output_type -> closeclaw.v1.TaskResponse
-	5,  // 11: closeclaw.v1.KernelBus.SyncStatus:output_type -> closeclaw.v1.Ack
-	8,  // 12: closeclaw.v1.KernelBus.CheckHealth:output_type -> closeclaw.v1.HeartbeatResponse
-	6,  // 13: closeclaw.v1.KernelBus.GetPendingMessages:output_type -> closeclaw.v1.IncomingMessage
-	2,  // 14: closeclaw.v1.KernelBus.SubscribeTasks:output_type -> closeclaw.v1.Task
-	10, // [10:15] is the sub-list for method output_type
-	5,  // [5:10] is the sub-list for method input_type
-	5,  // [5:5] is the sub-list for extension type_name
-	5,  // [5:5] is the sub-list for extension extendee
-	0,  // [0:5] is the sub-list for field type_name
+	1,  // 5: closeclaw.v1.ChatRequest.trace:type_name -> closeclaw.v1.TraceContext
+	12, // 6: closeclaw.v1.ChatRequest.options:type_name -> closeclaw.v1.ChatRequest.OptionsEntry
+	0,  // 7: closeclaw.v1.ChatResponse.status:type_name -> closeclaw.v1.TaskStatus
+	2,  // 8: closeclaw.v1.KernelBus.DispatchTask:input_type -> closeclaw.v1.Task
+	4,  // 9: closeclaw.v1.KernelBus.SyncStatus:input_type -> closeclaw.v1.StatusUpdate
+	7,  // 10: closeclaw.v1.KernelBus.CheckHealth:input_type -> closeclaw.v1.HeartbeatRequest
+	5,  // 11: closeclaw.v1.KernelBus.GetPendingMessages:input_type -> closeclaw.v1.Ack
+	5,  // 12: closeclaw.v1.KernelBus.SubscribeTasks:input_type -> closeclaw.v1.Ack
+	9,  // 13: closeclaw.v1.KernelBus.Chat:input_type -> closeclaw.v1.ChatRequest
+	3,  // 14: closeclaw.v1.KernelBus.DispatchTask:output_type -> closeclaw.v1.TaskResponse
+	5,  // 15: closeclaw.v1.KernelBus.SyncStatus:output_type -> closeclaw.v1.Ack
+	8,  // 16: closeclaw.v1.KernelBus.CheckHealth:output_type -> closeclaw.v1.HeartbeatResponse
+	6,  // 17: closeclaw.v1.KernelBus.GetPendingMessages:output_type -> closeclaw.v1.IncomingMessage
+	2,  // 18: closeclaw.v1.KernelBus.SubscribeTasks:output_type -> closeclaw.v1.Task
+	10, // 19: closeclaw.v1.KernelBus.Chat:output_type -> closeclaw.v1.ChatResponse
+	14, // [14:20] is the sub-list for method output_type
+	8,  // [8:14] is the sub-list for method input_type
+	8,  // [8:8] is the sub-list for extension type_name
+	8,  // [8:8] is the sub-list for extension extendee
+	0,  // [0:8] is the sub-list for field type_name
 }
 
 func init() { file_messages_proto_init() }
@@ -878,7 +1027,7 @@ func file_messages_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_messages_proto_rawDesc), len(file_messages_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   9,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

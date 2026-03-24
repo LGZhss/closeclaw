@@ -18,6 +18,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"closeclaw-kernel/db"
+	"closeclaw-kernel/llm"
 	pb "closeclaw-kernel/proto"
 	"closeclaw-kernel/router"
 )
@@ -36,11 +37,17 @@ type KernelBusServer struct {
 	activeGoroutines atomic.Int32
 	// tsStreams 存储当前活跃的 TS 沙盒订阅流，用于广播任务
 	tsStreams        sync.Map // map[chan *pb.Task]bool
+	
+	// LLM 客户端 (Phase 3B)
+	llmClient        *llm.Client
 }
 
 // NewKernelBusServer 创建服务实例。
 func NewKernelBusServer() *KernelBusServer {
-	return &KernelBusServer{startTime: time.Now()}
+	return &KernelBusServer{
+		startTime: time.Now(),
+		llmClient: llm.NewClient(),
+	}
 }
 
 // DispatchTask 接收来自 Dart 的任务指令，写入 SQLite 并返回确认。
@@ -211,6 +218,26 @@ func (s *KernelBusServer) BroadcastTask(task *pb.Task) {
 		}
 		return true
 	})
+}
+
+// Chat 处理来自 TS 执行层的推理请求 (Phase 3B)。
+func (s *KernelBusServer) Chat(ctx context.Context, req *pb.ChatRequest) (*pb.ChatResponse, error) {
+	slog.Info("收到 Chat 请求", "trace_id", req.GetTrace().GetTraceId(), "msg_len", len(req.GetMessage()))
+	
+	// 调用 Go 侧 LLM 客户端
+	resp, err := s.llmClient.Chat(req.GetMessage(), req.GetHistory())
+	if err != nil {
+		slog.Error("LLM 推理失败", "err", err)
+		return &pb.ChatResponse{
+			Status: pb.TaskStatus_FAILED,
+			Error:  err.Error(),
+		}, nil
+	}
+
+	return &pb.ChatResponse{
+		Text:   resp,
+		Status: pb.TaskStatus_DONE,
+	}, nil
 }
 // Start 启动 gRPC 服务并阻塞监听。
 func Start(srv *KernelBusServer) error {

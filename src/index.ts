@@ -49,14 +49,15 @@ class GrpcKernelBusClient {
     call.on('data', async (task: any) => {
       logger.info(`[TS Sandbox] Received dispatched task: ${task.id}`);
       
-      const runner = new SandboxRunner('openai'); // 默认使用 openai 适配器
+      const runner = new SandboxRunner(this.client); // 默认使用 openai 适配器
       
       try {
         // 构建执行上下文，由于是无状态沙盒，channel 为空，由 Go 控制逻辑处理响应
         const context = {
           groupFolder: task.group_jid || 'global',
           prompt: task.payload || '',
-          history: [] // 后续可由 Go 侧下发历史片段
+          history: [], // 后续可由 Go 侧下发历史片段
+          trace_id: task.trace?.trace_id || 'ts-' + Date.now()
         };
         
         const responseText = await runner.execute(context);

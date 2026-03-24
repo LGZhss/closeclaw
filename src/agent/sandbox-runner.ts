@@ -1,40 +1,53 @@
 import { AgentRunner, ExecutionContext } from './runner.js';
-import { getAdapter } from '../adapters/registry.js';
 import { logger } from '../logger.js';
 
 /**
  * 基于 Sandbox 的 Agent Runner 实现
- * 通过 AdapterRegistry 获取 LLM Adapter 并执行
+ * 通过 gRPC 调用 Go 内核的 Chat 接口执行 LLM 推理 (Phase 3B)
  */
 export class SandboxRunner implements AgentRunner {
-  private adapterName: string;
+  private client: any;
 
-  constructor(adapterName: string = 'openai') {
-    this.adapterName = adapterName;
+  constructor(client: any) {
+    this.client = client;
   }
 
   async execute(context: ExecutionContext): Promise<string> {
-    logger.debug(`[SandboxRunner] Executing with adapter: ${this.adapterName}`);
-
-    // 获取 LLM Adapter
-    const adapter = getAdapter(this.adapterName);
-    if (!adapter) {
-      const error = `No LLM adapter available: ${this.adapterName}`;
-      logger.error(`[SandboxRunner] ${error}`);
-      return `Error: ${error}`;
-    }
+    logger.debug(`[SandboxRunner] Executing via gRPC Chat`);
 
     try {
-      // 调用 LLM
-      const response = await adapter.chat({
-        systemInstruction: 'You are a helpful assistant.',
-        history: context.history || [],
+      // 构造 gRPC 请求
+      const chatRequest = {
+        trace: {
+          trace_id: (context as any).trace_id || 'manual-' + Date.now(),
+          created_at_ms: Date.now()
+        },
         message: context.prompt,
-        preferredLevel: 'pro'
-      });
+        history: (context.history || []).map(h => h.parts.map(p => p.text).join('\n')),
+        options: {
+          model: 'free'
+        }
+      };
 
-      logger.debug(`[SandboxRunner] LLM response received`);
-      return response.text;
+      // 调用 Go 内核的 Chat RPC
+      return new Promise((resolve) => {
+        this.client.Chat(chatRequest, (err: any, response: any) => {
+          if (err) {
+            logger.error(`[SandboxRunner] gRPC Chat failed: ${err.message}`);
+            resolve(`Error: ${err.message}`);
+            return;
+          }
+          
+          if (response.status === 2 || response.status === 'DONE') {
+            logger.debug(`[SandboxRunner] LLM response received via gRPC`);
+            resolve(response.text);
+          } else {
+            const error = response.error || 'Unknown error';
+            logger.error(`[SandboxRunner] LLM inference failed: ${error}`);
+            resolve(`Error: ${error}`);
+          }
+        });
+      });
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
       logger.error(`[SandboxRunner] Execution failed: ${errorMsg}`);
@@ -44,7 +57,5 @@ export class SandboxRunner implements AgentRunner {
 
   async close(): Promise<void> {
     logger.debug(`[SandboxRunner] Closing`);
-    // 当前实现无需清理资源
-    // 未来如果使用持久化连接，在此处清理
   }
 }

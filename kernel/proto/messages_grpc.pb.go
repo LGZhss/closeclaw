@@ -28,17 +28,22 @@ const (
 	KernelBus_CheckHealth_FullMethodName        = "/closeclaw.v1.KernelBus/CheckHealth"
 	KernelBus_GetPendingMessages_FullMethodName = "/closeclaw.v1.KernelBus/GetPendingMessages"
 	KernelBus_SubscribeTasks_FullMethodName     = "/closeclaw.v1.KernelBus/SubscribeTasks"
+	KernelBus_Chat_FullMethodName               = "/closeclaw.v1.KernelBus/Chat"
 )
 
 // KernelBusClient is the client API for KernelBus service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type KernelBusClient interface {
+	// 核心任务流
 	DispatchTask(ctx context.Context, in *Task, opts ...grpc.CallOption) (*TaskResponse, error)
 	SyncStatus(ctx context.Context, in *StatusUpdate, opts ...grpc.CallOption) (*Ack, error)
 	CheckHealth(ctx context.Context, in *HeartbeatRequest, opts ...grpc.CallOption) (*HeartbeatResponse, error)
+	// 消息与订阅
 	GetPendingMessages(ctx context.Context, in *Ack, opts ...grpc.CallOption) (grpc.ServerStreamingClient[IncomingMessage], error)
 	SubscribeTasks(ctx context.Context, in *Ack, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Task], error)
+	// LLM 推理转发 (Phase 3B)
+	Chat(ctx context.Context, in *ChatRequest, opts ...grpc.CallOption) (*ChatResponse, error)
 }
 
 type kernelBusClient struct {
@@ -117,15 +122,29 @@ func (c *kernelBusClient) SubscribeTasks(ctx context.Context, in *Ack, opts ...g
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type KernelBus_SubscribeTasksClient = grpc.ServerStreamingClient[Task]
 
+func (c *kernelBusClient) Chat(ctx context.Context, in *ChatRequest, opts ...grpc.CallOption) (*ChatResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ChatResponse)
+	err := c.cc.Invoke(ctx, KernelBus_Chat_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // KernelBusServer is the server API for KernelBus service.
 // All implementations must embed UnimplementedKernelBusServer
 // for forward compatibility.
 type KernelBusServer interface {
+	// 核心任务流
 	DispatchTask(context.Context, *Task) (*TaskResponse, error)
 	SyncStatus(context.Context, *StatusUpdate) (*Ack, error)
 	CheckHealth(context.Context, *HeartbeatRequest) (*HeartbeatResponse, error)
+	// 消息与订阅
 	GetPendingMessages(*Ack, grpc.ServerStreamingServer[IncomingMessage]) error
 	SubscribeTasks(*Ack, grpc.ServerStreamingServer[Task]) error
+	// LLM 推理转发 (Phase 3B)
+	Chat(context.Context, *ChatRequest) (*ChatResponse, error)
 	mustEmbedUnimplementedKernelBusServer()
 }
 
@@ -150,6 +169,9 @@ func (UnimplementedKernelBusServer) GetPendingMessages(*Ack, grpc.ServerStreamin
 }
 func (UnimplementedKernelBusServer) SubscribeTasks(*Ack, grpc.ServerStreamingServer[Task]) error {
 	return status.Error(codes.Unimplemented, "method SubscribeTasks not implemented")
+}
+func (UnimplementedKernelBusServer) Chat(context.Context, *ChatRequest) (*ChatResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method Chat not implemented")
 }
 func (UnimplementedKernelBusServer) mustEmbedUnimplementedKernelBusServer() {}
 func (UnimplementedKernelBusServer) testEmbeddedByValue()                   {}
@@ -248,6 +270,24 @@ func _KernelBus_SubscribeTasks_Handler(srv interface{}, stream grpc.ServerStream
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type KernelBus_SubscribeTasksServer = grpc.ServerStreamingServer[Task]
 
+func _KernelBus_Chat_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ChatRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(KernelBusServer).Chat(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: KernelBus_Chat_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(KernelBusServer).Chat(ctx, req.(*ChatRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // KernelBus_ServiceDesc is the grpc.ServiceDesc for KernelBus service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -266,6 +306,10 @@ var KernelBus_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CheckHealth",
 			Handler:    _KernelBus_CheckHealth_Handler,
+		},
+		{
+			MethodName: "Chat",
+			Handler:    _KernelBus_Chat_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

@@ -8,6 +8,7 @@ import 'package:args/args.dart';
 import '../lib/core/audit_relay.dart';
 import '../lib/core/logger.dart';
 import '../lib/core/mcp_server.dart';
+import '../lib/cc_parser.dart';
 
 void main(List<String> arguments) async {
   final parser = ArgParser()
@@ -108,6 +109,26 @@ Future<void> _cmdDoctor(ClawLogger log) async {
     log.info('协作主体数:  ${relay.subjects.length} 个已注册');
   } catch (e) {
     log.warn('无法加载 .subjects.json: $e');
+  }
+
+  // 扫描插件 (Phase 3C)
+  try {
+    final skillDir = Directory('.claude/skills');
+    if (skillDir.existsSync()) {
+      int skillCount = 0;
+      skillDir.listSync(recursive: true).forEach((entity) {
+        if (entity is File && entity.path.endsWith('SKILL.md')) {
+          final meta = CCParser.parseSkill(entity.path);
+          if (meta != null) {
+            skillCount++;
+            if (log.verbose) log.info('  - 插件: ${meta.name} (${meta.description})');
+          }
+        }
+      });
+      log.info('插件加载数:  $skillCount 个技能已就绪');
+    }
+  } catch (e) {
+    log.warn('扫描插件目录失败: $e');
   }
 
   log.info('=================================');

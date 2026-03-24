@@ -111,13 +111,36 @@ message HeartbeatResponse {
 }
 
 // ─────────────────────────────────────────
-// § 5  gRPC Service 定义
+// § 5  LLM 对话接口 (P027 Phase 3B)
+// ─────────────────────────────────────────
+
+message ChatRequest {
+  TraceContext trace    = 1;
+  string       message  = 2;
+  repeated string history = 3; // 简化为字符串数组，后续可扩展
+  map<string, string> options = 4; // 模型选择、温度等参数
+}
+
+message ChatResponse {
+  string     text    = 1;
+  TaskStatus status  = 2;
+  string     error   = 3;
+}
+
+// ─────────────────────────────────────────
+// § 6  gRPC Service 定义
 // ─────────────────────────────────────────
 
 service KernelBus {
+  // 核心任务流
   rpc DispatchTask(Task) returns (TaskResponse);
   rpc SyncStatus(StatusUpdate) returns (Ack);
   rpc CheckHealth(HeartbeatRequest) returns (HeartbeatResponse);
+  
+  // 消息与订阅
   rpc GetPendingMessages(Ack) returns (stream IncomingMessage);
   rpc SubscribeTasks(Ack) returns (stream Task);
+
+  // LLM 推理转发 (Phase 3B)
+  rpc Chat(ChatRequest) returns (ChatResponse);
 }
