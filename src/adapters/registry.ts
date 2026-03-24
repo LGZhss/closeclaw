@@ -1,4 +1,4 @@
-import { LLMAdapter } from "./base.js";
+import { LLMAdapter } from './base.js';
 
 /**
  * Adapter 工厂函数类型

@@ -2,7 +2,7 @@
  * 内存管理器 - TS 版
  */
 
-import os from "os";
+import os from 'os';
 
 export function getMemoryReport(): string {
   const total = os.totalmem();

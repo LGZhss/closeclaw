@@ -1,7 +1,7 @@
-import fs from "fs/promises";
-import path from "path";
-import { spawn, exec } from "child_process";
-import { logger } from "../logger.js";
+import fs from 'fs/promises';
+import path from 'path';
+import { spawn, exec } from 'child_process';
+import { logger } from '../logger.js';
 
 /** 工作区目录，默认当前目录 */
 export const WORKSPACE = process.cwd();
@@ -11,18 +11,17 @@ export const WORKSPACE = process.cwd();
  */
 export async function executeSystemCommand(command: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    const cmd = process.platform === "win32" ? "powershell.exe" : "/bin/sh";
-    const args =
-      process.platform === "win32" ? ["-Command", command] : ["-c", command];
+    const cmd = process.platform === 'win32' ? 'powershell.exe' : '/bin/sh';
+    const args = process.platform === 'win32' ? ['-Command', command] : ['-c', command];
 
-    const child = spawn(cmd, args, { stdio: "pipe" });
-    let stdout = "";
-    let stderr = "";
+    const child = spawn(cmd, args, { stdio: 'pipe' });
+    let stdout = '';
+    let stderr = '';
 
-    child.stdout.on("data", (data) => (stdout += data.toString()));
-    child.stderr.on("data", (data) => (stderr += data.toString()));
+    child.stdout.on('data', (data) => (stdout += data.toString()));
+    child.stderr.on('data', (data) => (stderr += data.toString()));
 
-    child.on("close", (code) => {
+    child.on('close', (code) => {
       if (code === 0) {
         resolve(stdout);
       } else {
@@ -35,9 +34,7 @@ export async function executeSystemCommand(command: string): Promise<string> {
 /**
  * 异步执行命令
  */
-export async function execAsync(
-  command: string,
-): Promise<{ stdout: string; stderr: string }> {
+export async function execAsync(command: string): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
     exec(command, (error, stdout, stderr) => {
       if (error) {
@@ -55,7 +52,7 @@ export async function execAsync(
 export async function readWsFile(filePath: string): Promise<string> {
   const fullPath = path.resolve(WORKSPACE, filePath);
   try {
-    return await fs.readFile(fullPath, "utf8");
+    return await fs.readFile(fullPath, 'utf8');
   } catch (error: any) {
     logger.error(`Error reading ${filePath}: ${error.message}`);
     throw error;
@@ -65,16 +62,13 @@ export async function readWsFile(filePath: string): Promise<string> {
 /**
  * 写入工作区文件
  */
-export async function writeWsFile(
-  filePath: string,
-  content: string,
-): Promise<string> {
+export async function writeWsFile(filePath: string, content: string): Promise<string> {
   const fullPath = path.resolve(WORKSPACE, filePath);
   try {
     const dir = path.dirname(fullPath);
     await fs.mkdir(dir, { recursive: true });
-    await fs.writeFile(fullPath, content, "utf8");
-    return "OK";
+    await fs.writeFile(fullPath, content, 'utf8');
+    return 'OK';
   } catch (error: any) {
     logger.error(`Error writing ${filePath}: ${error.message}`);
     return error.message;
@@ -98,35 +92,30 @@ export async function fetchUrl(url: string): Promise<string> {
 /**
  * 执行 Git 操作
  */
-export async function runGit(
-  action: "backup" | "sync",
-  message?: string,
-): Promise<string> {
+export async function runGit(action: 'backup' | 'sync', message?: string): Promise<string> {
   try {
-    if (action === "backup") {
+    if (action === 'backup') {
       const msg = message || `Backup at ${new Date().toISOString()}`;
       // 使用 spawn 直接调用 git，不经过 shell
       return new Promise((resolve) => {
-        const add = spawn("git", ["add", "."], { cwd: WORKSPACE });
-        add.on("close", (code) => {
-          if (code !== 0) return resolve("❌ git add failed");
-          const commit = spawn("git", ["commit", "-m", msg], {
-            cwd: WORKSPACE,
-          });
-          commit.on("close", (c) => {
-            if (c === 0) resolve("✅ Backup successful");
+        const add = spawn('git', ['add', '.'], { cwd: WORKSPACE });
+        add.on('close', (code) => {
+          if (code !== 0) return resolve('❌ git add failed');
+          const commit = spawn('git', ['commit', '-m', msg], { cwd: WORKSPACE });
+          commit.on('close', (c) => {
+            if (c === 0) resolve('✅ Backup successful');
             else resolve(`❌ git commit failed (code ${c})`);
           });
         });
       });
     } else {
       return new Promise((resolve) => {
-        const pull = spawn("git", ["pull"], { cwd: WORKSPACE });
-        pull.on("close", (code) => {
-          if (code !== 0) return resolve("❌ git pull failed");
-          const push = spawn("git", ["push"], { cwd: WORKSPACE });
-          push.on("close", (c) => {
-            if (c === 0) resolve("✅ Sync successful");
+        const pull = spawn('git', ['pull'], { cwd: WORKSPACE });
+        pull.on('close', (code) => {
+          if (code !== 0) return resolve('❌ git pull failed');
+          const push = spawn('git', ['push'], { cwd: WORKSPACE });
+          push.on('close', (c) => {
+            if (c === 0) resolve('✅ Sync successful');
             else resolve(`❌ git push failed (code ${c})`);
           });
         });
@@ -148,3 +137,4 @@ export function resolveSafePath(userPath: string): string {
   }
   return resolvedPath;
 }
+

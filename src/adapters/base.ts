@@ -5,9 +5,9 @@ export interface ChatParams {
   /** 系统指令 */
   systemInstruction: string;
   /** 对话历史 */
-  history: Array<{ role: string; parts: Array<{ text: string }> }>;
+  history: Array<{role: string; parts: Array<{text: string}>}>;
   /** 用户消息 */
-  message: string | Array<{ text: string }>;
+  message: string | Array<{text: string}>;
   /** 工具定义（可选） */
   tools?: Array<{
     name: string;
@@ -15,7 +15,7 @@ export interface ChatParams {
     parameters: Record<string, unknown>;
   }>;
   /** 优先模型级别 */
-  preferredLevel?: "pro" | "flash" | "lite" | "mini";
+  preferredLevel?: 'pro' | 'flash' | 'lite' | 'mini';
 }
 
 /**

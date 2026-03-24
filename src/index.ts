@@ -1,9 +1,9 @@
-import * as grpc from "@grpc/grpc-js";
-import * as protoLoader from "@grpc/proto-loader";
-import { resolve } from "path";
-import { SandboxRunner } from "./agent/sandbox-runner.js";
-import { logger } from "./logger.js";
-import { ASSISTANT_NAME } from "./config.js";
+import * as grpc from '@grpc/grpc-js';
+import * as protoLoader from '@grpc/proto-loader';
+import { resolve } from 'path';
+import { SandboxRunner } from './agent/sandbox-runner.js';
+import { logger } from './logger.js';
+import { ASSISTANT_NAME } from './config.js';
 // 确保适配器自动注册（目前仅保留协作主体适配器，由其自身注册）
 
 /**
@@ -14,25 +14,23 @@ class GrpcKernelBusClient {
   private readonly protoPath: string;
 
   constructor() {
-    this.protoPath = resolve(process.cwd(), "proto/messages.proto");
-
+    this.protoPath = resolve(process.cwd(), 'proto/messages.proto');
+    
     try {
       const packageDefinition = protoLoader.loadSync(this.protoPath, {
         keepCase: true,
         longs: String,
         enums: String,
         defaults: true,
-        oneofs: true,
+        oneofs: true
       });
-      const protoDescriptor = grpc.loadPackageDefinition(
-        packageDefinition,
-      ) as any;
+      const protoDescriptor = grpc.loadPackageDefinition(packageDefinition) as any;
       // 对应 proto 中的 package closeclaw.v1;
       const KernelBus = protoDescriptor.closeclaw.v1.KernelBus;
-
+      
       this.client = new KernelBus(
-        "127.0.0.1:50051",
-        grpc.credentials.createInsecure(),
+        '127.0.0.1:50051', 
+        grpc.credentials.createInsecure()
       );
     } catch (err: any) {
       logger.error(`[TS Sandbox] Failed to load proto: ${err.message}`);
@@ -40,68 +38,62 @@ class GrpcKernelBusClient {
   }
 
   start() {
-    logger.info(
-      "[TS Sandbox] Connecting to Go Kernel via gRPC at 127.0.0.1:50051...",
-    );
+    logger.info('[TS Sandbox] Connecting to Go Kernel via gRPC at 127.0.0.1:50051...');
     this.subscribeTasks();
   }
 
   private subscribeTasks() {
     // 调用我们在 proto 中新增的 SubscribeTasks stream
-    const call = this.client.SubscribeTasks({ ok: true, message: "Ready" });
-
-    call.on("data", async (task: any) => {
+    const call = this.client.SubscribeTasks({ ok: true, message: 'Ready' });
+    
+    call.on('data', async (task: any) => {
       const taskId = task.task_id || task.id; // 容错处理，但优先使用 task_id
       logger.info(`[TS Sandbox] Received dispatched task: ${taskId}`);
-
-      const runner = new SandboxRunner(this.client);
-
+      
+      const runner = new SandboxRunner(this.client); 
+      
       try {
         const context = {
-          groupFolder: task.group_folder || "global",
-          prompt: task.payload ? task.payload.toString() : "",
-          history: task.history || [],
-          trace_id: task.trace?.trace_id || "ts-" + Date.now(),
+          groupFolder: task.group_folder || 'global',
+          prompt: task.payload? task.payload.toString() : '',
+          history: task.history || [], 
+          trace_id: task.trace?.trace_id || 'ts-' + Date.now()
         };
-
+        
         const responseText = await runner.execute(context);
         logger.info(`[TS Sandbox] Task ${taskId} execution completed.`);
-
+        
         await this.syncStatus({
           task_id: taskId,
           trace_id: context.trace_id,
-          status: "DONE",
-          result: Buffer.from(responseText),
+          status: 'DONE',
+          result: Buffer.from(responseText)
         });
       } catch (err: any) {
-        logger.error(
-          `[TS Sandbox] Task ${taskId} execution failed: ${err.message}`,
-        );
+        logger.error(`[TS Sandbox] Task ${taskId} execution failed: ${err.message}`);
         await this.syncStatus({
           task_id: taskId,
           trace_id: task.trace?.trace_id,
-          status: "FAILED",
-          error: err.message,
+          status: 'FAILED',
+          error: err.message
         });
       } finally {
         await runner.close();
       }
     });
 
-    call.on("error", (err: any) => {
+    call.on('error', (err: any) => {
       logger.error(`[TS Sandbox] gRPC Stream Error: ${err.message}`);
       // 指数退避重连
       setTimeout(() => this.subscribeTasks(), 5000);
     });
 
-    call.on("status", (status: any) => {
-      logger.debug(
-        `[TS Sandbox] gRPC Stream Status: ${JSON.stringify(status)}`,
-      );
+    call.on('status', (status: any) => {
+      logger.debug(`[TS Sandbox] gRPC Stream Status: ${JSON.stringify(status)}`);
     });
 
-    call.on("end", () => {
-      logger.warn("[TS Sandbox] gRPC Stream ended by server. Reconnecting...");
+    call.on('end', () => {
+      logger.warn('[TS Sandbox] gRPC Stream ended by server. Reconnecting...');
       setTimeout(() => this.subscribeTasks(), 5000);
     });
   }
@@ -113,9 +105,7 @@ class GrpcKernelBusClient {
           logger.error(`[TS Sandbox] SyncStatus report failed: ${err.message}`);
           reject(err);
         } else {
-          logger.debug(
-            `[TS Sandbox] Status synced: ${update.task_id} -> ${update.status}`,
-          );
+          logger.debug(`[TS Sandbox] Status synced: ${update.task_id} -> ${update.status}`);
           resolve(response);
         }
       });
@@ -124,14 +114,12 @@ class GrpcKernelBusClient {
 }
 
 async function main() {
-  logger.info(
-    `[TS Sandbox] ${ASSISTANT_NAME} Stateless Execution Plane starting...`,
-  );
+  logger.info(`[TS Sandbox] ${ASSISTANT_NAME} Stateless Execution Plane starting...`);
   const client = new GrpcKernelBusClient();
   client.start();
 }
 
-main().catch((err) => {
+main().catch(err => {
   logger.error(`[TS Sandbox] Fatal error: ${err.message}`);
   process.exit(1);
 });

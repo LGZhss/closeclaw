@@ -3,12 +3,12 @@
  * 使用子进程执行代码和命令，实现基线隔离
  */
 
-import { spawn, ChildProcess } from "child_process";
-import os from "os";
-import path from "path";
-import fs from "fs";
-import { logger } from "../logger.js";
-import { config } from "../config.js";
+import { spawn, ChildProcess } from 'child_process';
+import os from 'os';
+import path from 'path';
+import fs from 'fs';
+import { logger } from '../logger.js';
+import { config } from '../config.js';
 
 export interface ExecutionResult {
   stdout: string;
@@ -34,43 +34,38 @@ export class ProcessExecutor {
    * @param options 执行选项
    * @returns 执行结果
    */
-  async execute(
-    code: string,
-    options: ExecutionOptions = {},
-  ): Promise<ExecutionResult> {
+  async execute(code: string, options: ExecutionOptions = {}): Promise<ExecutionResult> {
     const executionId = `exec_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
     const timeout = options.timeout || config.sandbox.timeout;
 
     return new Promise((resolve, reject) => {
       // 创建临时JavaScript文件
       const tempFile = path.join(os.tmpdir(), `temp_${executionId}.js`);
-
+      
       try {
         // 写入代码到临时文件
         fs.writeFileSync(tempFile, code);
 
         // 安全地使用 spawn 执行 node 命令，而不是通过 shell
-        this._executeProcess("node", [tempFile], { timeout }, executionId)
-          .then((result) => {
-            // 清理临时文件
-            try {
+        this._executeProcess('node', [tempFile], { timeout }, executionId).then(result => {
+          // 清理临时文件
+          try {
+            fs.unlinkSync(tempFile);
+          } catch (e) {
+            // 忽略清理错误
+          }
+          resolve(result);
+        }).catch(error => {
+          // 清理临时文件
+          try {
+            if (fs.existsSync(tempFile)) {
               fs.unlinkSync(tempFile);
-            } catch (e) {
-              // 忽略清理错误
             }
-            resolve(result);
-          })
-          .catch((error) => {
-            // 清理临时文件
-            try {
-              if (fs.existsSync(tempFile)) {
-                fs.unlinkSync(tempFile);
-              }
-            } catch (e) {
-              // 忽略清理错误
-            }
-            reject(error);
-          });
+          } catch (e) {
+            // 忽略清理错误
+          }
+          reject(error);
+        });
       } catch (error) {
         reject(error);
       }
@@ -83,24 +78,21 @@ export class ProcessExecutor {
    * @param options 执行选项
    * @returns 执行结果
    */
-  async executeCommand(
-    command: string,
-    options: ExecutionOptions = {},
-  ): Promise<ExecutionResult> {
+  async executeCommand(command: string, options: ExecutionOptions = {}): Promise<ExecutionResult> {
     const executionId = `exec_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 
     // 解析命令
     let cmd = command;
     let args: string[] = [];
 
-    if (process.platform === "win32") {
+    if (process.platform === 'win32') {
       // Windows 平台
-      cmd = "cmd.exe";
-      args = ["/c", command];
+      cmd = 'cmd.exe';
+      args = ['/c', command];
     } else {
       // Unix 平台
-      cmd = "/bin/sh";
-      args = ["-c", command];
+      cmd = '/bin/sh';
+      args = ['-c', command];
     }
 
     return this._executeProcess(cmd, args, options, executionId, command);
@@ -111,22 +103,22 @@ export class ProcessExecutor {
    * @private
    */
   private _executeProcess(
-    cmd: string,
-    args: string[],
-    options: ExecutionOptions,
-    executionId: string | null = null,
-    originalCommand: string = "",
+    cmd: string, 
+    args: string[], 
+    options: ExecutionOptions, 
+    executionId: string | null = null, 
+    originalCommand: string = ''
   ): Promise<ExecutionResult> {
     if (!executionId) {
       executionId = `exec_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
     }
     const timeout = options.timeout || config.sandbox.timeout;
     const cwd = options.cwd || process.cwd();
-    const displayCmd = originalCommand || `${cmd} ${args.join(" ")}`;
+    const displayCmd = originalCommand || `${cmd} ${args.join(' ')}`;
 
     return new Promise((resolve, reject) => {
-      let stdout = "";
-      let stderr = "";
+      let stdout = '';
+      let stderr = '';
       let timeoutId: NodeJS.Timeout | null = null;
 
       // 启动子进程
@@ -134,10 +126,10 @@ export class ProcessExecutor {
         cwd,
         env: {
           // 限制环境变量，防止泄露敏感信息
-          NODE_ENV: "production",
-          PATH: process.env.PATH,
+          NODE_ENV: 'production',
+          PATH: process.env.PATH
         },
-        stdio: "pipe",
+        stdio: 'pipe'
       });
 
       // 记录运行中的进程
@@ -152,17 +144,17 @@ export class ProcessExecutor {
       }
 
       // 捕获标准输出
-      childProcess.stdout!.on("data", (data) => {
+      childProcess.stdout!.on('data', (data) => {
         stdout += data.toString();
       });
 
       // 捕获标准错误
-      childProcess.stderr!.on("data", (data) => {
+      childProcess.stderr!.on('data', (data) => {
         stderr += data.toString();
       });
 
       // 进程结束
-      childProcess.on("close", (exitCode) => {
+      childProcess.on('close', (exitCode) => {
         // 清除超时
         if (timeoutId) {
           clearTimeout(timeoutId);
@@ -175,17 +167,15 @@ export class ProcessExecutor {
         const result: ExecutionResult = {
           stdout,
           stderr,
-          exitCode,
+          exitCode
         };
 
-        logger.debug(
-          `[ProcessExecutor] 命令执行完成: ${displayCmd}，退出码: ${exitCode}`,
-        );
+        logger.debug(`[ProcessExecutor] 命令执行完成: ${displayCmd}，退出码: ${exitCode}`);
         resolve(result);
       });
 
       // 进程错误
-      childProcess.on("error", (error) => {
+      childProcess.on('error', (error) => {
         // 清除超时
         if (timeoutId) {
           clearTimeout(timeoutId);
@@ -237,7 +227,7 @@ export class ProcessExecutor {
     }
 
     this.runningProcesses.clear();
-    logger.info("[ProcessExecutor] 执行器已关闭");
+    logger.info('[ProcessExecutor] 执行器已关闭');
   }
 
   /**
