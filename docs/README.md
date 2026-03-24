@@ -76,9 +76,7 @@ docs/
 
 ### archive/ 历史归档与技术分析
 
-- impl-plan-020.md - P020 原始实施规划 (已废弃)
-- CODEBASE_ANALYSIS.md - 早期代码库分析
-- TELEGRAM_IMPL_COMPARISON.md - Telegram 实现对比
+- CODEBASE_ANALYSIS.md - 早期代码库分析 (历史)
 - PHASE_3_COMPREHENSIVE_PLAN.md - Phase 3 综合计划 (历史)
 
 ---

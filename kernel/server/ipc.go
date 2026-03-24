@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"net"
 	"runtime"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -31,8 +32,10 @@ const (
 // KernelBusServer 实现 pb.KernelBusServer 接口。
 type KernelBusServer struct {
 	pb.UnimplementedKernelBusServer
-	startTime      time.Time
+	startTime        time.Time
 	activeGoroutines atomic.Int32
+	// tsStreams 存储当前活跃的 TS 沙盒订阅流，用于广播任务
+	tsStreams        sync.Map // map[chan *pb.Task]bool
 }
 
 // NewKernelBusServer 创建服务实例。
@@ -50,14 +53,46 @@ func (s *KernelBusServer) DispatchTask(ctx context.Context, req *pb.Task) (*pb.T
 		"task_id", req.GetTaskId(),
 		"trace_id", req.GetTrace().GetTraceId(),
 		"group_jid", req.GetGroupJid(),
-		"status", req.GetStatus(),
 	)
-	// TODO Phase2: 实际写入 SQLite (db.InsertTask)
-	// 当前 Phase1 POC 直接返回 RUNNING 确认
+
+	// 写入 SQLite
+	taskIDStr := req.GetTaskId()
+	var taskID int64
+	fmt.Sscanf(taskIDStr, "%d", &taskID) // 尝试从 string 转 int64，如果是 UUID 则由 DB 处理或映射
+
+	dbTask := db.ScheduledTask{
+		GroupFolder:   req.GetGroupFolder(),
+		Prompt:        string(req.GetPayload()),
+		ScheduleType:  req.GetScheduleType(),
+		ScheduleValue: req.GetScheduleValue(),
+		IsPaused:      false,
+		CreatedAt:     time.Now().UTC().Format(time.RFC3339),
+		Status:        "PENDING",
+		DependsOn:     "",
+	}
+	
+	// 如果 req.DependsOn 是 repeated string，我们需要将其转换为逗号分隔字符串
+	if len(req.GetDependsOn()) > 0 {
+		var deps string
+		for i, d := range req.GetDependsOn() {
+			if i > 0 {
+				deps += ","
+			}
+			deps += d
+		}
+		dbTask.DependsOn = deps
+	}
+
+	_, err := db.InsertTask(db.GetDB(), dbTask)
+	if err != nil {
+		slog.Error("Failed to insert task from gRPC", "err", err)
+		return nil, status.Errorf(codes.Internal, "DB insert failed: %v", err)
+	}
+
 	elapsed := time.Since(start).Milliseconds()
 	return &pb.TaskResponse{
 		TaskId:    req.GetTaskId(),
-		Status:    pb.TaskStatus_RUNNING,
+		Status:    pb.TaskStatus_PENDING,
 		ElapsedMs: elapsed,
 	}, nil
 }
@@ -72,7 +107,20 @@ func (s *KernelBusServer) SyncStatus(ctx context.Context, req *pb.StatusUpdate) 
 		"status", req.GetStatus(),
 		"error", req.GetError(),
 	)
-	return &pb.Ack{Ok: true, Message: "状态已接收"}, nil
+
+	// 更新数据库状态
+	var taskID int64
+	fmt.Sscanf(req.GetTaskId(), "%d", &taskID)
+	
+	statusStr := req.GetStatus().String()
+	if err := db.UpdateTaskStatus(db.GetDB(), taskID, statusStr); err != nil {
+		slog.Error("Failed to update task status from gRPC", "task_id", taskID, "err", err)
+		return nil, status.Errorf(codes.Internal, "DB update failed: %v", err)
+	}
+
+	// TODO: 记录到 task_run_logs
+
+	return &pb.Ack{Ok: true, Message: "状态已同步至内核"}, nil
 }
 
 // CheckHealth Dart 心跳探活接口。
@@ -128,8 +176,44 @@ func (s *KernelBusServer) GetPendingMessages(req *pb.Ack, stream pb.KernelBus_Ge
 	return nil
 }
 
+// SubscribeTasks 允许 TS 无状态沙盒订阅实时任务流。
+func (s *KernelBusServer) SubscribeTasks(req *pb.Ack, stream pb.KernelBus_SubscribeTasksServer) error {
+	slog.Info("[IPC] TS Sandbox subscribed to task stream")
+	
+	// 为该流创建一个下发通道
+	taskCh := make(chan *pb.Task, 100)
+	s.tsStreams.Store(taskCh, true)
+	defer s.tsStreams.Delete(taskCh)
+
+	for {
+		select {
+		case <-stream.Context().Done():
+			slog.Info("[IPC] TS Sandbox unsubscribed")
+			return nil
+		case task := <-taskCh:
+			if err := stream.Send(task); err != nil {
+				slog.Error("[IPC] Stream send failed", "err", err)
+				return err
+			}
+		}
+	}
+}
+
+// BroadcastTask 将任务推送到所有活跃的 TS 沙盒。
+func (s *KernelBusServer) BroadcastTask(task *pb.Task) {
+	slog.Info("[IPC] Broadcasting task to sandboxes", "task_id", task.GetTaskId())
+	s.tsStreams.Range(func(key, value interface{}) bool {
+		taskCh := key.(chan *pb.Task)
+		select {
+		case taskCh <- task:
+		default:
+			slog.Warn("[IPC] Task channel full, skipping client")
+		}
+		return true
+	})
+}
 // Start 启动 gRPC 服务并阻塞监听。
-func Start() error {
+func Start(srv *KernelBusServer) error {
 	lis, err := listen()
 	if err != nil {
 		return fmt.Errorf("创建监听器失败: %w", err)
@@ -138,7 +222,7 @@ func Start() error {
 		grpc.MaxRecvMsgSize(4*1024*1024),
 		grpc.MaxSendMsgSize(4*1024*1024),
 	)
-	pb.RegisterKernelBusServer(s, NewKernelBusServer())
+	pb.RegisterKernelBusServer(s, srv)
 
 	slog.Info("KernelBus gRPC 服务已启动", "addr", lis.Addr())
 	return s.Serve(lis)

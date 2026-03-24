@@ -103,6 +103,8 @@ CREATE TABLE IF NOT EXISTS scheduled_tasks (
   created_at     TEXT    NOT NULL,
   last_run_at    TEXT,
   next_run_at    TEXT,
+  status         TEXT    NOT NULL DEFAULT 'PENDING', -- PENDING, RUNNING, DONE, FAILED
+  depends_on     TEXT,    -- DAG: 逗号分隔的依赖任务 ID 列表
   FOREIGN KEY (group_folder) REFERENCES registered_groups(folder) ON DELETE CASCADE
 );
 

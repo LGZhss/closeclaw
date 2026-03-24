@@ -6,8 +6,8 @@ import path from "path";
  * 用于向 Claude Code / Chrome MCP 客户端公开 CloseClaw 的项目上下文。
  */
 export class McpBridge {
-  private votesDir: string;
-  private rulesFile: string;
+  private readonly votesDir: string;
+  private readonly rulesFile: string;
 
   constructor() {
     this.votesDir = path.resolve(
@@ -24,7 +24,7 @@ export class McpBridge {
   async listProposals(): Promise<any[]> {
     try {
       const files: string[] = await fs.readdir(this.votesDir);
-      const proposals = await Promise.all(
+      return await Promise.all(
         files
           .filter((f: string) => f.startsWith("proposal-"))
           .map(async (file: string) => {
@@ -40,7 +40,6 @@ export class McpBridge {
             };
           }),
       );
-      return proposals;
     } catch (error) {
       console.error("[MCP] Failed to list proposals:", error);
       return [];

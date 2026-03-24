@@ -96,7 +96,7 @@ node scripts/test-zhipu-api.js
 ### 🌟 新 IDE 必读（按顺序）
 
 1. **[docs/01-getting-started/quickstart.md](./docs/01-getting-started/quickstart.md)** - 快速开始（5 分钟）
-2. **[docs/02-collaboration/rules.md](./docs/02-collaboration/rules.md)** - 协作规则（10 分钟）
+2. **[RULES.md](./RULES.md)** - 协作规则（10 分钟）
 3. **[docs/03-development/ide-registration.md](./docs/03-development/ide-registration.md)** - 注册流程（5 分钟）
 
 ### 📚 核心文档
@@ -106,7 +106,7 @@ node scripts/test-zhipu-api.js
 | [docs/04-reference/file-structure.md](./docs/04-reference/file-structure.md) | 文件结构详解 |
 | [docs/05-architecture/overview.md](./docs/05-architecture/overview.md) | 系统架构设计 |
 | [docs/07-roadmap/future-plan.md](./docs/07-roadmap/future-plan.md) | 未来发展规划 |
-| [docs/02-collaboration/rules.md](./docs/02-collaboration/rules.md) | 协作规则 |
+| [RULES.md](./RULES.md) | 协作规则 |
 | [docs/06-registry/collaborators.md](./docs/06-registry/collaborators.md) | 协作主体注册 |
 
 ### 📂 完整文档目录
@@ -131,7 +131,7 @@ node scripts/test-zhipu-api.js
 
 **参与投票**: 编辑 `votes/proposal-001.md` 中的投票表
 
-**详细规则**: [docs/02-collaboration/rules.md](./docs/02-collaboration/rules.md)
+**详细规则**: [RULES.md](./RULES.md)
 
 ---
 
@@ -182,7 +182,7 @@ closeclaw/
 - 二级：≥5 IDE + 用户投票（功能新增）
 - 三级：≥8 IDE + 用户投票（核心变更）
 
-**详细规则**: [docs/02-collaboration/rules.md](./docs/02-collaboration/rules.md)
+**详细规则**: [RULES.md](./RULES.md)
 
 ---
 
@@ -207,7 +207,7 @@ npm run format
 ## 🆘 需要帮助？
 
 **新 IDE**: [docs/01-getting-started/quickstart.md](./docs/01-getting-started/quickstart.md)  
-**快速参考**: [docs/02-collaboration/rules.md](./docs/02-collaboration/rules.md)  
+**快速参考**: [RULES.md](./RULES.md)  
 **文件结构**: [docs/04-reference/file-structure.md](./docs/04-reference/file-structure.md)  
 **全部文档**: [docs/README.md](./docs/README.md)
 

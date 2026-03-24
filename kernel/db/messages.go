@@ -50,6 +50,8 @@ type ScheduledTask struct {
 	CreatedAt     string `json:"created_at"`
 	LastRunAt     string `json:"last_run_at"`
 	NextRunAt     string `json:"next_run_at"`
+	Status        string `json:"status"`
+	DependsOn     string `json:"depends_on"`
 }
 
 // ─────────────────────────────────────────
@@ -104,10 +106,10 @@ func MarkMessagesProcessed(db *sql.DB, ids []int64) error {
 // InsertTask 写入新调度任务，返回行 ID。
 func InsertTask(db *sql.DB, t ScheduledTask) (int64, error) {
 	res, err := db.Exec(
-		`INSERT INTO scheduled_tasks (group_folder, prompt, schedule_type, schedule_value, is_paused, created_at, next_run_at)
-		 VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		`INSERT INTO scheduled_tasks (group_folder, prompt, schedule_type, schedule_value, is_paused, created_at, next_run_at, status, depends_on)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		t.GroupFolder, t.Prompt, t.ScheduleType, t.ScheduleValue,
-		boolInt(t.IsPaused), t.CreatedAt, nullStr(t.NextRunAt),
+		boolInt(t.IsPaused), t.CreatedAt, nullStr(t.NextRunAt), t.Status, nullStr(t.DependsOn),
 	)
 	if err != nil {
 		return 0, fmt.Errorf("InsertTask: %w", err)
@@ -119,8 +121,8 @@ func InsertTask(db *sql.DB, t ScheduledTask) (int64, error) {
 func GetDueTasks(db *sql.DB, now time.Time) ([]ScheduledTask, error) {
 	rows, err := db.Query(
 		`SELECT id, group_folder, prompt, schedule_type, schedule_value, is_paused,
-		        created_at, COALESCE(last_run_at,''), COALESCE(next_run_at,'')
-		 FROM scheduled_tasks WHERE is_paused = 0 AND next_run_at IS NOT NULL AND next_run_at <= ?
+		        created_at, COALESCE(last_run_at,''), COALESCE(next_run_at,''), COALESCE(depends_on,'')
+		 FROM scheduled_tasks WHERE is_paused = 0 AND status = 'PENDING' AND next_run_at IS NOT NULL AND next_run_at <= ?
 		 ORDER BY next_run_at ASC`,
 		now.UTC().Format(time.RFC3339),
 	)
@@ -134,10 +136,34 @@ func GetDueTasks(db *sql.DB, now time.Time) ([]ScheduledTask, error) {
 // UpdateTaskNextRun 更新 last_run_at 与 next_run_at。
 func UpdateTaskNextRun(db *sql.DB, taskID int64, nextRunAt string) error {
 	_, err := db.Exec(
-		`UPDATE scheduled_tasks SET next_run_at = ?, last_run_at = datetime('now') WHERE id = ?`,
+		`UPDATE scheduled_tasks SET next_run_at = ?, last_run_at = datetime('now'), status = 'PENDING' WHERE id = ?`,
 		nextRunAt, taskID,
 	)
 	return err
+}
+
+// UpdateTaskStatus 更新任务执行状态。
+func UpdateTaskStatus(db *sql.DB, taskID int64, status string) error {
+	_, err := db.Exec(`UPDATE scheduled_tasks SET status = ? WHERE id = ?`, status, taskID)
+	return err
+}
+
+// CheckDependenciesMet 检查依赖的任务是否已全部完成 (DONE)。
+func CheckDependenciesMet(db *sql.DB, dependsOn string) (bool, error) {
+	if dependsOn == "" {
+		return true, nil
+	}
+	// dependsOn 是逗号分隔的 ID 列表
+	query := fmt.Sprintf(
+		"SELECT COUNT(*) FROM scheduled_tasks WHERE id IN (%s) AND status != 'DONE'",
+		dependsOn, // 注意：在真实生产中应使用正则或参数化，此处假设 dependsOn 格式由系统控制
+	)
+	var count int
+	err := db.QueryRow(query).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	return count == 0, nil
 }
 
 // ─────────────────────────────────────────
@@ -183,7 +209,7 @@ func scanTasks(rows *sql.Rows) ([]ScheduledTask, error) {
 		var isPaused int
 		if err := rows.Scan(
 			&t.ID, &t.GroupFolder, &t.Prompt, &t.ScheduleType, &t.ScheduleValue,
-			&isPaused, &t.CreatedAt, &t.LastRunAt, &t.NextRunAt,
+			&isPaused, &t.CreatedAt, &t.LastRunAt, &t.NextRunAt, &t.Status, &t.DependsOn,
 		); err != nil {
 			return nil, err
 		}

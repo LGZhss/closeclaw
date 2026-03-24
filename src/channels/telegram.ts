@@ -141,7 +141,8 @@ export class TelegramChannel implements Channel {
   private startPolling(): void {
     this.pollingActive = true;
     this.abortController = new AbortController();
-    this.poll();
+    // 启动背景轮询，不等待其结束
+    void this.poll();
   }
   
   private async poll(): Promise<void> {

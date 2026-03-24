@@ -1,4 +1,4 @@
-﻿import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { TelegramChannel } from "../src/channels/telegram.js";
 import { ChannelOpts } from "../src/types.js";
 
@@ -65,8 +65,7 @@ describe("Telegram Channel - JID Management", () => {
 
     it("should format user with first name only", async () => {
       const onMsg = vi.fn();
-      const mf = createPollingMock({ update_id: 1, message: { message_id: 1, from: { id: 1, first_name: "Alice" }, chat: { id: 1, type: "private" as const }, text: "Hi", date: 1 } });
-      global.fetch = mf;
+      global.fetch = createPollingMock({ update_id: 1, message: { message_id: 1, from: { id: 1, first_name: "Alice" }, chat: { id: 1, type: "private" as const }, text: "Hi", date: 1 } });
       const ch = new TelegramChannel({ onMessage: onMsg, registeredGroups: vi.fn() } as ChannelOpts, "tok");
       await ch.connect();
       await new Promise(r => setTimeout(r, 50));
@@ -76,8 +75,7 @@ describe("Telegram Channel - JID Management", () => {
 
     it("should format user with first and last name", async () => {
       const onMsg = vi.fn();
-      const mf = createPollingMock({ update_id: 1, message: { message_id: 1, from: { id: 1, first_name: "John", last_name: "Doe" }, chat: { id: 1, type: "private" as const }, text: "Hi", date: 1 } });
-      global.fetch = mf;
+      global.fetch = createPollingMock({ update_id: 1, message: { message_id: 1, from: { id: 1, first_name: "John", last_name: "Doe" }, chat: { id: 1, type: "private" as const }, text: "Hi", date: 1 } });
       const ch = new TelegramChannel({ onMessage: onMsg, registeredGroups: vi.fn() } as ChannelOpts, "tok");
       await ch.connect();
       await new Promise(r => setTimeout(r, 50));
@@ -87,8 +85,7 @@ describe("Telegram Channel - JID Management", () => {
 
     it("should format user with full name and username", async () => {
       const onMsg = vi.fn();
-      const mf = createPollingMock({ update_id: 1, message: { message_id: 1, from: { id: 1, first_name: "Bob", last_name: "Smith", username: "bobsmith" }, chat: { id: 1, type: "private" as const }, text: "Hi", date: 1 } });
-      global.fetch = mf;
+      global.fetch = createPollingMock({ update_id: 1, message: { message_id: 1, from: { id: 1, first_name: "Bob", last_name: "Smith", username: "bobsmith" }, chat: { id: 1, type: "private" as const }, text: "Hi", date: 1 } });
       const ch = new TelegramChannel({ onMessage: onMsg, registeredGroups: vi.fn() } as ChannelOpts, "tok");
       await ch.connect();
       await new Promise(r => setTimeout(r, 50));

@@ -8,3 +8,10 @@ profile:
   name: qodana.recommended
 include:
   - name: CheckDependencyLicenses
+exclude:
+  - name: All
+    paths:
+      - "worktrees"
+      - "gh_bin_new"
+      - "dist"
+      - "node_modules"

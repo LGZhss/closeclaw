@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
-import { routeOutbound, escapeXml, findChannelForJid } from "../src/router.js";
-import { Channel } from "../src/types.js";
+import { routeOutbound, escapeXml, findChannelForJid, formatMessages } from "../src/router.js";
+import { Channel, DbMessage } from "../src/types.js";
 
 describe("findChannelForJid", () => {
   it("should return the matching channel when one owns the JID", () => {
@@ -98,7 +98,7 @@ describe("escapeXml", () => {
   });
 
   it("should escape < and > correctly", () => {
-    expect(escapeXml("<html>")).toBe("&lt;html&gt;");
+    expect(escapeXml('<html lang="zh-CN">')).toBe("&lt;html lang=&quot;zh-CN&quot;&gt;");
   });
 
   it('should escape " correctly', () => {

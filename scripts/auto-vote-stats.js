@@ -132,7 +132,7 @@ function parseProposal(filePath) {
     result.userScore = -0.5 * n;
   }
   
-  const agreeScore = ideAgree * 1 + (result.userVote === '赞同' ? 0.5 * n : 0);
+  const agreeScore = ideAgree + (result.userVote === '赞同' ? 0.5 * n : 0);
   const opposeScore = ideOppose * 2 + (result.userVote === '反对' ? 0.5 * n : 0);
   
   // 判断法定人数
@@ -164,7 +164,7 @@ function printReport(proposals) {
   console.log('\n📊 CloseClaw 提案投票统计报告');
   console.log('=' .repeat(50));
   
-  const sorted = proposals.sort((a, b) => parseInt(a.id || 0) - parseInt(b.id || 0));
+  const sorted = proposals.sort((a, b) => parseInt(a.id || "0") - parseInt(b.id || "0"));
   
   for (const p of sorted) {
     const statusIcon = p.passed ? '✅' : p.quorumMet ? '🟡' : '⚪';

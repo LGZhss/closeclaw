@@ -1,84 +1,126 @@
-import { SandboxRunner } from "./agent/sandbox-runner.js";
-import { logger } from "./logger.js";
-import { ASSISTANT_NAME } from "./config.js";
-import "./adapters/openai.js"; // Trigger adapter self-registration
+import * as grpc from '@grpc/grpc-js';
+import * as protoLoader from '@grpc/proto-loader';
+import { resolve } from 'path';
+import { SandboxRunner } from './agent/sandbox-runner.js';
+import { logger } from './logger.js';
+import { ASSISTANT_NAME } from './config.js';
+import './adapters/openai.js'; // 确保适配器自动注册
 
-// Phase2 POC: 模拟 gRPC 客户端桩 (未来使用 @grpc/grpc-js 真正连接 Go Kernel)
-class MockKernelBusClient {
-  async connect() {
-    logger.info("模拟连接至 Go KernelBus gRPC 服务...");
-    return new Promise((resolve) => setTimeout(resolve, 500));
-  }
+/**
+ * GrpcKernelBusClient - 正式 gRPC 客户端连接 Go 内核
+ */
+class GrpcKernelBusClient {
+  private readonly client: any;
+  private readonly protoPath: string;
 
-  // 模拟从 Go 接收 DispatchTask
-  onTaskDispatch(callback: (task: any) => Promise<void>) {
-    // 模拟 2 秒后收到一个来自 Go 的任务
-    setTimeout(async () => {
-      logger.info("[gRPC IN] 收到 Go 内核下发的任务指派");
-      await callback({
-        taskId: "task-001",
-        groupFolder: "main",
-        prompt: "你好，请生成一个测试回复以验证 TS 沙盒无状态化。",
+  constructor() {
+    this.protoPath = resolve(process.cwd(), 'proto/messages.proto');
+    
+    try {
+      const packageDefinition = protoLoader.loadSync(this.protoPath, {
+        keepCase: true,
+        longs: String,
+        enums: String,
+        defaults: true,
+        oneofs: true
       });
-    }, 2000);
-  }
-
-  // 模拟向 Go 发送 StatusUpdate
-  async syncStatus(taskId: string, status: string, error?: string) {
-    logger.info(`[gRPC OUT] 向 Go 内核同步任务状态: taskId=${taskId}, status=${status}, error=${error}`);
-  }
-}
-
-async function handleDispatchedTask(client: MockKernelBusClient, task: any) {
-  try {
-    await client.syncStatus(task.taskId, "RUNNING");
-    logger.info(`开始在无状态沙盒中执行任务: ${task.taskId}`);
-
-    const runner = new SandboxRunner('openai');
-    
-    // 执行环境已隔离，没有传真实的 channel，只做上下文处理
-    const context = {
-      groupFolder: task.groupFolder,
-      prompt: task.prompt,
-      channel: null as any, 
-      history: []
-    };
-    
-    const response = await runner.execute(context);
-    logger.info(`沙盒执行完毕，输出结果: ${response.substring(0, 50)}...`);
-    
-    await runner.close();
-    await client.syncStatus(task.taskId, "COMPLETED");
-
-  } catch (error) {
-    logger.error(`沙盒任务崩溃: ${error}`);
-    await client.syncStatus(task.taskId, "FAILED", String(error));
-  }
-}
-
-async function main(): Promise<void> {
-  logger.info(`启动 ${ASSISTANT_NAME} 无状态沙盒节点 v0.1.0-phase2...`);
-
-  try {
-    const grpcClient = new MockKernelBusClient();
-    await grpcClient.connect();
-
-    logger.info("等待 Go 内核指派任务...");
-
-    grpcClient.onTaskDispatch(async (task) => {
-      await handleDispatchedTask(grpcClient, task);
+      const protoDescriptor = grpc.loadPackageDefinition(packageDefinition) as any;
+      // 对应 proto 中的 package closeclaw.v1;
+      const KernelBus = protoDescriptor.closeclaw.v1.KernelBus;
       
-      // Phase2 POC: 测试走完一条鞭链路后自动退出，验证结束
-      setTimeout(() => {
-        logger.info("链路跑通，验证完成。退出沙盒。");
-        process.exit(0);
-      }, 1000);
+      this.client = new KernelBus(
+        '127.0.0.1:50051', 
+        grpc.credentials.createInsecure()
+      );
+    } catch (err: any) {
+      logger.error(`[TS Sandbox] Failed to load proto: ${err.message}`);
+    }
+  }
+
+  start() {
+    logger.info('[TS Sandbox] Connecting to Go Kernel via gRPC at 127.0.0.1:50051...');
+    this.subscribeTasks();
+  }
+
+  private subscribeTasks() {
+    // 调用我们在 proto 中新增的 SubscribeTasks stream
+    const call = this.client.SubscribeTasks({ ok: true, message: 'Ready' });
+    
+    call.on('data', async (task: any) => {
+      logger.info(`[TS Sandbox] Received dispatched task: ${task.id}`);
+      
+      const runner = new SandboxRunner('openai'); // 默认使用 openai 适配器
+      
+      try {
+        // 构建执行上下文，由于是无状态沙盒，channel 为空，由 Go 控制逻辑处理响应
+        const context = {
+          groupFolder: task.group_jid || 'global',
+          prompt: task.payload || '',
+          channel: null as any,
+          history: [] // 后续可由 Go 侧下发历史片段
+        };
+        
+        const responseText = await runner.execute(context);
+        logger.info(`[TS Sandbox] Task ${task.id} execution completed.`);
+        
+        // 汇报状态至内核
+        await this.syncStatus({
+          task_id: task.task_id,
+          trace_id: task.trace?.trace_id,
+          status: 'DONE',
+          result: Buffer.from(responseText)
+        });
+      } catch (err: any) {
+        logger.error(`[TS Sandbox] Task ${task.id} execution failed: ${err.message}`);
+        await this.syncStatus({
+          task_id: task.task_id,
+          trace_id: task.trace?.trace_id,
+          status: 'FAILED',
+          error: err.message
+        });
+      } finally {
+        await runner.close();
+      }
     });
 
-  } catch (error) {
-    logger.error(`致命错误: ${error}`);
-    process.exit(1);
+    call.on('error', (err: any) => {
+      logger.error(`[TS Sandbox] gRPC Stream Error: ${err.message}`);
+      // 指数退避重连
+      setTimeout(() => this.subscribeTasks(), 5000);
+    });
+
+    call.on('status', (status: any) => {
+      logger.debug(`[TS Sandbox] gRPC Stream Status: ${JSON.stringify(status)}`);
+    });
+
+    call.on('end', () => {
+      logger.warn('[TS Sandbox] gRPC Stream ended by server. Reconnecting...');
+      setTimeout(() => this.subscribeTasks(), 5000);
+    });
+  }
+
+  private async syncStatus(update: any): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.client.SyncStatus(update, (err: any, response: any) => {
+        if (err) {
+          logger.error(`[TS Sandbox] SyncStatus report failed: ${err.message}`);
+          reject(err);
+        } else {
+          logger.debug(`[TS Sandbox] Status synced: ${update.task_id} -> ${update.status}`);
+          resolve(response);
+        }
+      });
+    });
   }
 }
 
-main();
+async function main() {
+  logger.info(`[TS Sandbox] ${ASSISTANT_NAME} Stateless Execution Plane starting...`);
+  const client = new GrpcKernelBusClient();
+  client.start();
+}
+
+main().catch(err => {
+  logger.error(`[TS Sandbox] Fatal error: ${err.message}`);
+  process.exit(1);
+});
