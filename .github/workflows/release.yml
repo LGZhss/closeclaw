@@ -45,16 +45,16 @@ jobs:
           go mod tidy
 
       - name: Go Kernel - Run Benchmarks
-        shell: msys2 {0}
         run: |
           cd kernel
-          CGO_ENABLED=1 go test -v -bench . -benchmem ./db
+          $env:CGO_ENABLED="1"
+          go test -v -bench . -benchmem ./db
 
       - name: Go Kernel - Build Binary
-        shell: msys2 {0}
         run: |
           cd kernel
-          CGO_ENABLED=1 go build -o ../build/closeclaw-kernel.exe main.go
+          $env:CGO_ENABLED="1"
+          go build -o ../build/closeclaw-kernel.exe main.go
 
       - name: Dart Control Plane - Download Dependencies
         run: |
