@@ -60,7 +60,7 @@ func TestShouldTrigger(t *testing.T) {
 func TestBuildAgentPrompt(t *testing.T) {
 	cfg := DefaultConfig("Andy")
 	msgs := []db.Message{
-		{SenderName: "Alice", Text: "Hi there!", Timestamp: "2026-03-23T09:05:00Z"},
+		{SenderName: "Alice", Text: "Hi there!", Timestamp: 1774227900000},
 	}
 	out := BuildAgentPrompt(cfg, msgs)
 	expected := "You are Andy, a helpful AI assistant.\n\nConversation history:\n[3月23日 上午9:05] Alice: Hi there!\n\nPlease respond to the latest messages above. Be helpful, concise, and natural."

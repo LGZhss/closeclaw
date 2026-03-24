@@ -1,7 +1,8 @@
+
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **.closeclaw** (1419 symbols, 3065 relationships, 81 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **.closeclaw** (1368 symbols, 2915 relationships, 74 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
@@ -142,81 +143,41 @@ npm run test:coverage      # Generate coverage report (v8 provider)
 ## Project Structure
 
 ```
-src/
-├── index.ts                 # Core orchestrator (main entry point)
-├── db.ts                    # SQLite database layer (6 tables)
-├── router.ts                # Message routing & prompt building
-├── config.ts                # Configuration management
-├── logger.ts                # Pino structured logging
-├── channels/                # Channel adapters (Telegram, etc.)
-│   ├── registry.ts
-│   ├── index.ts
-│   └── telegram.ts
-├── task-scheduler.ts        # Cron/interval task execution
-├── group-queue.ts           # Per-group message queue (prevents cross-group conflicts)
-└── agent/
-    ├── runner.ts            # Agent execution interface
-    └── sandbox-runner.ts    # LLM adapter orchestration
+cmd/                         # 控制平面 (Dart)
+├── bin/closeclaw.dart       # 主入口
+└── lib/                     # 守护进程与审计中继
 
-docs/
-├── 01-getting-started/      # Quickstart guide, onboarding
-├── 02-collaboration/        # Rules, voting, environment topology
-├── 03-development/          # IDE registration, implementation plans
-├── 04-reference/            # File structure, registration flow
-├── 05-architecture/         # System design with diagrams
-├── 06-registry/             # Collaborator list and management
-└── 07-roadmap/              # Future plans and task tracking
+kernel/                      # 状态总线 (Go)
+├── db/                      # SQLite WAL 高并发总线
+├── scheduler/               # 毫秒级任务循环
+└── router/                  # 消息分发核心
 
-groups/                      # Per-group memory storage
-├── global/CONTEXT.md        # Global conversation context
-└── {groupName}/CONTEXT.md   # Group-specific context (for each chat)
+src/                         # 沙盒执行层 (TypeScript)
+├── index.ts                 # NPM 执行入口
+├── sandbox/                 # 生态执行隔板
+└── tools/                   # Agent 动态挂载工具
 
-votes/                       # ⭐ CRITICAL: All code changes require proposals here
-├── proposal-001.md
-├── proposal-002.md
-└── ...
+proto/                       # 跨语言协议 (.proto)
+docs/                        # 极简文档体系
+groups/                      # 分群组记忆 (CONTEXT.md)
+votes/                       # 协作提案决议区
 ```
 
-## High-Level Architecture
+## High-Level Architecture (P027)
 
-### Seven-Layer Stack
+### 三语言微内核栈 (Three-Language Micro-kernel)
 
-**Layer 1: Interaction (Channels)**
-- `src/channels/` — Platform adapters (Telegram, etc.)
-- Interface: `Channel` with `connect()`, `sendMessage()`, `disconnect()`
-- Registry pattern for channel factories
+**Layer 1: 控制平面 (Dart)**
+- `cmd/` — 负责生命周期管理、MCP Server 对外暴露、CLI 交互。
+- 编译为原生 `closeclaw.exe`，实现零环境依赖启动。
 
-**Layer 2: Routing & Message Processing**
-- `src/router.ts` — Message routing, trigger pattern matching (`@{ASSISTANT_NAME}`)
-- `src/db.ts` — SQLite storage with WAL mode for concurrency
-- Prompt building from chat history, XML escaping for safety
+**Layer 2: 状态与网络总线 (Go)**
+- `kernel/` — 负责高性能 SQLite WAL 并发读写、SSE 网络流处理、分布式 TraceID 生成。
+- 作为系统的“神经中枢”，通过 Named Pipe 与 TS 握手。
 
-**Layer 3: Task Scheduling**
-- `src/task-scheduler.ts` — Cron expression parsing (cron-parser library)
-- Supports: cron, fixed intervals, one-time tasks
-- `src/group-queue.ts` — Per-group queuing (prevents cross-group conflicts)
-
-**Layer 4: Agent Execution**
-- `src/agent/runner.ts` — `AgentRunner` interface (abstract)
-- `src/agent/sandbox-runner.ts` — Concrete LLM orchestration
-
-**Layer 5: LLM Adapters**
-- `src/adapters/` — `LLMAdapter` interface supporting 15+ providers
-- Providers: Anthropic, OpenRouter, Zhipu, OpenAI, GitHub Models, SiliconFlow, etc.
-- Supports: function calling, tool definitions, system instructions, conversation history
-
-**Layer 6: Database**
-- `src/db.ts` — SQLite with 6 tables:
-  1. `messages` — Incoming messages by channel/JID
-  2. `registered_groups` — Chat context mappings
-  3. `scheduled_tasks` — Cron/interval definitions
-  4. `task_run_logs` — Execution history
-  5. `sessions` — Active sessions per group
-  6. `router_state` — Last processed message tracking
-
-**Layer 7: Configuration & Logging**
-- `src/config.ts` — Environment-based configuration
-- `src/logger.ts` — Pino structured logging (pino-pretty for dev)
+**Layer 3: 生态执行沙盒 (TypeScript)**
+- `src/` — 负责具体 SDK 调用、Telegram 复杂媒体处理。
+- 角色调整为“哑终端”，仅执行内核下发的指令。
 
 ### Message Flow
 ```

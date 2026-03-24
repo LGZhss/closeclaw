@@ -32,7 +32,11 @@
       "CodeRider",
       "Junie"
     ],
-    "cloud": ["Jules-Bolt", "Jules-Palette", "Jules-Sentinel"]
+    "cloud": [
+      "Jules-Bolt",
+      "Jules-Palette",
+      "Jules-Sentinel"
+    ]
   },
   "trust_model": "Attribution",
   "proxy_user": "LGZhss"

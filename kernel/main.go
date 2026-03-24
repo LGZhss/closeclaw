@@ -41,7 +41,12 @@ func loadEnv(path string) {
 
 func main() {
 	// 加载根目录 .env
-	loadEnv("../.env")
+	// 优先加载当前目录 .env，回退到上级目录 (适应 bin/ 运行或 kernel/ 运行)
+	if _, err := os.Stat(".env"); err == nil {
+		loadEnv(".env")
+	} else {
+		loadEnv("../.env")
+	}
 
 	// 日志格式化
 	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{

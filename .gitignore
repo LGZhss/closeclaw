@@ -40,41 +40,40 @@ groups/*/CONTEXT.md
 *.swp
 *.swo
 
-# 所有注册的协作主体 (IDEs/Agents) 私有目录 - 见 .subjects.json
-.antigravity/
-.cursor/
-.pearai/
-.trae/
-.trae-cn/
+# 🟢 准许同步的活动主体 (Active Subject Memory)
+!.antigravity/
+!.cursor/
+!.trae/
+!.lingma/
+!.joycode/
+!.kiro/
+!.qoder/
+!.dropstone/
+!.arts/
+!.claude/
+!.jules/
+
+# 🔴 仍保持忽略或归档的主体
+.gitnexus/
 .iflow/
-.lingma/
 .comate/
 .codebuddy/
 .codebuddy-cn/
-.joycode/
+.pearai/
 .catpawai/
-.talkcody/
-.qwencode/
 .gemini-cli/
 .codex/
 .copilot/
 .verdent/
-.kiro/
 .opencode/
-.qoder/
 .cascade/
-.dropstone/
 .kimi-closeclaw/
 .zed/
 .codeflicker/
 .codearts/
 .coderider/
 .junie/
-.arts/
-.claude/
 .codeartsdoer/
-.jules/
-.gitnexus/
 
 # -----------------------------------------------------------------------------
 # 5. 系统临时文件 (OS & Temporary)

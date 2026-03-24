@@ -65,12 +65,10 @@ const CORE_DIRECTORIES = [
   'src',
   'docs',
   'scripts',
-  'templates',
   'votes',
   'tests',
   'data',
   'dist',
-  'gh_bin',
 ];
 
 const IDE_CONFIG_DIRS = [

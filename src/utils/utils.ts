@@ -96,11 +96,30 @@ export async function runGit(action: 'backup' | 'sync', message?: string): Promi
   try {
     if (action === 'backup') {
       const msg = message || `Backup at ${new Date().toISOString()}`;
-      await executeSystemCommand(`git add . && git commit -m "${msg}"`);
-      return '✅ Backup successful';
+      // 使用 spawn 直接调用 git，不经过 shell
+      return new Promise((resolve) => {
+        const add = spawn('git', ['add', '.'], { cwd: WORKSPACE });
+        add.on('close', (code) => {
+          if (code !== 0) return resolve('❌ git add failed');
+          const commit = spawn('git', ['commit', '-m', msg], { cwd: WORKSPACE });
+          commit.on('close', (c) => {
+            if (c === 0) resolve('✅ Backup successful');
+            else resolve(`❌ git commit failed (code ${c})`);
+          });
+        });
+      });
     } else {
-      await executeSystemCommand(`git pull && git push`);
-      return '✅ Sync successful';
+      return new Promise((resolve) => {
+        const pull = spawn('git', ['pull'], { cwd: WORKSPACE });
+        pull.on('close', (code) => {
+          if (code !== 0) return resolve('❌ git pull failed');
+          const push = spawn('git', ['push'], { cwd: WORKSPACE });
+          push.on('close', (c) => {
+            if (c === 0) resolve('✅ Sync successful');
+            else resolve(`❌ git push failed (code ${c})`);
+          });
+        });
+      });
     }
   } catch (error: any) {
     logger.error(`Git error: ${error.message}`);
