@@ -48,6 +48,7 @@ func BenchmarkBatchInsert1000(b *testing.B) {
 		if err != nil {
 			b.Fatal(err)
 		}
+		defer tx.Rollback()
 		stmt, _ := tx.Prepare(
 			`INSERT INTO messages (channel, chat_jid, sender_jid, sender_name, text, timestamp, is_group, processed)
 			 VALUES (?, ?, ?, ?, ?, ?, 1, 0)`,
@@ -127,6 +128,7 @@ func BenchmarkConcurrentWrite(b *testing.B) {
 func seedMessages(b *testing.B, db *sql.DB, n int) {
 	b.Helper()
 	tx, _ := db.Begin()
+	defer tx.Rollback()
 	stmt, _ := tx.Prepare(
 		`INSERT INTO messages (channel, chat_jid, sender_jid, sender_name, text, timestamp, is_group, processed)
 		 VALUES ('telegram','seed@g.us','seed@s.com','种子用户',?,?,1,0)`,

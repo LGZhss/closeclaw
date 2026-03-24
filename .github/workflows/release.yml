@@ -22,6 +22,10 @@ jobs:
         with:
           go-version: '1.22'
           cache: true
+          cache-dependency-path: kernel/go.sum
+
+      - name: Create Build Directory
+        run: mkdir build
 
       - name: Setup Dart
         uses: dart-lang/setup-dart@v1

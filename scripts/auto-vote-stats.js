@@ -187,7 +187,7 @@ function main() {
   let proposals = scanProposals();
   
   if (targetId) {
-    proposals = proposals.filter(p => p.id === targetId);
+    proposals = proposals.filter(p => parseInt(p.id) === parseInt(targetId));
   }
   
   printReport(proposals);

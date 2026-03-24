@@ -3,8 +3,12 @@
  * 负责管理沙盒执行环境，实现多级隔离策略
  */
 
-import { logger } from '../logger.js';
-import { ProcessExecutor, ExecutionResult, ExecutionOptions } from './process-executor.js';
+import { logger } from "../logger.js";
+import {
+  ProcessExecutor,
+  ExecutionResult,
+  ExecutionOptions,
+} from "./process-executor.js";
 
 export interface ExecutionHistoryEntry {
   id: string;
@@ -13,7 +17,7 @@ export interface ExecutionHistoryEntry {
   startTime: number;
   endTime?: number;
   duration?: number;
-  status: 'running' | 'completed' | 'failed' | 'stopped';
+  status: "running" | "completed" | "failed" | "stopped";
   result?: ExecutionResult | { error: string };
 }
 
@@ -25,7 +29,7 @@ export class SandboxManager {
 
   constructor() {
     this.executors = {
-      process: new ProcessExecutor()
+      process: new ProcessExecutor(),
     };
     this.executionHistory = new Map();
   }
@@ -36,7 +40,10 @@ export class SandboxManager {
    * @param options 执行选项
    * @returns 执行结果
    */
-  async execute(code: string, options: ExecutionOptions = {}): Promise<ExecutionResult> {
+  async execute(
+    code: string,
+    options: ExecutionOptions = {},
+  ): Promise<ExecutionResult> {
     const executionId = `exec_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
     const startTime = Date.now();
 
@@ -44,18 +51,20 @@ export class SandboxManager {
       // 记录执行开始
       this.executionHistory.set(executionId, {
         id: executionId,
-        code: code.slice(0, 100) + (code.length > 100 ? '...' : ''),
+        code: code.slice(0, 100) + (code.length > 100 ? "..." : ""),
         startTime,
-        status: 'running'
+        status: "running",
       });
 
       // 优先使用子进程隔离
       logger.info(`[Sandbox] 尝试使用子进程执行代码 (ID: ${executionId})`);
       const result = await this.executors.process.execute(code, options);
-      this._updateExecutionStatus(executionId, 'completed', result);
+      this._updateExecutionStatus(executionId, "completed", result);
       return result;
     } catch (error: any) {
-      this._updateExecutionStatus(executionId, 'failed', { error: error.message });
+      this._updateExecutionStatus(executionId, "failed", {
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -66,7 +75,10 @@ export class SandboxManager {
    * @param options 执行选项
    * @returns 执行结果
    */
-  async executeCommand(command: string, options: ExecutionOptions = {}): Promise<ExecutionResult> {
+  async executeCommand(
+    command: string,
+    options: ExecutionOptions = {},
+  ): Promise<ExecutionResult> {
     const executionId = `exec_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
     const startTime = Date.now();
 
@@ -76,16 +88,21 @@ export class SandboxManager {
         id: executionId,
         command,
         startTime,
-        status: 'running'
+        status: "running",
       });
 
       // 使用子进程执行命令
       logger.info(`[Sandbox] 尝试使用子进程执行命令: ${command}`);
-      const result = await this.executors.process.executeCommand(command, options);
-      this._updateExecutionStatus(executionId, 'completed', result);
+      const result = await this.executors.process.executeCommand(
+        command,
+        options,
+      );
+      this._updateExecutionStatus(executionId, "completed", result);
       return result;
     } catch (error: any) {
-      this._updateExecutionStatus(executionId, 'failed', { error: error.message });
+      this._updateExecutionStatus(executionId, "failed", {
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -103,7 +120,7 @@ export class SandboxManager {
 
     try {
       await this.executors.process.stop(executionId);
-      this._updateExecutionStatus(executionId, 'stopped');
+      this._updateExecutionStatus(executionId, "stopped");
       return true;
     } catch (error: any) {
       logger.error(`[Sandbox] 停止执行失败: ${error.message}`);
@@ -125,7 +142,7 @@ export class SandboxManager {
    * @param days 天数
    */
   cleanupExpiredExecutions(days: number = 1): void {
-    const cutoffTime = Date.now() - (days * 24 * 60 * 60 * 1000);
+    const cutoffTime = Date.now() - days * 24 * 60 * 60 * 1000;
     let removed = 0;
 
     for (const [executionId, execution] of this.executionHistory.entries()) {
@@ -146,7 +163,7 @@ export class SandboxManager {
   async close(): Promise<void> {
     try {
       await this.executors.process.close();
-      logger.info('[Sandbox] 沙盒管理器已关闭');
+      logger.info("[Sandbox] 沙盒管理器已关闭");
     } catch (error: any) {
       logger.error(`[Sandbox] 关闭沙盒管理器失败: ${error.message}`);
     }
@@ -156,7 +173,11 @@ export class SandboxManager {
    * 更新执行状态
    * @private
    */
-  private _updateExecutionStatus(executionId: string, status: ExecutionHistoryEntry['status'], result: any = null): void {
+  private _updateExecutionStatus(
+    executionId: string,
+    status: ExecutionHistoryEntry["status"],
+    result: any = null,
+  ): void {
     const execution = this.executionHistory.get(executionId);
     if (execution) {
       execution.status = status;
