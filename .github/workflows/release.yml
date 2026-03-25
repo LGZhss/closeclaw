@@ -1,73 +1,38 @@
-name: CloseClaw Ultra CI/CD
+name: Release CloseClaw
 
 on:
   push:
-    branches: [ main, "proposal/**" ]
-  pull_request:
-    branches: [ main ]
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
 
 jobs:
-  build-and-release:
-    name: Build Kernel (Go) and Control Plane (Dart)
+  release:
     runs-on: windows-latest
-    permissions:
-      contents: write
-
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.22'
-          cache: true
-          cache-dependency-path: kernel/go.sum
 
-      - name: Create Build Directory
-        run: mkdir build
-
-      - name: Setup Dart
-        uses: dart-lang/setup-dart@v1
-        with:
-          sdk: stable
-
-      - name: Install GCC (MinGW-w64 via MSYS2)
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: MINGW64
-          update: true
-          install: mingw-w64-x86_64-gcc
-
-      - name: Go Kernel - Download Dependencies
+      - name: Build Kernel (Go)
         run: |
           cd kernel
-          go mod tidy
+          go build -o ../closeclaw-kernel-win-amd64.exe .
 
-      - name: Go Kernel - Run Benchmarks
-        run: |
-          cd kernel
-          $env:CGO_ENABLED="1"
-          go test -v -bench . -benchmem ./db
-
-      - name: Go Kernel - Build Binary
-        run: |
-          cd kernel
-          $env:CGO_ENABLED="1"
-          go build -o ../build/closeclaw-kernel.exe main.go
-
-      - name: Dart Control Plane - Download Dependencies
-        run: |
-          cd cmd
-          dart pub get
-
-      - name: Dart Control Plane - Build AOT Binary
-        run: |
-          cd cmd
-          dart compile exe bin/closeclaw.dart -o ../build/closeclaw.exe
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: closeclaw-binaries
-          path: build/*.exe
+          files: |
+            closeclaw-kernel-win-amd64.exe
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
