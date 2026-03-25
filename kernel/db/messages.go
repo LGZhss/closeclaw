@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 )
@@ -159,7 +160,25 @@ func CheckDependenciesMet(db *sql.DB, dependsOn string) (bool, error) {
 	}
 	// dependsOn 是逗号分隔的 ID 列表，转换为 JSON 数组以便安全查询
 	ids := strings.Split(dependsOn, ",")
-	jsonIDs, _ := json.Marshal(ids)
+	validIDs := make([]int64, 0, len(ids))
+	for _, idStr := range ids {
+		idStr = strings.TrimSpace(idStr)
+		if idStr == "" {
+			continue
+		}
+		var id int64
+		if _, err := fmt.Sscanf(idStr, "%d", &id); err != nil {
+			slog.Warn("Ignoring invalid dependency ID", "id", idStr)
+			continue
+		}
+		validIDs = append(validIDs, id)
+	}
+
+	if len(validIDs) == 0 {
+		return true, nil
+	}
+
+	jsonIDs, _ := json.Marshal(validIDs)
 
 	query := `SELECT COUNT(*) FROM scheduled_tasks 
 	          WHERE id IN (SELECT value FROM json_each(?)) 

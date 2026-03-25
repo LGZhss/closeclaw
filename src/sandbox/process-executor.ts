@@ -184,6 +184,15 @@ export class ProcessExecutor {
         // 移除进程记录
         this.runningProcesses.delete(executionId!);
 
+        // 补齐：在进程错误时也尝试清理临时文件 (Item 8)
+        const argsStr = args.join(' ');
+        if (argsStr.includes('temp_exec_')) {
+          const tempPath = args.find(a => a.includes('temp_exec_'));
+          if (tempPath && fs.existsSync(tempPath)) {
+            try { fs.unlinkSync(tempPath); } catch {}
+          }
+        }
+
         logger.error(`[ProcessExecutor] 命令执行错误: ${error.message}`);
         reject(error);
       });

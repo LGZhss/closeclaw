@@ -25,11 +25,15 @@ class GrpcKernelBusClient {
         oneofs: true
       });
       const protoDescriptor = grpc.loadPackageDefinition(packageDefinition) as any;
-      // 对应 proto 中的 package closeclaw.v1;
       const KernelBus = protoDescriptor.closeclaw.v1.KernelBus;
       
+      const isWindows = process.platform === 'win32';
+      const target = isWindows 
+        ? 'pipe:////./pipe/closeclaw_ipc' 
+        : 'unix:///tmp/closeclaw.sock';
+
       this.client = new KernelBus(
-        '127.0.0.1:50051', 
+        target, 
         grpc.credentials.createInsecure()
       );
     } catch (err: unknown) {
@@ -39,7 +43,9 @@ class GrpcKernelBusClient {
   }
 
   start() {
-    logger.info('[TS Sandbox] Connecting to Go Kernel via gRPC at 127.0.0.1:50051...');
+    const isWindows = process.platform === 'win32';
+    const target = isWindows ? '\\\\.\\pipe\\closeclaw_ipc' : '/tmp/closeclaw.sock';
+    logger.info(`[TS Sandbox] Connecting to Go Kernel via ${isWindows ? 'Named Pipe' : 'Unix Socket'} at ${target}...`);
     this.subscribeTasks();
   }
 

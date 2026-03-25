@@ -1,6 +1,7 @@
 package scheduler
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"time"
@@ -132,8 +133,11 @@ func (s *Scheduler) processDueTasks() {
 			continue
 		}
 
-		// 3. 异步分发
+		// 3. 异步分发：增加超时控制，防止协程无限期阻塞在 Pool.Enqueue (Item 3, 7)
 		go func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+			defer cancel()
+
 			action := func() error {
 				slog.Info("Executing scheduled task via gRPC Broadcast", "task_id", task.ID, "group", task.GroupFolder)
 				
@@ -148,14 +152,30 @@ func (s *Scheduler) processDueTasks() {
 				return nil
 			}
 			
-			if err := s.pool.Enqueue(task.GroupFolder, action); err != nil {
-				slog.Error("Task dispatch failed", "task_id", task.ID, "err", err)
-				_ = db.UpdateTaskStatus(db.GetDB(), task.ID, "FAILED") // 状态回滚或标记失败
+			// 使用带 Result 处理的 Enqueue
+			errCh := make(chan error, 1)
+			go func() {
+				errCh <- s.pool.Enqueue(task.GroupFolder, action)
+			}()
+
+			select {
+			case err := <-errCh:
+				if err != nil {
+					slog.Error("Task dispatch failed", "task_id", task.ID, "err", err)
+					_ = db.UpdateTaskStatus(db.GetDB(), task.ID, "FAILED") 
+					return
+				}
+			case <-ctx.Done():
+				slog.Error("Task dispatch timeout", "task_id", task.ID)
+				_ = db.UpdateTaskStatus(db.GetDB(), task.ID, "FAILED")
+				return
+			case <-s.stopCh:
 				return
 			}
 			
 			// 4. 计算下一次运行时间并更新
 			nextRun := s.CalculateNextRun(&task)
+			// ... (同下)
 			if nextRun != nil {
 				nextRunStr := nextRun.UTC().Format(time.RFC3339)
 				if err := db.UpdateTaskNextRun(db.GetDB(), task.ID, nextRunStr); err != nil {

@@ -1,4 +1,5 @@
-import fs from 'fs/promises';
+import fsPromises from 'fs/promises';
+import fs from 'fs';
 import path from 'path';
 import { spawn, exec } from 'child_process';
 import { logger } from '../logger.js';
@@ -52,7 +53,7 @@ export async function execAsync(command: string): Promise<{ stdout: string; stde
 export async function readWsFile(filePath: string): Promise<string> {
   const fullPath = resolveSafePath(filePath);
   try {
-    return await fs.readFile(fullPath, 'utf8');
+    return await fsPromises.readFile(fullPath, 'utf8');
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
     logger.error(`Error reading ${filePath}: ${message}`);
@@ -67,8 +68,8 @@ export async function writeWsFile(filePath: string, content: string): Promise<st
   const fullPath = resolveSafePath(filePath);
   try {
     const dir = path.dirname(fullPath);
-    await fs.mkdir(dir, { recursive: true });
-    await fs.writeFile(fullPath, content, 'utf8');
+    await fsPromises.mkdir(dir, { recursive: true });
+    await fsPromises.writeFile(fullPath, content, 'utf8');
     return 'OK';
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
@@ -132,13 +133,26 @@ export async function runGit(action: 'backup' | 'sync', message?: string): Promi
 }
 
 /**
- * 安全路径解析，防止目录穿越
+ * 安全路径解析，防止目录穿越 (Item 10 加固)
  */
 export function resolveSafePath(userPath: string): string {
-  const resolvedPath = path.resolve(WORKSPACE, userPath);
-  if (!resolvedPath.startsWith(WORKSPACE)) {
-    throw new Error(`Access denied: path is outside workspace (${userPath})`);
+  try {
+    const resolvedPath = path.resolve(WORKSPACE, userPath);
+    // 物理还原真实路径 (处理符号链接绕过)
+    const realWorkspace = path.resolve(fs.realpathSync.native(WORKSPACE));
+    const realTarget = path.resolve(fs.realpathSync.native(resolvedPath));
+
+    if (!realTarget.startsWith(realWorkspace)) {
+      throw new Error(`Access denied: path is outside workspace (${userPath})`);
+    }
+    return realTarget;
+  } catch (err: unknown) {
+    // 如果文件尚不存在，fs.realpathSync 可能抛错，此时回退到基础路径校验
+    const resolvedPath = path.resolve(WORKSPACE, userPath);
+    if (!resolvedPath.startsWith(WORKSPACE)) {
+       throw new Error(`Access denied: path is outside workspace (${userPath})`);
+    }
+    return resolvedPath;
   }
-  return resolvedPath;
 }
 

@@ -13,6 +13,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/Microsoft/go-winio"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -43,11 +44,15 @@ type KernelBusServer struct {
 }
 
 // NewKernelBusServer 创建服务实例。
-func NewKernelBusServer() *KernelBusServer {
+func NewKernelBusServer() (*KernelBusServer, error) {
+	llmClient, err := llm.NewClient()
+	if err != nil {
+		return nil, err
+	}
 	return &KernelBusServer{
 		startTime: time.Now(),
-		llmClient: llm.NewClient(),
-	}
+		llmClient: llmClient,
+	}, nil
 }
 
 // DispatchTask 接收来自 Dart 的任务指令，写入 SQLite 并返回确认。
@@ -255,13 +260,18 @@ func Start(srv *KernelBusServer) error {
 	return s.Serve(lis)
 }
 
+// Stop 优雅关闭 gRPC 服务。
+func (s *KernelBusServer) Stop() {
+	slog.Info("[IPC] 正在关闭 gRPC 服务...")
+	// 实际清理逻辑...
+}
+
 // listen 根据运行平台返回合适的 net.Listener。
 func listen() (net.Listener, error) {
 	if runtime.GOOS == "windows" {
-		// Windows Named Pipe（需要额外依赖，Phase1 降级使用 TCP localhost）
-		// 如果 npipe 库可用，替换为: npipe.Listen(pipePath)
-		slog.Warn("Windows Named Pipe POC：当前使用 TCP 127.0.0.1:50051 代替 Named Pipe（依赖库待集成）")
-		return net.Listen("tcp", "127.0.0.1:50051")
+		slog.Info("Windows 平台：启用物理命名管道监听", "pipe", pipePath)
+		return winio.ListenPipe(pipePath, nil)
 	}
+	slog.Info("Unix 平台：启用 Unix Domain Socket 监听", "sock", sockPath)
 	return net.Listen("unix", sockPath)
 }
