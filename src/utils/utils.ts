@@ -1,7 +1,7 @@
 import fsPromises from 'fs/promises';
 import fs from 'fs';
 import path from 'path';
-import { spawn, exec } from 'child_process';
+import { spawn } from 'child_process';
 import { logger } from '../logger.js';
 
 /** 工作区目录，默认当前目录 */
@@ -33,16 +33,39 @@ export async function executeSystemCommand(command: string): Promise<string> {
 }
 
 /**
- * 异步执行命令
+ * 异步执行命令（安全防注入版本）
  */
 export async function execAsync(command: string): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
-    exec(command, (error, stdout, stderr) => {
-      if (error) {
-        reject(error);
-      } else {
+    // 简单解析命令和参数（支持双引号包裹的参数）
+    const parts = command.match(/(?:[^\s"]+|"[^"]*")+/g) || [];
+    if (parts.length === 0) {
+      return reject(new Error('Empty command'));
+    }
+
+    const executable = parts[0];
+    const args = parts.slice(1).map(arg => arg.replace(/^"|"$/g, ''));
+
+    const child = spawn(executable, args, { stdio: 'pipe', shell: false });
+    let stdout = '';
+    let stderr = '';
+
+    child.stdout.on('data', (data) => (stdout += data.toString()));
+    child.stderr.on('data', (data) => (stderr += data.toString()));
+
+    child.on('close', (code) => {
+      if (code === 0) {
         resolve({ stdout, stderr });
+      } else {
+        const error: any = new Error(stderr || `Process exited with code ${code}`);
+        error.code = code;
+        error.cmd = command;
+        reject(error);
       }
+    });
+
+    child.on('error', (error) => {
+      reject(error);
     });
   });
 }
