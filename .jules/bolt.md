@@ -45,3 +45,7 @@
 ## 2026-03-21 - Thorough Auditing for SQLite Prepared Statement Caching
 - **Learning**: Even after applying lazy-initialization caching to a few well-known hot paths in a database file, other frequently invoked functions (like task scheduling polling or logging) may still contain `db.prepare()` calls that recompile on every execution, causing a hidden performance drag under load.
 - **Action**: When applying lazy-initialization for `db.prepare()`, always grep the entire database abstraction layer for any remaining inline `db.prepare` statements to ensure maximum possible performance gains, skipping only strictly dynamic statements.
+
+## 2026-03-24 - Async FS Operations in Sandbox Process Executor
+**Learning:** Found synchronous fs operations (`fs.writeFileSync`, `fs.unlinkSync`, `fs.existsSync`) in `src/sandbox/process-executor.ts` during a high-frequency code path (`execute` function) which runs external commands. This blocks the main thread and severely degrades the performance of the event loop under heavy load.
+**Action:** Replace `fs` synchronous methods with `fs/promises` async equivalents. Use `.catch(() => {})` for unlink operations to gracefully handle cases where the file might not exist instead of using `fs.existsSync` which introduces a race condition and extra IO operations.
