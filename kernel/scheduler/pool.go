@@ -1,6 +1,7 @@
 package scheduler
 
 import (
+	"fmt"
 	"log/slog"
 	"sync"
 )
@@ -99,9 +100,20 @@ func (p *GroupPool) tryProcess(groupFolder string) {
 // executeItem runs the actual task and triggers the next items.
 func (p *GroupPool) executeItem(item *QueueItem) {
 	slog.Info("Executing task for group", "groupFolder", item.GroupFolder)
+	
+	defer func() {
+		if r := recover(); r != nil {
+			slog.Error("Task action panicked", "group", item.GroupFolder, "panic", r)
+			item.ResultCh <- fmt.Errorf("task panicked: %v", r)
+		} else {
+			// 如果没有 panic，ResultCh 应该已经在 action 结束后由外部或此处处理
+			// 但由于 executeItem 是由 tryProcess 启动的协程，我们在这里闭环
+		}
+	}()
+
 	err := item.Action()
 	
-	// Notify caller
+	// Notify caller (if not already panicked)
 	item.ResultCh <- err
 
 	p.mu.Lock()

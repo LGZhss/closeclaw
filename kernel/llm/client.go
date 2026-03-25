@@ -38,10 +38,13 @@ type Client struct {
 	HTTP    *http.Client
 }
 
-func NewClient() *Client {
+func NewClient() (*Client, error) {
 	key := os.Getenv("OPENROUTER_API_KEY") // 优先使用 OpenRouter
 	if key == "" {
 		key = os.Getenv("OPENAI_API_KEY")
+	}
+	if key == "" {
+		return nil, fmt.Errorf("未配置 LLM API Key (需设置 OPENROUTER_API_KEY 或 OPENAI_API_KEY)")
 	}
 	baseURL := os.Getenv("OPENROUTER_BASE_URL")
 	if baseURL == "" {
@@ -52,7 +55,7 @@ func NewClient() *Client {
 		APIKey:  key,
 		BaseURL: baseURL,
 		HTTP:    &http.Client{Timeout: 60 * time.Second},
-	}
+	}, nil
 }
 
 // Chat 执行一次推理请求

@@ -72,14 +72,19 @@ func main() {
 	}
 
 	// 1. 初始化数据库
-	_, err := db.InitDB(storeDir)
+	dbConn, err := db.InitDB(storeDir)
 	if err != nil {
 		slog.Error("SQLite 初始化失败", "err", err)
 		os.Exit(1)
 	}
+	defer dbConn.Close()
 
 	// 启动 gRPC 服务与调度器关联
-	srv := server.NewKernelBusServer()
+	srv, err := server.NewKernelBusServer()
+	if err != nil {
+		slog.Error("KernelBus 服务初始化失败 (可能缺少 API Key)", "err", err)
+		os.Exit(1)
+	}
 
 	// 启动 Go 任务调度器 (Phase 2+)
 	pool := scheduler.NewGroupPool(5) // max 5 concurrent tasks globally

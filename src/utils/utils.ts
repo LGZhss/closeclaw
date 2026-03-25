@@ -143,12 +143,25 @@ export async function runGit(
 }
 
 /**
- * 安全路径解析，防止目录穿越
+ * 安全路径解析，防止目录穿越 (Item 10 加固)
  */
 export function resolveSafePath(userPath: string): string {
-  const resolvedPath = path.resolve(WORKSPACE, userPath);
-  if (!resolvedPath.startsWith(WORKSPACE)) {
-    throw new Error(`Access denied: path is outside workspace (${userPath})`);
+  try {
+    const resolvedPath = path.resolve(WORKSPACE, userPath);
+    // 物理还原真实路径 (处理符号链接绕过)
+    const realWorkspace = path.resolve(fs.realpathSync.native(WORKSPACE));
+    const realTarget = path.resolve(fs.realpathSync.native(resolvedPath));
+
+    if (!realTarget.startsWith(realWorkspace)) {
+      throw new Error(`Access denied: path is outside workspace (${userPath})`);
+    }
+    return realTarget;
+  } catch (err: unknown) {
+    // 如果文件尚不存在，fs.realpathSync 可能抛错，此时回退到基础路径校验
+    const resolvedPath = path.resolve(WORKSPACE, userPath);
+    if (!resolvedPath.startsWith(WORKSPACE)) {
+       throw new Error(`Access denied: path is outside workspace (${userPath})`);
+    }
+    return resolvedPath;
   }
-  return resolvedPath;
 }
