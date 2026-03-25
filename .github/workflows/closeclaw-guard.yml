@@ -6,18 +6,22 @@ on:
   pull_request:
     branches: [ main ]
   schedule:
-    - cron: '0 0 * * *' # Daily scan
+    - cron: '0 0 * * *'
+
+permissions:
+  contents: read
+  security-events: write
 
 jobs:
   semgrep:
     name: Semgrep SAST
     runs-on: ubuntu-latest
-    container:
-      image: returntocorp/semgrep
     steps:
       - uses: actions/checkout@v4
-      - run: semgrep scan --config auto --sarif --output=semgrep.sarif
-      - name: Upload SARIF
+      - name: Run Semgrep
+        run: |
+          docker run --rm -v $(pwd):/src returntocorp/semgrep semgrep scan --config auto --sarif --output=semgrep.sarif
+      - name: Upload Semgrep SARIF
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: semgrep.sarif
@@ -33,13 +37,18 @@ jobs:
         with:
           scan-args: |-
             --recursive
+            --format sarif
+            --output osv-results.sarif
             ./
+      - name: Upload OSV SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: osv-results.sarif
+        if: always()
 
   codeql:
     name: CodeQL Analysis
     runs-on: ubuntu-latest
-    permissions:
-      security-events: write
     strategy:
       fail-fast: false
       matrix:
