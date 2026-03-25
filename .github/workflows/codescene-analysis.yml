@@ -12,6 +12,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: CodeScene Analysis
-        uses: codescene-saas/codescene-github-action@v1.2.0
+        uses: codescene-saas/codescene-github-action@v1
         with:
           codescene-enterprise-token: ${{ secrets.CODESCENE_ENTERPRISE_TOKEN }}

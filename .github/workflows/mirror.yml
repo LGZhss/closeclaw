@@ -1,0 +1,34 @@
+name: Multi-Remote Sync
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  sync-mirrors:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Mirror to Gitee
+        uses: Yikun/hub-mirror-action@master
+        with:
+          src: github/LGZhss
+          dst: gitee/LGZhss
+          static_list: "closeclaw"
+          gitee_token: ${{ secrets.GITEE_TOKEN }}
+          account_type: user
+          force_update: true
+        if: always()
+
+      - name: Mirror to Codeup (Alibaba)
+        run: |
+          git remote add codeup https://codeup.aliyun.com/your-repo.git
+          git push -f codeup main
+        env:
+          CODEUP_USER: ${{ secrets.CODEUP_USER }}
+          CODEUP_TOKEN: ${{ secrets.CODEUP_TOKEN }}
+        if: always()
