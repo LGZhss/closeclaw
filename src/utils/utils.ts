@@ -15,14 +15,14 @@ export async function executeSystemCommand(command: string): Promise<string> {
     const cmd = process.platform === 'win32' ? 'powershell.exe' : '/bin/sh';
     const args = process.platform === 'win32' ? ['-Command', command] : ['-c', command];
 
-    const child = spawn(cmd, args, { stdio: 'pipe' });
+    const child: any = spawn(cmd, args, { stdio: 'pipe' });
     let stdout = '';
     let stderr = '';
 
-    child.stdout.on('data', (data) => (stdout += data.toString()));
-    child.stderr.on('data', (data) => (stderr += data.toString()));
+    child.stdout.on('data', (data: Buffer) => (stdout += data.toString()));
+    child.stderr.on('data', (data: Buffer) => (stderr += data.toString()));
 
-    child.on('close', (code) => {
+    child.on('close', (code: number | null) => {
       if (code === 0) {
         resolve(stdout);
       } else {
@@ -43,17 +43,17 @@ export async function execAsync(command: string): Promise<{ stdout: string; stde
       return reject(new Error('Empty command'));
     }
 
-    const executable = parts[0];
+    const executable = parts[0] as string;
     const args = parts.slice(1).map(arg => arg.replace(/^"|"$/g, ''));
 
-    const child = spawn(executable, args, { stdio: 'pipe', shell: false });
+    const child: any = spawn(executable, args, { stdio: 'pipe', shell: false });
     let stdout = '';
     let stderr = '';
 
-    child.stdout.on('data', (data) => (stdout += data.toString()));
-    child.stderr.on('data', (data) => (stderr += data.toString()));
+    child.stdout.on('data', (data: Buffer) => (stdout += data.toString()));
+    child.stderr.on('data', (data: Buffer) => (stderr += data.toString()));
 
-    child.on('close', (code) => {
+    child.on('close', (code: number | null) => {
       if (code === 0) {
         resolve({ stdout, stderr });
       } else {
@@ -64,7 +64,7 @@ export async function execAsync(command: string): Promise<{ stdout: string; stde
       }
     });
 
-    child.on('error', (error) => {
+    child.on('error', (error: any) => {
       reject(error);
     });
   });

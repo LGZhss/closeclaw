@@ -15,7 +15,6 @@ import {
   fetchUrl, 
   runGit
 } from '../utils/utils.js';
-import { getMemoryReport } from '../utils/memory-manager.js';
 import { cliAnything } from './cli-anything.js';
 
 export class ToolRegistry {
@@ -33,8 +32,6 @@ export class ToolRegistry {
     this.handlers.set('fetchUrl', this.fetchUrl.bind(this));
     this.handlers.set('gitBackup', this.gitBackup.bind(this));
     this.handlers.set('gitSync', this.gitSync.bind(this));
-    this.handlers.set('getStatus', this.getStatus.bind(this));
-    this.handlers.set('heartbeat', this.heartbeat.bind(this));
     this.handlers.set('cliAnything', this.cliAnything.bind(this));
   }
 
@@ -133,15 +130,6 @@ export class ToolRegistry {
 
   private async gitSync() {
     return await runGit('sync');
-  }
-
-  private async getStatus() {
-    const memReport = getMemoryReport();
-    return `📊 *Agent OS 运行状态*\n\n🧠 *内存状态*\n${memReport}`;
-  }
-
-  private async heartbeat() {
-    return `🫀 *Agent 健康检查*\n\n✅ 进程存活 (PID: ${process.pid})`;
   }
 
   private async cliAnything(args: any) {

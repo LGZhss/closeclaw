@@ -1,0 +1,16 @@
+# Gemini Code Assist Configuration
+review:
+  summary: true
+  auto_review: true
+  criteria:
+    - name: "Security First"
+      description: "Focus on potential injections, path traversals, and resource leaks."
+    - name: "Micro-kernel Pattern"
+      description: "Ensure logic follows the separation of Control Plane (Dart), Bus (Go), and Sandbox (TS)."
+    - name: "Chinese Documentation"
+      description: "Ensure comments and summaries in PRs are in Simplified Chinese as per RULES.md."
+
+styleguide:
+  - "Use kebab-case for files and directories."
+  - "Always add docstrings to exported functions."
+  - "Follow Go effective programming and TypeScript strict mode."

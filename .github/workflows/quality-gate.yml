@@ -1,0 +1,59 @@
+name: CloseClaw Quality Gate
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint-and-check:
+    name: Lint and Quality Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: TS Typecheck
+        run: npm run typecheck
+
+      - name: ESLint
+        run: npx eslint src/**/*.ts
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Go Vet
+        run: |
+          cd kernel
+          go vet ./...
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+
+      - name: Dart Analyze
+        run: |
+          cd cmd
+          dart analyze
+
+  powershell-check:
+    name: PSScriptAnalyzer (PowerShell)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          Invoke-ScriptAnalyzer -Path ./scripts/*.ps1 -Recurse | Where-Object {$_.Severity -eq 'Error'} | ForEach-Object {
+            Write-Error "PowerShell Analysis Error: $($_.Message)"
+          }

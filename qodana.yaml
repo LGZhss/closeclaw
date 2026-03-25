@@ -1,0 +1,22 @@
+# Qodana configuration file
+version: "1.0"
+
+# Linter to use
+linter: jetbrains/qodana-go:latest
+
+# Profiles to use
+profile:
+  name: qodana.recommended
+
+# Exclude directories
+exclude:
+  - name: All
+    paths:
+      - node_modules
+      - .dart_tool
+      - build
+      - tests/phase-1-archive # Just in case
+
+# Project specific settings
+project:
+  name: CloseClaw
