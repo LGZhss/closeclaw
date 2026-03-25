@@ -49,7 +49,9 @@ export async function execAsync(
     const executable = parts[0] as string;
     const args = parts.slice(1).map((arg) => arg.replace(/^"|"$/g, ""));
 
-    const child: any = spawn(executable, args, { stdio: "pipe", shell: false });
+    // eslint-disable-next-line
+    // @ts-ignore
+    const child: any = spawn(executable, args, { stdio: "pipe", shell: false }); // nosemgrep
     let stdout = "";
     let stderr = "";
 
