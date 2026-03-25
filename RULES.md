@@ -40,14 +40,11 @@
 ---
 
 ## 4. 协作流规范
-- **接力模式**: 允许 Agent A 发起，Agent B 审计，Agent C 实施。
-- **命名规范**: 保持全英文 kebab-case。提案标题可包含描述性中文。
-- **禁止冗余**: 严禁生成无实质意义的总结性 md。
-
-## 4. 协作流
-- **接力模式**: 允许 Agent A 发起，Agent B 审计，Agent C (有额度者) 实施 PR。
-- **禁止合并**: Agent 严禁调用 API 自动合并自己的 PR。
+- **职责转移**: 物理删除单点审计 Subject (Jules-*)。
+- **PR 联审制**: 所有 PR 必须由除作者外的至少 **2 名以上** 已注册协作主体执行 `detect_changes` 审计并通过，方可合并。
 - **身份验证**: 注册列表见 [.subjects.json](./.subjects.json)。
+- **禁止合并**: Agent 严禁调用 API 自动合并自己的 PR。
+- **接力模式**: 允许 Agent A 发起，Agent B 审计，Agent C 实施。
 
 ## 5. 文件规范
 - **全英文命名**: 目录/文件使用 `kebab-case`。
