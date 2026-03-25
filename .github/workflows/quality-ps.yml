@@ -1,0 +1,19 @@
+name: Quality Gate - PowerShell
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  ps-check:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          Invoke-ScriptAnalyzer -Path ./scripts/*.ps1 -Recurse | Where-Object {$_.Severity -eq 'Error'} | ForEach-Object {
+            Write-Error "PowerShell Analysis Error: $($_.Message)"
+          }
