@@ -159,6 +159,12 @@ export async function runGit(action: 'backup' | 'sync', message?: string): Promi
 /**
  * 安全路径解析，防止目录穿越 (Item 10 加固)
  */
+function isPathInside(target: string, parent: string): boolean {
+  if (target === parent) return true;
+  const safeParent = parent.endsWith(path.sep) ? parent : parent + path.sep;
+  return target.startsWith(safeParent);
+}
+
 export function resolveSafePath(userPath: string): string {
   try {
     const resolvedPath = path.resolve(WORKSPACE, userPath);
@@ -166,8 +172,7 @@ export function resolveSafePath(userPath: string): string {
     const realWorkspace = path.resolve(fs.realpathSync.native(WORKSPACE));
     const realTarget = path.resolve(fs.realpathSync.native(resolvedPath));
 
-    const safeWorkspacePath = realWorkspace.endsWith(path.sep) ? realWorkspace : realWorkspace + path.sep;
-    if (realTarget !== realWorkspace && !realTarget.startsWith(safeWorkspacePath)) {
+    if (!isPathInside(realTarget, realWorkspace)) {
       throw new Error(`Access denied: path is outside workspace (${userPath})`);
     }
     return realTarget;
@@ -177,8 +182,7 @@ export function resolveSafePath(userPath: string): string {
     }
     // 如果文件尚不存在，fs.realpathSync 可能抛错，此时回退到基础路径校验
     const resolvedPath = path.resolve(WORKSPACE, userPath);
-    const fallbackWorkspacePath = WORKSPACE.endsWith(path.sep) ? WORKSPACE : WORKSPACE + path.sep;
-    if (resolvedPath !== WORKSPACE && !resolvedPath.startsWith(fallbackWorkspacePath)) {
+    if (!isPathInside(resolvedPath, WORKSPACE)) {
        throw new Error(`Access denied: path is outside workspace (${userPath})`);
     }
     return resolvedPath;
