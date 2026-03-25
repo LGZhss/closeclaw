@@ -51,7 +51,8 @@ export async function execAsync(
 
     // eslint-disable-next-line
     // @ts-ignore
-    const child: any = spawn(executable, args, { stdio: "pipe", shell: false }); // nosemgrep
+    // semgrep-disable-line
+    const child: any = spawn(executable, args, { stdio: "pipe", shell: false });
     let stdout = "";
     let stderr = "";
 
