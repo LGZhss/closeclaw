@@ -38,38 +38,33 @@ export class ProcessExecutor {
     const executionId = `exec_${Date.now()}_${Math.random().toString(36).substring(2, 11)}_${process.hrtime.bigint()}`;
     const timeout = options.timeout || config.sandbox.timeout;
 
-    return new Promise((resolve, reject) => {
-      // 创建临时JavaScript文件
-      const tempFile = path.join(os.tmpdir(), `temp_${executionId}.js`);
+    // 创建临时JavaScript文件
+    const tempFile = path.join(os.tmpdir(), `temp_${executionId}.js`);
 
+    try {
+      // 写入代码到临时文件 (Bolt: performance improvement, avoid blocking event loop)
+      await fs.promises.writeFile(tempFile, code);
+
+      // 安全地使用 spawn 执行 node 命令，而不是通过 shell
+      const result = await this._executeProcess('node', [tempFile], { timeout }, executionId);
+
+      // 清理临时文件
       try {
-        // 写入代码到临时文件
-        fs.writeFileSync(tempFile, code);
-
-        // 安全地使用 spawn 执行 node 命令，而不是通过 shell
-        this._executeProcess('node', [tempFile], { timeout }, executionId).then(result => {
-          // 清理临时文件
-          try {
-            fs.unlinkSync(tempFile);
-          } catch (e) {
-            // 忽略清理错误
-          }
-          resolve(result);
-        }).catch(error => {
-          // 清理临时文件
-          try {
-            if (fs.existsSync(tempFile)) {
-              fs.unlinkSync(tempFile);
-            }
-          } catch (e) {
-            // 忽略清理错误
-          }
-          reject(error);
-        });
-      } catch (error) {
-        reject(error);
+        await fs.promises.unlink(tempFile);
+      } catch (e) {
+        // 忽略清理错误
       }
-    });
+
+      return result;
+    } catch (error) {
+      // 清理临时文件
+      try {
+        await fs.promises.unlink(tempFile);
+      } catch (e) {
+        // 忽略清理错误
+      }
+      throw error;
+    }
   }
 
   /**
@@ -188,8 +183,9 @@ export class ProcessExecutor {
         const argsStr = args.join(' ');
         if (argsStr.includes('temp_exec_')) {
           const tempPath = args.find(a => a.includes('temp_exec_'));
-          if (tempPath && fs.existsSync(tempPath)) {
-            try { fs.unlinkSync(tempPath); } catch {}
+          if (tempPath) {
+            // Bolt: performance improvement, non-blocking cleanup
+            fs.promises.unlink(tempPath).catch(() => {});
           }
         }
 
