@@ -107,7 +107,15 @@ export async function writeWsFile(filePath: string, content: string): Promise<st
  */
 export async function fetchUrl(url: string): Promise<string> {
   try {
-    const response = await fetch(url);
+    const parsedUrl = new URL(url);
+    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+      throw new Error(`Unsupported protocol: ${parsedUrl.protocol}. Only http and https are allowed.`);
+    }
+
+    const response = await fetch(url, {
+      signal: AbortSignal.timeout(15000) // 15 seconds timeout
+    });
+
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     return await response.text();
   } catch (error: unknown) {
