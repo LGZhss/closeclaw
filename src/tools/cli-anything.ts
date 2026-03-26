@@ -24,21 +24,21 @@ export interface CliAnythingResult {
  */
 export async function cliAnything(args: CliAnythingArgs): Promise<CliAnythingResult> {
   const { prompt, workingDir = '.', timeout = 30000 } = args;
-  
+
   try {
     const safeDir = resolveSafePath(workingDir);
-    
+
     logger.info(`[CLI-Anything] 执行命令: ${prompt} 在目录: ${safeDir}`);
-    
+
     const result = await executeCliAnything(prompt, safeDir, timeout);
-    
+
     return {
       success: true,
       output: result.stdout,
       error: result.stderr,
       workingDir: safeDir
     };
-    
+
   } catch (error: any) {
     logger.error(`[CLI-Anything] 执行失败: ${error.message}`);
     return {
@@ -61,7 +61,7 @@ async function executeCliAnything(prompt: string, workDir: string, timeout: numb
     'copy file': 'cp',
     'move file': 'mv'
   };
-  
+
   let command = prompt;
   for (const [key, cmd] of Object.entries(fallbackCommands)) {
     if (prompt.toLowerCase().includes(key)) {
@@ -84,7 +84,7 @@ async function executeCliAnything(prompt: string, workDir: string, timeout: numb
   if (!allowedCommands.has(baseCommand)) {
     throw new Error(`命令不在白名单中: ${baseCommand}`);
   }
-  
+
   const dangerousPatterns = [
     /rm\s+-rf\s+\//,
     /format/,
@@ -92,13 +92,13 @@ async function executeCliAnything(prompt: string, workDir: string, timeout: numb
     /shutdown/,
     /reboot/
   ];
-  
+
   for (const pattern of dangerousPatterns) {
     if (pattern.test(command)) {
       throw new Error(`检测到危险命令: ${command}`);
     }
   }
-  
+
   return await sandboxManager.executeCommand(command, {
     cwd: workDir,
     timeout

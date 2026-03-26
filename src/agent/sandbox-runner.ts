@@ -37,7 +37,7 @@ export class SandboxRunner implements AgentRunner {
             resolve(`Error: ${err.message}`);
             return;
           }
-          
+
           if (response.status === 2 || response.status === 'DONE') {
             logger.debug(`[SandboxRunner] LLM response received via gRPC`);
             resolve(response.text);
