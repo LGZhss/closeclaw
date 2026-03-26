@@ -8,49 +8,16 @@ import { logger } from "../logger.js";
 export const WORKSPACE = process.cwd();
 
 /**
- * 执行系统命令（PowerShell 风格）
+ * 内部统一的进程生成辅助函数
  */
-export async function executeSystemCommand(command: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const cmd = process.platform === "win32" ? "powershell.exe" : "/bin/sh";
-    const args =
-      process.platform === "win32" ? ["-Command", command] : ["-c", command];
-
-    const child: any = spawn(cmd, args, { stdio: "pipe" });
-    let stdout = "";
-    let stderr = "";
-
-    child.stdout.on("data", (data: Buffer) => (stdout += data.toString()));
-    child.stderr.on("data", (data: Buffer) => (stderr += data.toString()));
-
-    child.on("close", (code: number | null) => {
-      if (code === 0) {
-        resolve(stdout);
-      } else {
-        reject(new Error(stderr || `Command failed with code ${code}`));
-      }
-    });
-  });
-}
-
-/**
- * 异步执行命令（安全防注入版本）
- */
-export async function execAsync(
-  command: string,
+async function spawnProcess(
+  cmd: string,
+  args: string[],
+  shell: boolean,
 ): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
-    // 简单解析命令和参数（支持双引号包裹的参数）
-    const parts = command.match(/(?:[^\s"]+|"[^"]*")+/g) || [];
-    if (parts.length === 0) {
-      return reject(new Error("Empty command"));
-    }
-
-    const executable = parts[0] as string;
-    const args = parts.slice(1).map((arg) => arg.replace(/^"|"$/g, ""));
-
-    // nosemgrep
-    const child: any = spawn(executable, args, { stdio: "pipe", shell: false });
+    // eslint-disable-next-line
+    const child: any = spawn(cmd, args, { stdio: "pipe", shell });
     let stdout = "";
     let stderr = "";
 
@@ -65,15 +32,45 @@ export async function execAsync(
           stderr || `Process exited with code ${code}`,
         );
         error.code = code;
-        error.cmd = command;
         reject(error);
       }
     });
 
-    child.on("error", (error: any) => {
-      reject(error);
-    });
+    child.on("error", (error: any) => reject(error));
   });
+}
+
+/**
+ * 执行系统命令（PowerShell 风格）
+ */
+export async function executeSystemCommand(command: string): Promise<string> {
+  const cmd = process.platform === "win32" ? "powershell.exe" : "/bin/sh";
+  const args =
+    process.platform === "win32" ? ["-Command", command] : ["-c", command];
+  const { stdout } = await spawnProcess(cmd, args, false);
+  return stdout;
+}
+
+/**
+ * 异步执行命令（安全防注入版本）
+ */
+export async function execAsync(
+  command: string,
+): Promise<{ stdout: string; stderr: string }> {
+  const parts = command.match(/(?:[^\s"]+|"[^"]*")+/g) || [];
+  if (parts.length === 0) {
+    throw new Error("Empty command");
+  }
+
+  const executable = parts[0] as string;
+  const args = parts.slice(1).map((arg) => arg.replace(/^"|"$/g, ""));
+
+  try {
+    return await spawnProcess(executable, args, false);
+  } catch (err: any) {
+    err.cmd = command;
+    throw err;
+  }
 }
 
 /**
@@ -115,8 +112,8 @@ export async function writeWsFile(
  */
 export async function fetchUrl(url: string): Promise<string> {
   try {
-    if (!new URL(url).protocol.startsWith('http')) {
-      throw new Error('Only http/https allowed');
+    if (!new URL(url).protocol.startsWith("http")) {
+      throw new Error("Only http/https allowed");
     }
 
     const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
