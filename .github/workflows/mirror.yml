@@ -17,7 +17,7 @@ jobs:
         uses: Yikun/hub-mirror-action@master
         with:
           src: github/LGZhss
-          dst: gitee/LGZhss
+          dst: gitee/lgzhss
           static_list: "closeclaw"
           dst_key: ${{ secrets.GITEE_PRIVATE_KEY }}
           dst_token: ${{ secrets.GITEE_TOKEN }}
@@ -27,9 +27,15 @@ jobs:
 
       - name: Mirror to Codeup (Alibaba)
         run: |
-          git remote add codeup https://codeup.aliyun.com/your-repo.git
+          git remote add codeup https://codeup.aliyun.com/69c15eb9ad0a337b92d8feaa/LGZhss/closeclaw.git
           git push -f codeup main
         env:
           CODEUP_USER: ${{ secrets.CODEUP_USER }}
           CODEUP_TOKEN: ${{ secrets.CODEUP_TOKEN }}
+        if: always()
+
+      - name: Mirror to JihuLab (GitLab)
+        run: |
+          git remote add gitlab https://oauth2:${{ secrets.GITLAB_TOKEN }}@jihulab.com/lgzhsss/closeclaw.git
+          git push -f gitlab main
         if: always()
