@@ -2,34 +2,36 @@ name: Multi-Remote Sync
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
   sync-mirrors:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
+
       - name: Mirror to Gitee
-        uses: Yikun/hub-mirror-action@master
-        with:
-          src: github/LGZhss
-          dst: gitee/LGZhss
-          static_list: "closeclaw"
-          dst_key: ${{ secrets.GITEE_PRIVATE_KEY }}
-          dst_token: ${{ secrets.GITEE_TOKEN }}
-          account_type: user
-          force_update: true
-        if: always()
+        run: |
+          git remote add gitee https://gitee.com/lgzhss/closeclaw.git
+          git push -f gitee main
+        env:
+          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
 
       - name: Mirror to Codeup (Alibaba)
         run: |
-          git remote add codeup https://codeup.aliyun.com/your-repo.git
+          git remote add codeup https://codeup.aliyun.com/69c15eb9ad0a337b92d8feaa/LGZhss/closeclaw.git
           git push -f codeup main
         env:
-          CODEUP_USER: ${{ secrets.CODEUP_USER }}
           CODEUP_TOKEN: ${{ secrets.CODEUP_TOKEN }}
-        if: always()
+
+      - name: Mirror to JihuLab
+        run: |
+          git remote add jihulab https://jihulab.com/LGZhss/closeclaw.git
+          git push -f jihulab main
+        env:
+          JIHU_TOKEN: ${{ secrets.JIHU_TOKEN }}
