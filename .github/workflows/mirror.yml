@@ -17,21 +17,16 @@ jobs:
 
       - name: Mirror to Gitee
         run: |
-          git remote add gitee https://gitee.com/lgzhss/closeclaw.git
+          git remote add gitee https://lgzhss:${{ secrets.GITEE_TOKEN }}@gitee.com/lgzhss/closeclaw.git
           git push -f gitee main
-        env:
-          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
 
       - name: Mirror to Codeup (Alibaba)
         run: |
-          git remote add codeup https://codeup.aliyun.com/69c15eb9ad0a337b92d8feaa/LGZhss/closeclaw.git
+          git remote add codeup https://${{ secrets.CODEUP_USER }}:${{ secrets.CODEUP_TOKEN }}@codeup.aliyun.com/69c15eb9ad0a337b92d8feaa/LGZhss/closeclaw.git
           git push -f codeup main
-        env:
-          CODEUP_TOKEN: ${{ secrets.CODEUP_TOKEN }}
 
       - name: Mirror to JihuLab
         run: |
+          # JihuLab might need JIHU_TOKEN in secrets
           git remote add jihulab https://jihulab.com/LGZhss/closeclaw.git
           git push -f jihulab main
-        env:
-          JIHU_TOKEN: ${{ secrets.JIHU_TOKEN }}
