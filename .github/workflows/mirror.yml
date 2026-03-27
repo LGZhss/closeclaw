@@ -48,18 +48,8 @@ jobs:
           CODEUP_TOKEN: ${{ secrets.CODEUP_TOKEN }}
         if: always()
 
-<<<<<<< HEAD
       - name: Mirror to JihuLab (GitLab)
         run: |
           git remote add gitlab https://oauth2:${{ secrets.GITLAB_TOKEN }}@jihulab.com/lgzhsss/closeclaw.git
           git push -f gitlab main
         if: always()
-=======
-
-
-
-      - name: Mirror to JihuLab
-        run: |
-          # JihuLab might need JIHU_TOKEN in secrets
-          git remote add jihulab https://oauth2:${{ secrets.GITLAB_TOKEN }}@jihulab.com/lgzhsss/closeclaw.git
->>>>>>> 2b0c7498f88866a4a1fcc21fe20414076c5316c7
