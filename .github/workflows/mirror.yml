@@ -16,7 +16,6 @@ jobs:
           fetch-depth: 0
 
       - name: Mirror to Gitee
-<<<<<<< HEAD
         uses: Yikun/hub-mirror-action@master
         with:
           src: github/LGZhss
@@ -42,19 +41,3 @@ jobs:
           git remote add gitlab https://oauth2:${{ secrets.GITLAB_TOKEN }}@jihulab.com/lgzhsss/closeclaw.git
           git push -f gitlab main
         if: always()
-=======
-        run: |
-          git remote add gitee https://lgzhss:${{ secrets.GITEE_TOKEN }}@gitee.com/lgzhss/closeclaw.git
-          git push -f gitee main
-
-      - name: Mirror to Codeup (Alibaba)
-        run: |
-          git remote add codeup https://${{ secrets.CODEUP_USER }}:${{ secrets.CODEUP_TOKEN }}@codeup.aliyun.com/69c15eb9ad0a337b92d8feaa/LGZhss/closeclaw.git
-          git push -f codeup main
-
-      - name: Mirror to JihuLab
-        run: |
-          # JihuLab might need JIHU_TOKEN in secrets
-          git remote add jihulab https://LGZhss:${{ secrets.JIHU_TOKEN }}@jihulab.com/LGZhss/closeclaw.git
-          git push -f jihulab main
->>>>>>> bc72c788d0e4b051a2da245bab01cb5949fc16aa
