@@ -6,3 +6,8 @@
 **Vulnerability:** Modified `execAsync(command: string)` to `execAsync(executable: string, args: string[])` to fix command injection, which inadvertently caused downstream execution failures because callers were still passing a single string.
 **Learning:** Fixing command injection by forcing an API signature change on widely exported utility functions causes massive runtime regressions. If existing callers expect to pass a single command string, the internal wrapper must safely tokenize the string without relying on a shell interpreter.
 **Prevention:** When fixing command injection in legacy single-string execution functions, do not change the function signature if doing so breaks consumers. Instead, internally parse the string into an executable and arguments array (handling quotes) and use `child_process.spawn` with `shell: false`.
+
+## 2024-03-25 - [CRITICAL/HIGH] Fix path traversal in file operations
+**Vulnerability:** The `resolveSafePath` function in `src/utils/utils.ts` allowed path traversal to access files outside the workspace directory if the external path had the same prefix (e.g., `WORKSPACE` was `/app` and the target path was `/app-secrets`).
+**Learning:** `path.startsWith(prefix)` alone is insufficient to verify if a path is fully contained within a prefix directory, because `/app-secrets` `.startsWith("/app")` evaluates to true. We must include the path separator (`/app/`) or strictly match the directory itself.
+**Prevention:** When validating paths using `startsWith()`, always ensure the parent directory path ends with a directory separator (`path.sep`) or perform an exact match check (`path === parentDir`) to avoid partial prefix matching path traversal attacks.

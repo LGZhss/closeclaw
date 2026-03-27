@@ -15,7 +15,7 @@ class GrpcKernelBusClient {
 
   constructor() {
     this.protoPath = resolve(process.cwd(), 'proto/messages.proto');
-    
+
     try {
       const packageDefinition = protoLoader.loadSync(this.protoPath, {
         keepCase: true,
@@ -26,14 +26,14 @@ class GrpcKernelBusClient {
       });
       const protoDescriptor = grpc.loadPackageDefinition(packageDefinition) as any;
       const KernelBus = protoDescriptor.closeclaw.v1.KernelBus;
-      
+
       const isWindows = process.platform === 'win32';
-      const target = isWindows 
-        ? 'pipe:////./pipe/closeclaw_ipc' 
+      const target = isWindows
+        ? 'pipe:////./pipe/closeclaw_ipc'
         : 'unix:///tmp/closeclaw.sock';
 
       this.client = new KernelBus(
-        target, 
+        target,
         grpc.credentials.createInsecure()
       );
     } catch (err: unknown) {
@@ -52,28 +52,28 @@ class GrpcKernelBusClient {
   private subscribeTasks() {
     // 调用我们在 proto 中新增的 SubscribeTasks stream
     const call = this.client.SubscribeTasks({ ok: true, message: 'Ready' });
-    
+
     call.on('data', async (task: { task_id?: string; id?: string; group_folder?: string; payload?: Buffer; history?: any[]; trace?: { trace_id?: string } }) => {
-      const taskId = task.task_id || task.id; 
+      const taskId = task.task_id || task.id;
       if (!taskId) {
         logger.warn('[TS Sandbox] Received task without ID, ignoring.');
         return;
       }
       logger.info(`[TS Sandbox] Received dispatched task: ${taskId}`);
-      
-      const runner = new SandboxRunner(this.client); 
-      
+
+      const runner = new SandboxRunner(this.client);
+
       try {
         const context = {
           groupFolder: task.group_folder || 'global',
           prompt: task.payload? task.payload.toString() : '',
-          history: task.history || [], 
+          history: task.history || [],
           trace_id: task.trace?.trace_id || 'ts-' + Date.now()
         };
-        
+
         const responseText = await runner.execute(context);
         logger.info(`[TS Sandbox] Task ${taskId} execution completed.`);
-        
+
         await this.syncStatus({
           task_id: taskId,
           trace_id: context.trace_id,

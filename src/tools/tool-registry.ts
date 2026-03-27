@@ -2,17 +2,17 @@
  * Unified Tool Registry (MCP 工具统一注册表)
  */
 
-import { 
-  getToolsForLLM, 
-  findToolByAlias, 
-  findToolByName 
+import {
+  getToolsForLLM,
+  findToolByAlias,
+  findToolByName
 } from './tool-definitions.js';
 import { logger } from '../logger.js';
-import { 
-  executeSystemCommand, 
-  readWsFile, 
-  writeWsFile, 
-  fetchUrl, 
+import {
+  executeSystemCommand,
+  readWsFile,
+  writeWsFile,
+  fetchUrl,
   runGit
 } from '../utils/utils.js';
 import { cliAnything } from './cli-anything.js';

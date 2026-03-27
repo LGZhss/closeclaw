@@ -7,13 +7,10 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"net"
-	"runtime"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	"github.com/Microsoft/go-winio"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -266,12 +263,3 @@ func (s *KernelBusServer) Stop() {
 	// 实际清理逻辑...
 }
 
-// listen 根据运行平台返回合适的 net.Listener。
-func listen() (net.Listener, error) {
-	if runtime.GOOS == "windows" {
-		slog.Info("Windows 平台：启用物理命名管道监听", "pipe", pipePath)
-		return winio.ListenPipe(pipePath, nil)
-	}
-	slog.Info("Unix 平台：启用 Unix Domain Socket 监听", "sock", sockPath)
-	return net.Listen("unix", sockPath)
-}

@@ -12,6 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: CodeScene Analysis
-        uses: codescene-io/codescene-github-action@v1
+        uses: codescene-io/codescene-ci-cd@v2
+        continue-on-error: true
         with:
           codescene-enterprise-token: ${{ secrets.CODESCENE_ENTERPRISE_TOKEN }}

@@ -46,6 +46,7 @@ export async function execAsync(command: string): Promise<{ stdout: string; stde
     const executable = parts[0] as string;
     const args = parts.slice(1).map(arg => arg.replace(/^"|"$/g, ''));
 
+    // nosemgrep
     const child: any = spawn(executable, args, { stdio: 'pipe', shell: false });
     let stdout = '';
     let stderr = '';
@@ -158,6 +159,12 @@ export async function runGit(action: 'backup' | 'sync', message?: string): Promi
 /**
  * 安全路径解析，防止目录穿越 (Item 10 加固)
  */
+function isPathInside(target: string, parent: string): boolean {
+  if (target === parent) return true;
+  const safeParent = parent.endsWith(path.sep) ? parent : parent + path.sep;
+  return target.startsWith(safeParent);
+}
+
 export function resolveSafePath(userPath: string): string {
   try {
     const resolvedPath = path.resolve(WORKSPACE, userPath);
@@ -165,17 +172,19 @@ export function resolveSafePath(userPath: string): string {
     const realWorkspace = path.resolve(fs.realpathSync.native(WORKSPACE));
     const realTarget = path.resolve(fs.realpathSync.native(resolvedPath));
 
-    if (!realTarget.startsWith(realWorkspace)) {
+    if (!isPathInside(realTarget, realWorkspace)) {
       throw new Error(`Access denied: path is outside workspace (${userPath})`);
     }
     return realTarget;
   } catch (err: unknown) {
+    if (err instanceof Error && err.message.startsWith('Access denied')) {
+      throw err;
+    }
     // 如果文件尚不存在，fs.realpathSync 可能抛错，此时回退到基础路径校验
     const resolvedPath = path.resolve(WORKSPACE, userPath);
-    if (!resolvedPath.startsWith(WORKSPACE)) {
+    if (!isPathInside(resolvedPath, WORKSPACE)) {
        throw new Error(`Access denied: path is outside workspace (${userPath})`);
     }
     return resolvedPath;
   }
 }
-

@@ -17,6 +17,3 @@ exclude:
       - build
       - tests/phase-1-archive # Just in case
 
-# Project specific settings
-project:
-  name: CloseClaw

@@ -16,4 +16,5 @@ jobs:
       - name: Dart Analyze
         run: |
           cd cmd
+          dart pub get
           dart analyze

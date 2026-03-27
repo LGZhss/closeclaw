@@ -41,7 +41,7 @@ export class ProcessExecutor {
     return new Promise((resolve, reject) => {
       // 创建临时JavaScript文件
       const tempFile = path.join(os.tmpdir(), `temp_${executionId}.js`);
-      
+
       try {
         // 写入代码到临时文件
         fs.writeFileSync(tempFile, code);
@@ -103,10 +103,10 @@ export class ProcessExecutor {
    * @private
    */
   private _executeProcess(
-    cmd: string, 
-    args: string[], 
-    options: ExecutionOptions, 
-    executionId: string | null = null, 
+    cmd: string,
+    args: string[],
+    options: ExecutionOptions,
+    executionId: string | null = null,
     originalCommand: string = ''
   ): Promise<ExecutionResult> {
     if (!executionId) {

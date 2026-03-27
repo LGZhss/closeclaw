@@ -136,7 +136,7 @@ export function getToolsForLLM() {
 
 export function findToolByAlias(slashCmd: string) {
   const normalized = slashCmd.toLowerCase();
-  return TOOL_DEFINITIONS.find(t => 
+  return TOOL_DEFINITIONS.find(t =>
     t.aliases.some(a => a.toLowerCase() === normalized)
   ) || null;
 }
