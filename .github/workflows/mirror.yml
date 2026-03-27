@@ -28,5 +28,5 @@ jobs:
       - name: Mirror to JihuLab
         run: |
           # JihuLab might need JIHU_TOKEN in secrets
-          git remote add jihulab https://oauth2:${{ secrets.JIHU_TOKEN }}@jihulab.com/LGZhss/closeclaw.git
+          git remote add jihulab https://LGZhss:${{ secrets.JIHU_TOKEN }}@jihulab.com/LGZhss/closeclaw.git
           git push -f jihulab main
