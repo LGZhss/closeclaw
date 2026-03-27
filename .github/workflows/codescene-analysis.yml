@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: CodeScene Analysis
-        uses: codescene-io/codescene-ci-cd@v2
+        uses: codescene-io/codescene-ci-cd-action@v2
         continue-on-error: true
         with:
           codescene-enterprise-token: ${{ secrets.CODESCENE_ENTERPRISE_TOKEN }}
