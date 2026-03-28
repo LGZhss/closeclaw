@@ -11,17 +11,48 @@ export const WORKSPACE = process.cwd();
  * 将命令行字符串解析为可执行文件和参数数组
  */
 export function parseCommandString(command: string): string[] {
-  const regex = /"[^"\\]*(?:\\.[^"\\]*)*"|'[^'\\]*(?:\\.[^'\\]*)*'|[^\s]+/g;
-  const matches = command.match(regex) || [];
-  return matches.map((arg) => {
-    if (
-      (arg.startsWith('"') && arg.endsWith('"')) ||
-      (arg.startsWith("'") && arg.endsWith("'"))
-    ) {
-      return arg.slice(1, -1).replace(/\\(.)/g, "$1");
+  const args: string[] = [];
+  let token = '';
+  let inDouble = false;
+  let inSingle = false;
+  let escape = false;
+  let started = false;
+
+  for (let i = 0; i < command.length; i++) {
+    const c = command[i];
+    if (escape) {
+      token += c;
+      escape = false;
+      started = true;
+      continue;
     }
-    return arg;
-  });
+    if (c === '\\') {
+      escape = true;
+      continue;
+    }
+    if (c === '"' && !inSingle) {
+      inDouble = !inDouble;
+      started = true;
+      continue;
+    }
+    if (c === "'" && !inDouble) {
+      inSingle = !inSingle;
+      started = true;
+      continue;
+    }
+    if (c === ' ' && !inSingle && !inDouble) {
+      if (started) {
+        args.push(token);
+        token = '';
+        started = false;
+      }
+      continue;
+    }
+    token += c;
+    started = true;
+  }
+  if (started) args.push(token);
+  return args;
 }
 
 /**

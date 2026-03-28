@@ -3,57 +3,25 @@ import { parseCommandString, execAsync } from "../src/utils/utils.js";
 
 describe("Utils module", () => {
   describe("parseCommandString", () => {
-    it("should parse basic commands correctly", () => {
-      expect(parseCommandString("git status")).toEqual(["git", "status"]);
-      expect(parseCommandString("  git    commit  ")).toEqual([
-        "git",
-        "commit",
-      ]);
-    });
+    const testCases = [
+      { input: "git status", expected: ["git", "status"] },
+      { input: "  git    commit  ", expected: ["git", "commit"] },
+      { input: "echo 'hello world'", expected: ["echo", "hello world"] },
+      { input: "commit -m 'initial commit'", expected: ["commit", "-m", "initial commit"] },
+      { input: 'echo "hello world"', expected: ["echo", "hello world"] },
+      { input: 'commit -m "initial commit"', expected: ["commit", "-m", "initial commit"] },
+      { input: 'commit -m ""', expected: ["commit", "-m", ""] },
+      { input: "commit -m ''", expected: ["commit", "-m", ""] },
+      { input: 'echo "hello \\" world"', expected: ["echo", 'hello " world'] },
+      { input: "echo 'hello \\' world'", expected: ["echo", "hello ' world"] },
+      { input: "", expected: [] },
+      { input: "   ", expected: [] }
+    ];
 
-    it("should handle single quotes", () => {
-      expect(parseCommandString("echo 'hello world'")).toEqual([
-        "echo",
-        "hello world",
-      ]);
-      expect(parseCommandString("commit -m 'initial commit'")).toEqual([
-        "commit",
-        "-m",
-        "initial commit",
-      ]);
-    });
-
-    it("should handle double quotes", () => {
-      expect(parseCommandString('echo "hello world"')).toEqual([
-        "echo",
-        "hello world",
-      ]);
-      expect(parseCommandString('commit -m "initial commit"')).toEqual([
-        "commit",
-        "-m",
-        "initial commit",
-      ]);
-    });
-
-    it("should handle empty quotes", () => {
-      expect(parseCommandString('commit -m ""')).toEqual(["commit", "-m", ""]);
-      expect(parseCommandString("commit -m ''")).toEqual(["commit", "-m", ""]);
-    });
-
-    it("should handle escaped characters inside quotes", () => {
-      expect(parseCommandString('echo "hello \\" world"')).toEqual([
-        "echo",
-        'hello " world',
-      ]);
-      expect(parseCommandString("echo 'hello \\' world'")).toEqual([
-        "echo",
-        "hello ' world",
-      ]);
-    });
-
-    it("should return empty array for empty string", () => {
-      expect(parseCommandString("")).toEqual([]);
-      expect(parseCommandString("   ")).toEqual([]);
+    testCases.forEach(({ input, expected }) => {
+      it(`should correctly parse input: ${input}`, () => {
+        expect(parseCommandString(input)).toEqual(expected);
+      });
     });
   });
 
