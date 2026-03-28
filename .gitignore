@@ -120,3 +120,4 @@ logs-*.zip
 !CHANGELOG.md
 !AGENTS.md
 !CLAUDE.md
+coverage/
