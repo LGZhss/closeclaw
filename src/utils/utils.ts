@@ -40,14 +40,68 @@ export async function execAsync(
   command: string,
 ): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
-    // 简单解析命令和参数（支持双引号包裹的参数）
-    const parts = command.match(/(?:[^\s"]+|"[^"]*")+/g) || [];
+    // 使用状态机解析命令和参数（支持单双引号及转义字符）
+    const parts: string[] = [];
+    let currentArg = "";
+    let inQuotes = false;
+    let quoteChar: string | null = null;
+    let escapeNext = false;
+
+    for (let i = 0; i < command.length; i++) {
+      const char = command[i];
+
+      if (escapeNext) {
+        currentArg += char;
+        escapeNext = false;
+        continue;
+      }
+
+      if (char === "\\") {
+        escapeNext = true;
+        continue;
+      }
+
+      if (inQuotes) {
+        if (char === quoteChar) {
+          inQuotes = false;
+          quoteChar = null;
+          // 处理显式的空字符串如 ""
+          if (currentArg === "" && command[i - 1] === char) {
+            parts.push("");
+          }
+        } else {
+          currentArg += char;
+        }
+        continue;
+      }
+
+      if (char === '"' || char === "'") {
+        inQuotes = true;
+        quoteChar = char;
+        continue;
+      }
+
+      if (/\s/.test(char)) {
+        if (currentArg.length > 0) {
+          parts.push(currentArg);
+          currentArg = "";
+        }
+        continue;
+      }
+
+      currentArg += char;
+    }
+
+    if (currentArg.length > 0) {
+      parts.push(currentArg);
+    }
+
     if (parts.length === 0) {
       return reject(new Error("Empty command"));
     }
 
     const executable = parts[0] as string;
-    const args = parts.slice(1).map((arg) => arg.replace(/^"|"$/g, ""));
+    const args = parts.slice(1);
 
     // nosemgrep: javascript.express.security.audit.xss.child-process.child-process-spawn
     const child: any = spawn(executable, args, { stdio: "pipe", shell: false });
