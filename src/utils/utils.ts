@@ -35,16 +35,28 @@ export async function executeSystemCommand(command: string): Promise<string> {
 /**
  * 异步执行命令（安全防注入版本）
  */
+export function parseCommandString(command: string): string[] {
+  const matches = command.match(/"[^"\\]*(?:\\.[^"\\]*)*"|'[^'\\]*(?:\\.[^'\\]*)*'|[^\s]+/g) || [];
+  return matches.map((arg) => {
+    if (
+      (arg.startsWith('"') && arg.endsWith('"') && arg.length >= 2) ||
+      (arg.startsWith("'") && arg.endsWith("'") && arg.length >= 2)
+    ) {
+      return arg.slice(1, -1).replace(/\\(.)/g, '$1');
+    }
+    return arg;
+  });
+}
+
 export async function execAsync(command: string): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
-    // 简单解析命令和参数（支持双引号包裹的参数）
-    const parts = command.match(/(?:[^\s"]+|"[^"]*")+/g) || [];
+    const parts = parseCommandString(command);
     if (parts.length === 0) {
       return reject(new Error('Empty command'));
     }
 
     const executable = parts[0] as string;
-    const args = parts.slice(1).map(arg => arg.replace(/^"|"$/g, ''));
+    const args = parts.slice(1);
 
     // nosemgrep
     const child: any = spawn(executable, args, { stdio: 'pipe', shell: false });
