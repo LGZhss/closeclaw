@@ -2,9 +2,9 @@
  * CLI-Anything Tool Adapter for AgentOS
  */
 
-import { logger } from "../logger.js";
-import { resolveSafePath } from "../utils/utils.js";
-import { sandboxManager } from "../sandbox/manager.js";
+import { logger } from '../logger.js';
+import { resolveSafePath } from '../utils/utils.js';
+import { sandboxManager } from '../sandbox/manager.js';
 
 export interface CliAnythingArgs {
   prompt: string;
@@ -22,10 +22,8 @@ export interface CliAnythingResult {
 /**
  * CLI-Anything 工具处理器
  */
-export async function cliAnything(
-  args: CliAnythingArgs,
-): Promise<CliAnythingResult> {
-  const { prompt, workingDir = ".", timeout = 30000 } = args;
+export async function cliAnything(args: CliAnythingArgs): Promise<CliAnythingResult> {
+  const { prompt, workingDir = '.', timeout = 30000 } = args;
 
   try {
     const safeDir = resolveSafePath(workingDir);
@@ -38,14 +36,15 @@ export async function cliAnything(
       success: true,
       output: result.stdout,
       error: result.stderr,
-      workingDir: safeDir,
+      workingDir: safeDir
     };
+
   } catch (error: any) {
     logger.error(`[CLI-Anything] 执行失败: ${error.message}`);
     return {
       success: false,
       error: error.message,
-      output: "",
+      output: ''
     };
   }
 }
@@ -53,18 +52,14 @@ export async function cliAnything(
 /**
  * 执行 CLI-Anything 命令 (当前为安全过滤后的备选实现)
  */
-async function executeCliAnything(
-  prompt: string,
-  workDir: string,
-  timeout: number,
-) {
+async function executeCliAnything(prompt: string, workDir: string, timeout: number) {
   const fallbackCommands: Record<string, string> = {
-    "list files": "ls -la",
-    "show directory": "pwd",
-    "create directory": "mkdir",
-    "remove file": "rm",
-    "copy file": "cp",
-    "move file": "mv",
+    'list files': 'ls -la',
+    'show directory': 'pwd',
+    'create directory': 'mkdir',
+    'remove file': 'rm',
+    'copy file': 'cp',
+    'move file': 'mv'
   };
 
   let command = prompt;
@@ -82,17 +77,8 @@ async function executeCliAnything(
   }
 
   const allowedCommands = new Set([
-    "ls",
-    "pwd",
-    "mkdir",
-    "rm",
-    "cp",
-    "mv",
-    "echo",
-    "cat",
-    "touch",
-    "grep",
-    "find",
+    'ls', 'pwd', 'mkdir', 'rm', 'cp', 'mv',
+    'echo', 'cat', 'touch', 'grep', 'find'
   ]);
 
   if (!allowedCommands.has(baseCommand)) {
@@ -104,7 +90,7 @@ async function executeCliAnything(
     /format/,
     /del\s+\/s/,
     /shutdown/,
-    /reboot/,
+    /reboot/
   ];
 
   for (const pattern of dangerousPatterns) {
@@ -115,6 +101,6 @@ async function executeCliAnything(
 
   return await sandboxManager.executeCommand(command, {
     cwd: workDir,
-    timeout,
+    timeout
   });
 }

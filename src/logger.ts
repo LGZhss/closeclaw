@@ -1,4 +1,4 @@
-import { pino } from "pino";
+import { pino } from 'pino';
 
 export const logger = pino({
   transport: {
@@ -19,9 +19,9 @@ export const logLevels = {
   FATAL: 50,
 };
 
-export function log(message: string, level: keyof typeof logLevels = "INFO") {
-  const logMethod = level.toLowerCase() as "info" | "warn" | "error" | "debug";
-  if (typeof logger[logMethod] === "function") {
+export function log(message: string, level: keyof typeof logLevels = 'INFO') {
+  const logMethod = level.toLowerCase() as 'info' | 'warn' | 'error' | 'debug';
+  if (typeof logger[logMethod] === 'function') {
     (logger[logMethod] as (msg: string) => void)(message);
   }
 }
