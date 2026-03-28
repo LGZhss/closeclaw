@@ -49,7 +49,7 @@ export async function execAsync(
     const executable = parts[0] as string;
     const args = parts.slice(1).map((arg) => arg.replace(/^"|"$/g, ""));
 
-    // nosemgrep
+    // nosemgrep: javascript.express.security.audit.xss.child-process.child-process-spawn
     const child: any = spawn(executable, args, { stdio: "pipe", shell: false });
     let stdout = "";
     let stderr = "";
