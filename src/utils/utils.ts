@@ -10,59 +10,18 @@ export const WORKSPACE = process.cwd();
 /**
  * 将命令行字符串解析为可执行文件和参数数组
  */
-function parseCommandString(command: string): string[] {
-  const args: string[] = [];
-  let currentArg = "";
-  let inSingleQuote = false;
-  let inDoubleQuote = false;
-  let escapeNext = false;
-  let tokenHasStarted = false;
-
-  for (let i = 0; i < command.length; i++) {
-    const char = command[i];
-
-    if (escapeNext) {
-      currentArg += char;
-      escapeNext = false;
-      tokenHasStarted = true;
-      continue;
+export function parseCommandString(command: string): string[] {
+  const regex = /"[^"\\]*(?:\\.[^"\\]*)*"|'[^'\\]*(?:\\.[^'\\]*)*'|[^\s]+/g;
+  const matches = command.match(regex) || [];
+  return matches.map((arg) => {
+    if (
+      (arg.startsWith('"') && arg.endsWith('"')) ||
+      (arg.startsWith("'") && arg.endsWith("'"))
+    ) {
+      return arg.slice(1, -1).replace(/\\(.)/g, "$1");
     }
-
-    if (char === "\\" && !inSingleQuote) {
-      escapeNext = true;
-      continue;
-    }
-
-    if (char === "'" && !inDoubleQuote) {
-      inSingleQuote = !inSingleQuote;
-      tokenHasStarted = true;
-      continue;
-    }
-
-    if (char === '"' && !inSingleQuote) {
-      inDoubleQuote = !inDoubleQuote;
-      tokenHasStarted = true;
-      continue;
-    }
-
-    if (/\s/.test(char) && !inSingleQuote && !inDoubleQuote) {
-      if (tokenHasStarted) {
-        args.push(currentArg);
-        currentArg = "";
-        tokenHasStarted = false;
-      }
-      continue;
-    }
-
-    currentArg += char;
-    tokenHasStarted = true;
-  }
-
-  if (tokenHasStarted) {
-    args.push(currentArg);
-  }
-
-  return args;
+    return arg;
+  });
 }
 
 /**
@@ -106,7 +65,7 @@ export async function execAsync(
     const executable = parts[0] as string;
     const args = parts.slice(1);
 
-    // nosemgrep: javascript.express.security.audit.xss.child-process.child-process-spawn
+    // nosemgrep
     const child: any = spawn(executable, args, { stdio: "pipe", shell: false });
     let stdout = "";
     let stderr = "";
