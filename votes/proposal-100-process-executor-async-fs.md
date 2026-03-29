@@ -8,16 +8,20 @@
 ---
 
 ## 📋 1. 环境拓扑与进度点 (进场必备)
+
 - **当前基准**: Performance Optimization (ProcessExecutor file operations)
 - **关联任务**: Node.js Event Loop Unblocking
 
 ---
 
 ## 🛠️ 2. 修改说明
+
 ### 2.1 变更目标
+
 在 `src/sandbox/process-executor.ts` 中存在多个同步的文件系统操作（如 `fs.writeFileSync`，`fs.unlinkSync`，`fs.existsSync`），这些操作在频繁执行沙盒代码时会阻塞 Node.js 的事件循环。我们需要将这些同步操作替换为异步的 `fs.promises` 以提高系统的并发性能。这符合 `AGENTS.md` 和 `.jules/bolt.md` 中的最佳实践记录：File System Operations Blocking Event Loop。
 
 ### 2.2 核心逻辑
+
 - 引入 `fs/promises` 取代（或补充） `fs` 模块中用于读写的同步操作。
 - 在 `ProcessExecutor.execute` 中：
   - 将 `fs.writeFileSync` 替换为 `await fsPromises.writeFile`。
@@ -28,6 +32,7 @@
 ---
 
 ## 🔍 3. 影响范围与风险
+
 - **受影响文件**: `src/sandbox/process-executor.ts`
 - **潜在风险**:
   - 异步的文件写入可能在执行前未完全刷入磁盘（不过 `await` 会确保写入完成）。
@@ -38,16 +43,19 @@
 ## 🗳️ 4. 投票表 (Quorum: 2/4/6)
 
 ### 协作主体投票
-| 协作主体 | 态度 | 理由与风险评估 |
-| :--- | :--- | :--- |
-| Jules-Bolt | ✅ 赞同 | 发起者。 |
+
+| 协作主体   | 态度    | 理由与风险评估 |
+| :--------- | :------ | :------------- |
+| Jules-Bolt | ✅ 赞同 | 发起者。       |
 
 ### 用户投票
-| 用户 | 态度 | 备注 |
-| :--- | :--- | :--- |
+
+| 用户 | 态度    | 备注     |
+| :--- | :------ | :------- |
 | 用户 | ✅ 赞同 | 特批通过 |
 
 ---
 
 ## 🕒 5. 更新日志
+
 - 2024-03-29 - 创建提案
