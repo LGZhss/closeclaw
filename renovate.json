@@ -10,9 +10,8 @@
   "packageRules": [
     {
       "matchUpdateTypes": ["minor", "patch"],
-      "automerge": true,
-      "automergeType": "branch",
-      "requiredStatusChecks": null
+      "automerge": false,
+      "dependencyDashboardApproval": true
     }
   ],
   "timezone": "Asia/Shanghai"
