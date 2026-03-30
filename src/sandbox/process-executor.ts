@@ -47,18 +47,27 @@ export class ProcessExecutor {
       await fs.promises.writeFile(tempFile, code);
 
       // 安全地使用 spawn 执行 node 命令
-      return await this._executeProcess("node", [tempFile], { timeout }, executionId);
+      return await this._executeProcess(
+        "node",
+        [tempFile],
+        { timeout },
+        executionId,
+      );
     } catch (error) {
-      logger.error(`[ProcessExecutor] 执行失败: ${error instanceof Error ? error.message : String(error)}`);
+      logger.error(
+        `[ProcessExecutor] 执行失败: ${error instanceof Error ? error.message : String(error)}`,
+      );
       throw error;
     } finally {
       // 核心加固：使用 finally 确保即使在 _executeProcess 抛错时也会清理
+      // 性能优化：直接使用异步 unlink 并捕获 ENOENT，避免 fs.existsSync 阻塞事件循环
+      // 预期影响：在高并发沙盒执行时，显著降低主线程阻塞时间，提升整体吞吐量
       try {
-        if (fs.existsSync(tempFile)) {
-          await fs.promises.unlink(tempFile);
+        await fs.promises.unlink(tempFile);
+      } catch (e: any) {
+        if (e.code !== "ENOENT") {
+          logger.warn(`[ProcessExecutor] 清理临时文件失败: ${tempFile}`);
         }
-      } catch (e) {
-        logger.warn(`[ProcessExecutor] 清理临时文件失败: ${tempFile}`);
       }
     }
   }
@@ -184,10 +193,9 @@ export class ProcessExecutor {
         const argsStr = args.join(" ");
         if (argsStr.includes("temp_exec_")) {
           const tempPath = args.find((a) => a.includes("temp_exec_"));
-          if (tempPath && fs.existsSync(tempPath)) {
-            try {
-              fs.unlinkSync(tempPath);
-            } catch {}
+          // 性能优化：使用异步 unlink 避免同步 fs API 阻塞 Node.js 事件循环
+          if (tempPath) {
+            fs.promises.unlink(tempPath).catch(() => {});
           }
         }
 
