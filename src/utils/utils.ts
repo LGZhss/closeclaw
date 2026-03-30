@@ -47,7 +47,13 @@ export async function execAsync(
     }
 
     const executable = parts[0] as string;
-    const args = parts.slice(1).map((arg) => arg.replace(/^"|"$/g, ""));
+    const args = parts.slice(1).map((arg) => {
+      // 如果是被引号包裹的，则去掉引号并处理其中的转义字符
+      if (arg.startsWith('"') && arg.endsWith('"')) {
+        return arg.slice(1, -1).replace(/\\([\s\S])/g, "$1");
+      }
+      return arg;
+    });
 
     // nosemgrep
     const child: any = spawn(executable, args, { stdio: "pipe", shell: false });

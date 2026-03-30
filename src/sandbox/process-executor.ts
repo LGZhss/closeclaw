@@ -40,41 +40,27 @@ export class ProcessExecutor {
   ): Promise<ExecutionResult> {
     const executionId = `exec_${Date.now()}_${Math.random().toString(36).substring(2, 11)}_${process.hrtime.bigint()}`;
     const timeout = options.timeout || config.sandbox.timeout;
+    const tempFile = path.join(os.tmpdir(), `temp_${executionId}.js`);
 
-    return new Promise((resolve, reject) => {
-      // 创建临时JavaScript文件
-      const tempFile = path.join(os.tmpdir(), `temp_${executionId}.js`);
+    try {
+      // 写入代码到临时文件 (异步)
+      await fs.promises.writeFile(tempFile, code);
 
+      // 安全地使用 spawn 执行 node 命令
+      return await this._executeProcess("node", [tempFile], { timeout }, executionId);
+    } catch (error) {
+      logger.error(`[ProcessExecutor] 执行失败: ${error instanceof Error ? error.message : String(error)}`);
+      throw error;
+    } finally {
+      // 核心加固：使用 finally 确保即使在 _executeProcess 抛错时也会清理
       try {
-        // 写入代码到临时文件
-        fs.writeFileSync(tempFile, code);
-
-        // 安全地使用 spawn 执行 node 命令，而不是通过 shell
-        this._executeProcess("node", [tempFile], { timeout }, executionId)
-          .then((result) => {
-            // 清理临时文件
-            try {
-              fs.unlinkSync(tempFile);
-            } catch (e) {
-              // 忽略清理错误
-            }
-            resolve(result);
-          })
-          .catch((error) => {
-            // 清理临时文件
-            try {
-              if (fs.existsSync(tempFile)) {
-                fs.unlinkSync(tempFile);
-              }
-            } catch (e) {
-              // 忽略清理错误
-            }
-            reject(error);
-          });
-      } catch (error) {
-        reject(error);
+        if (fs.existsSync(tempFile)) {
+          await fs.promises.unlink(tempFile);
+        }
+      } catch (e) {
+        logger.warn(`[ProcessExecutor] 清理临时文件失败: ${tempFile}`);
       }
-    });
+    }
   }
 
   /**
