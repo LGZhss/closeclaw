@@ -67,7 +67,9 @@ func (s *KernelBusServer) DispatchTask(ctx context.Context, req *pb.Task) (*pb.T
 	// 写入 SQLite
 	taskIDStr := req.GetTaskId()
 	var taskID int64
-	fmt.Sscanf(taskIDStr, "%d", &taskID) // 尝试从 string 转 int64，如果是 UUID 则由 DB 处理或映射
+	if _, err := fmt.Sscanf(taskIDStr, "%d", &taskID); err != nil {
+		slog.Warn("Failed to parse task ID as int64, using 0", "task_id", taskIDStr, "err", err)
+	}
 
 	dbTask := db.ScheduledTask{
 		GroupFolder:   req.GetGroupFolder(),
@@ -119,7 +121,9 @@ func (s *KernelBusServer) SyncStatus(ctx context.Context, req *pb.StatusUpdate) 
 
 	// 更新数据库状态
 	var taskID int64
-	fmt.Sscanf(req.GetTaskId(), "%d", &taskID)
+	if _, err := fmt.Sscanf(req.GetTaskId(), "%d", &taskID); err != nil {
+		slog.Warn("Failed to parse task ID for status sync", "task_id", req.GetTaskId(), "err", err)
+	}
 	
 	statusStr := req.GetStatus().String()
 	if err := db.UpdateTaskStatus(db.GetDB(), taskID, statusStr); err != nil {
@@ -145,7 +149,7 @@ func (s *KernelBusServer) CheckHealth(ctx context.Context, req *pb.HeartbeatRequ
 }
 
 // GetPendingMessages 流式推送待处理消息给 Dart。
-func (s *KernelBusServer) GetPendingMessages(req *pb.Ack, stream pb.KernelBus_GetPendingMessagesServer) error {
+func (s *KernelBusServer) GetPendingMessages(_ *pb.Ack, stream pb.KernelBus_GetPendingMessagesServer) error {
 	// Phase2 POC：结合 router 进行消息过滤和 Prompt 拼装
 	cfg := router.DefaultConfig("Andy")
 	
@@ -186,7 +190,7 @@ func (s *KernelBusServer) GetPendingMessages(req *pb.Ack, stream pb.KernelBus_Ge
 }
 
 // SubscribeTasks 允许 TS 无状态沙盒订阅实时任务流。
-func (s *KernelBusServer) SubscribeTasks(req *pb.Ack, stream pb.KernelBus_SubscribeTasksServer) error {
+func (s *KernelBusServer) SubscribeTasks(_ *pb.Ack, stream pb.KernelBus_SubscribeTasksServer) error {
 	slog.Info("[IPC] TS Sandbox subscribed to task stream")
 	
 	// 为该流创建一个下发通道

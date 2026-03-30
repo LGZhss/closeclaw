@@ -48,8 +48,39 @@ jobs:
           CODEUP_TOKEN: ${{ secrets.CODEUP_TOKEN }}
         if: always()
 
-      - name: Mirror to JihuLab (GitLab)
+      - name: Mirror to JihuLab & Pull AI Fixes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # 1. 设置 JihuLab 远程
           git remote add gitlab https://oauth2:${{ secrets.GITLAB_TOKEN }}@jihulab.com/lgzhsss/closeclaw.git
+          
+          # 2. 从极狐拉取 AI 生成的修复分支
+          echo "Checking for AI resolution branches from JihuLab..."
+          git fetch gitlab 'refs/heads/sentinel/*:refs/heads/sentinel/*' --force || true
+          git fetch gitlab 'refs/heads/vulnerability/*:refs/heads/vulnerability/*' --force || true
+          
+          # 3. 将这些分支推送到 GitHub
+          echo "Syncing AI branches to GitHub..."
+          git push origin 'refs/heads/sentinel/*' --force || true
+          git push origin 'refs/heads/vulnerability/*' --force || true
+          
+          # 4. 自动为拉回的分支创建 PR (如果不存在)
+          for branch in $(git branch -r | grep 'gitlab/sentinel/\|gitlab/vulnerability/' | sed 's/gitlab\///'); do
+            echo "Processing AI branch: $branch"
+            # 检查 PR 是否已存在
+            PR_EXISTS=$(gh pr list --head "$branch" --json number --jq '.[0].number')
+            if [ -z "$PR_EXISTS" ]; then
+              echo "Creating PR for $branch..."
+              gh pr create --base main --head "$branch" \
+                --title "🤖 AI Fix from JihuLab: $branch" \
+                --body "Automated synchronization of vulnerability resolution from JihuLab AI Agent." || true
+            else
+              echo "PR already exists for $branch (PR #$PR_EXISTS)"
+            fi
+          done
+
+          # 5. 推送 GitHub main 到 JihuLab (保持镜像更新)
+          echo "Mirroring main to JihuLab..."
           git push -f gitlab main
         if: always()
