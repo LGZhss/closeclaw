@@ -96,8 +96,11 @@ func MarkMessagesProcessed(db *sql.DB, ids []int64) error {
 	if len(ids) == 0 {
 		return nil
 	}
-	jsonIDs, _ := json.Marshal(ids)
-	_, err := db.Exec(
+	jsonIDs, err := json.Marshal(ids)
+	if err != nil {
+		return fmt.Errorf("marshal ids: %w", err)
+	}
+	_, err = db.Exec(
 		`UPDATE messages SET processed = 1 WHERE id IN (SELECT value FROM json_each(?))`,
 		string(jsonIDs),
 	)
@@ -178,14 +181,17 @@ func CheckDependenciesMet(db *sql.DB, dependsOn string) (bool, error) {
 		return true, nil
 	}
 
-	jsonIDs, _ := json.Marshal(validIDs)
+	jsonIDs, err := json.Marshal(validIDs)
+	if err != nil {
+		return false, fmt.Errorf("marshal validIDs: %w", err)
+	}
 
 	query := `SELECT COUNT(*) FROM scheduled_tasks 
 	          WHERE id IN (SELECT value FROM json_each(?)) 
 	          AND status != 'DONE'`
 
 	var count int
-	err := db.QueryRow(query, string(jsonIDs)).Scan(&count)
+	err = db.QueryRow(query, string(jsonIDs)).Scan(&count)
 	if err != nil {
 		return false, err
 	}

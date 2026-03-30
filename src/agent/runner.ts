@@ -7,7 +7,7 @@ export interface ExecutionContext {
   /** 发送给 LLM 的 prompt */
   prompt: string;
   /** 消息历史（可选） */
-  history?: Array<{role: string; parts: Array<{text: string}>}>;
+  history?: Array<{ role: string; parts: Array<{ text: string }> }>;
 }
 
 /**

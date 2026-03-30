@@ -162,12 +162,16 @@ func (s *Scheduler) processDueTasks() {
 			case err := <-errCh:
 				if err != nil {
 					slog.Error("Task dispatch failed", "task_id", task.ID, "err", err)
-					_ = db.UpdateTaskStatus(db.GetDB(), task.ID, "FAILED") 
+					if err := db.UpdateTaskStatus(db.GetDB(), task.ID, "FAILED"); err != nil {
+						slog.Error("Failed to update status to FAILED", "task_id", task.ID, "err", err)
+					}
 					return
 				}
 			case <-ctx.Done():
 				slog.Error("Task dispatch timeout", "task_id", task.ID)
-				_ = db.UpdateTaskStatus(db.GetDB(), task.ID, "FAILED")
+				if err := db.UpdateTaskStatus(db.GetDB(), task.ID, "FAILED"); err != nil {
+					slog.Error("Failed to update status to FAILED on timeout", "task_id", task.ID, "err", err)
+				}
 				return
 			case <-s.stopCh:
 				return
@@ -185,7 +189,9 @@ func (s *Scheduler) processDueTasks() {
 			} else {
 				// 对于 once 类型的任务，执行后标记为 DONE
 				if task.ScheduleType == "once" {
-					_ = db.UpdateTaskStatus(db.GetDB(), task.ID, "DONE")
+					if err := db.UpdateTaskStatus(db.GetDB(), task.ID, "DONE"); err != nil {
+						slog.Error("Failed to update status to DONE", "task_id", task.ID, "err", err)
+					}
 				}
 			}
 		}()
