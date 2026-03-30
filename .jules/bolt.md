@@ -1,3 +1,4 @@
 ## 2024-05-14 - Asynchronous File System Operations in High-Concurrency Environments
+
 **Learning:** In the Node.js event loop, synchronous file system operations (like `fs.existsSync` or `fs.unlinkSync`) block the entire main thread, which can severely degrade performance in a high-concurrency sandbox environment where many processes are spawned and cleaned up rapidly. Catching an error from an asynchronous `unlink` is more efficient under load than explicitly checking for existence synchronously.
 **Action:** Always prefer `fs.promises.unlink(path).catch(e => { if(e.code !== 'ENOENT') throw e; })` over `if(fs.existsSync(path)) fs.unlinkSync(path)` for background cleanup tasks to maximize event loop throughput.
