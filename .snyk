@@ -1,0 +1,12 @@
+# CloseClaw Snyk 策略文件
+# 本文件是 Snyk App 和 Snyk Action 共用的唯一真理源。
+# 所有漏洞 ignore 操作必须通过 `snyk ignore` CLI 写入本文件，禁止在控制台手动操作。
+# 参考文档: https://docs.snyk.io/snyk-cli/commands/ignore
+
+version: v1.25.0
+
+# 忽略策略 (示例结构，按需通过 `snyk ignore` 命令填充)
+ignore: {}
+
+# 补丁策略
+patch: {}
