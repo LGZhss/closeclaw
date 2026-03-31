@@ -11,14 +11,8 @@ export const WORKSPACE = process.cwd();
  * 读取工作区文件
  */
 export async function readWsFile(filePath: string): Promise<string> {
-  const normalized = filePath.replace(/\\/g, "/").replace(/^\.\/+/, "");
-  for (const protectedPath of PROTECTED_PATHS) {
-    if (
-      normalized === protectedPath ||
-      normalized.startsWith(protectedPath + "/")
-    ) {
-      throw new Error(`Access denied: ${filePath} is a protected path`);
-    }
+  if (isProtectedPath(filePath)) {
+    throw new Error(`Access denied: ${filePath} is a protected path`);
   }
 
   const fullPath = resolveSafePath(filePath);
@@ -51,20 +45,34 @@ const PROTECTED_PATHS = [
 ];
 
 /**
+ * 判断路径是否是受保护的路径
+ */
+export function isProtectedPath(filePath: string): boolean {
+  const workspaceRoot = path.resolve(WORKSPACE);
+  const resolvedPath = path.resolve(workspaceRoot, filePath);
+  const relative = path.relative(workspaceRoot, resolvedPath);
+  const normalized = relative.replace(/\\/g, "/");
+
+  for (const protectedPath of PROTECTED_PATHS) {
+    if (
+      normalized === protectedPath ||
+      normalized.startsWith(protectedPath + "/")
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
  * 写入工作区文件
  */
 export async function writeWsFile(
   filePath: string,
   content: string,
 ): Promise<string> {
-  const normalized = filePath.replace(/\\/g, "/").replace(/^\.\/+/, "");
-  for (const protectedPath of PROTECTED_PATHS) {
-    if (
-      normalized === protectedPath ||
-      normalized.startsWith(protectedPath + "/")
-    ) {
-      return `Access denied: ${filePath} is a protected path`;
-    }
+  if (isProtectedPath(filePath)) {
+    return `Access denied: ${filePath} is a protected path`;
   }
 
   const fullPath = resolveSafePath(filePath);

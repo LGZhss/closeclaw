@@ -73,7 +73,9 @@ export class ToolRegistry {
     const propNames = Object.keys(props);
 
     if (tool.name === "write_file") {
-      const match = rawText.match(/^\/(?:write|writeFile)\s+(\S+)\s+([\s\S]*)$/i);
+      const match = rawText.match(
+        /^\/(?:write|writeFile)\s+(\S+)\s+([\s\S]*)$/i,
+      );
       if (match) {
         return { filePath: match[1], content: match[2] };
       }
