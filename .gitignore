@@ -50,14 +50,14 @@ groups/*/CONTEXT.md
 !.qoder/
 !.dropstone/
 !.arts/
-!.claude/
 !.jules/
 !.workbuddy/
+!.iflow/
+!.comate/
+!.codeartsdoer/
 
 # 🔴 仍保持忽略或归档的主体
 .gitnexus/
-.iflow/
-.comate/
 .codebuddy/
 .codebuddy-cn/
 .pearai/
@@ -74,7 +74,6 @@ groups/*/CONTEXT.md
 .codearts/
 .coderider/
 .junie/
-.codeartsdoer/
 
 # -----------------------------------------------------------------------------
 # 5. 系统临时文件 (OS & Temporary)
