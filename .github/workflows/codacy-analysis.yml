@@ -21,5 +21,5 @@ jobs:
         uses: codacy/codacy-analysis-cli-action@v4.4.7
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          upload: true
+          upload: false
           max-allowed-issues: 0

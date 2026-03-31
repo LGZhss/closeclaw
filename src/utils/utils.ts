@@ -53,11 +53,9 @@ export function isProtectedPath(filePath: string): boolean {
   const relative = path.relative(workspaceRoot, resolvedPath);
   const normalized = relative.replace(/\\/g, "/");
 
-  return PROTECTED_PATHS.some(
-    (protectedPath) =>
-      normalized === protectedPath ||
-      normalized.startsWith(protectedPath + "/"),
-  );
+  // Create a regex to match exact path or subdirectory: ^(path)(\/.*)?$
+  const regexPattern = `^(${PROTECTED_PATHS.map((p) => p.replace(/\./g, "\\.")).join("|")})(/.*)?$`;
+  return new RegExp(regexPattern).test(normalized);
 }
 
 /**
