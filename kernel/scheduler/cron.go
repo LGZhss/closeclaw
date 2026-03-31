@@ -177,23 +177,6 @@ func (s *Scheduler) processDueTasks() {
 				return
 			}
 			
-			// 4. 计算下一次运行时间并更新
-			nextRun := s.CalculateNextRun(&task)
-			// ... (同下)
-			if nextRun != nil {
-				nextRunStr := nextRun.UTC().Format(time.RFC3339)
-				if err := db.UpdateTaskNextRun(db.GetDB(), task.ID, nextRunStr); err != nil {
-					slog.Error("Scheduled next run update failed", "task_id", task.ID, "err", err)
-				}
-				slog.Info("Task rescheduled", "task_id", task.ID, "next_run", nextRunStr)
-			} else {
-				// 对于 once 类型的任务，执行后标记为 DONE
-				if task.ScheduleType == "once" {
-					if err := db.UpdateTaskStatus(db.GetDB(), task.ID, "DONE"); err != nil {
-						slog.Error("Failed to update status to DONE", "task_id", task.ID, "err", err)
-					}
-				}
-			}
 		}()
 	}
 }

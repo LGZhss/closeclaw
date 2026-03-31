@@ -11,6 +11,16 @@ export const WORKSPACE = process.cwd();
  * 读取工作区文件
  */
 export async function readWsFile(filePath: string): Promise<string> {
+  const normalized = filePath.replace(/\\/g, "/").replace(/^\.\/+/, "");
+  for (const protectedPath of PROTECTED_PATHS) {
+    if (
+      normalized === protectedPath ||
+      normalized.startsWith(protectedPath + "/")
+    ) {
+      throw new Error(`Access denied: ${filePath} is a protected path`);
+    }
+  }
+
   const fullPath = resolveSafePath(filePath);
   try {
     // eslint-disable-next-line security/detect-non-literal-fs-filename
@@ -140,7 +150,7 @@ export async function runGit(
     try {
       if (action === "backup") {
         const msg = message || `Backup at ${new Date().toISOString()}`;
-        return new Promise((resolve) => {
+        return await new Promise((resolve) => {
           const add = spawn("git", ["add", "."], { cwd: WORKSPACE });
           add.on("close", (code) => {
             if (code !== 0) return resolve("❌ git add failed");
@@ -154,7 +164,7 @@ export async function runGit(
           });
         });
       } else {
-        return new Promise((resolve) => {
+        return await new Promise((resolve) => {
           const pull = spawn("git", ["pull"], { cwd: WORKSPACE });
           pull.on("close", (code) => {
             if (code !== 0) return resolve("❌ git pull failed");

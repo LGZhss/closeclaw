@@ -9,7 +9,6 @@ import {
 } from "./tool-definitions.js";
 import { logger } from "../logger.js";
 import { readWsFile, writeWsFile, fetchUrl, runGit } from "../utils/utils.js";
-import { cliAnything } from "./cli-anything.js";
 
 export class ToolRegistry {
   private handlers: Map<string, Function>;
@@ -25,7 +24,6 @@ export class ToolRegistry {
     this.handlers.set("fetchUrl", this.fetchUrl.bind(this));
     this.handlers.set("gitBackup", this.gitBackup.bind(this));
     this.handlers.set("gitSync", this.gitSync.bind(this));
-    this.handlers.set("cliAnything", this.cliAnything.bind(this));
   }
 
   async executeByCommand(rawText: string, context: any = {}) {
@@ -75,9 +73,17 @@ export class ToolRegistry {
     const propNames = Object.keys(props);
 
     if (tool.name === "write_file") {
-      const match = rawText.match(/^\/write\s+(\S+)\s+([\s\S]*)$/i);
+      const match = rawText.match(/^\/(?:write|writeFile)\s+(\S+)\s+([\s\S]*)$/i);
       if (match) {
         return { filePath: match[1], content: match[2] };
+      }
+    }
+
+    if (tool.name === "read_file") {
+      // 增强：匹配 /read <路径>，支持路径中包含空格
+      const match = rawText.match(/^\/(?:read|readFile)\s+([\s\S]*)$/i);
+      if (match) {
+        return { filePath: match[1].trim() };
       }
     }
 
@@ -115,13 +121,6 @@ export class ToolRegistry {
 
   private async gitSync() {
     return await runGit("sync");
-  }
-
-  private async cliAnything(args: any) {
-    const result = await cliAnything(args);
-    return result.success
-      ? `🔧 **CLI-Anything 执行结果**\n${result.output}`
-      : `❌ 失败: ${result.error}`;
   }
 }
 

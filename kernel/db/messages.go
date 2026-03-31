@@ -56,6 +56,17 @@ type ScheduledTask struct {
 	DependsOn     string `json:"depends_on"`
 }
 
+// TaskRunLog 对应 task_run_logs 表一行。
+type TaskRunLog struct {
+	ID        int64  `json:"id"`
+	TaskID    int64  `json:"task_id"`
+	Status    string `json:"status"`
+	Output    string `json:"output"`
+	StartedAt string `json:"started_at"`
+	EndedAt   string `json:"ended_at"`
+}
+
+
 // Message は DbMessage のエイリアス（kernel/router と kernel/server が参照する互換名）
 type Message = DbMessage
 
@@ -155,6 +166,41 @@ func UpdateTaskStatus(db *sql.DB, taskID int64, status string) error {
 	_, err := db.Exec(`UPDATE scheduled_tasks SET status = ? WHERE id = ?`, status, taskID)
 	return err
 }
+
+// InsertTaskRunLog 记录任务运行日志。
+func InsertTaskRunLog(db *sql.DB, log TaskRunLog) (int64, error) {
+	res, err := db.Exec(
+		`INSERT INTO task_run_logs (task_id, status, output, started_at, ended_at)
+		 VALUES (?, ?, ?, ?, ?)`,
+		log.TaskID, log.Status, log.Output, log.StartedAt, log.EndedAt,
+	)
+	if err != nil {
+		return 0, fmt.Errorf("InsertTaskRunLog: %w", err)
+	}
+	return res.LastInsertId()
+}
+
+// GetTaskByID 获取单个任务。
+func GetTaskByID(db *sql.DB, taskID int64) (*ScheduledTask, error) {
+	row := db.QueryRow(
+		`SELECT id, group_folder, prompt, schedule_type, schedule_value, is_paused,
+		        created_at, COALESCE(last_run_at,''), COALESCE(next_run_at,''), COALESCE(status,''), COALESCE(depends_on,'')
+		 FROM scheduled_tasks WHERE id = ?`,
+		taskID,
+	)
+	var t ScheduledTask
+	var isPaused int
+	err := row.Scan(
+		&t.ID, &t.GroupFolder, &t.Prompt, &t.ScheduleType, &t.ScheduleValue,
+		&isPaused, &t.CreatedAt, &t.LastRunAt, &t.NextRunAt, &t.Status, &t.DependsOn,
+	)
+	if err != nil {
+		return nil, err
+	}
+	t.IsPaused = isPaused == 1
+	return &t, nil
+}
+
 
 // CheckDependenciesMet 检查依赖的任务是否已全部完成 (DONE)。
 func CheckDependenciesMet(db *sql.DB, dependsOn string) (bool, error) {

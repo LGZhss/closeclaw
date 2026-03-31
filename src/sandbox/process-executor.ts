@@ -203,8 +203,8 @@ export class ProcessExecutor {
 
         // 补齐：在进程错误时也尝试清理临时文件 (Item 8)
         const argsStr = args.join(" ");
-        if (argsStr.includes("temp_exec_")) {
-          const tempPath = args.find((a) => a.includes("temp_exec_"));
+        if (argsStr.includes("temp_")) {
+          const tempPath = args.find((a) => a.includes("temp_"));
           // eslint-disable-next-line security/detect-non-literal-fs-filename
           if (tempPath && fs.existsSync(tempPath)) {
             try {

@@ -100,20 +100,6 @@ export const TOOL_DEFINITIONS = [
     aliases: ["/heartbeat"],
     noContext: true,
   },
-  {
-    name: "cli_anything",
-    description: "使用自然语言执行命令行操作。",
-    parameters: {
-      type: "object",
-      properties: {
-        prompt: { type: "string", description: "自然语言命令描述" },
-      },
-      required: ["prompt"],
-    },
-    handler: "cliAnything",
-    aliases: ["/cli"],
-    noContext: false,
-  },
 ];
 
 export function getToolsForLLM() {

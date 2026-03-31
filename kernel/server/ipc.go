@@ -38,7 +38,11 @@ type KernelBusServer struct {
 	
 	// LLM 客户端 (Phase 3B)
 	llmClient        *llm.Client
+	sched            interface {
+		CalculateNextRun(task *db.ScheduledTask) *time.Time
+	}
 }
+
 
 // NewKernelBusServer 创建服务实例。
 func NewKernelBusServer() (*KernelBusServer, error) {
@@ -51,6 +55,14 @@ func NewKernelBusServer() (*KernelBusServer, error) {
 		llmClient: llmClient,
 	}, nil
 }
+
+// SetScheduler 注入调度器实例，避免循环依赖。
+func (s *KernelBusServer) SetScheduler(sched interface {
+	CalculateNextRun(task *db.ScheduledTask) *time.Time
+}) {
+	s.sched = sched
+}
+
 
 // DispatchTask 接收来自 Dart 的任务指令，写入 SQLite 并返回确认。
 func (s *KernelBusServer) DispatchTask(ctx context.Context, req *pb.Task) (*pb.TaskResponse, error) {
@@ -131,7 +143,34 @@ func (s *KernelBusServer) SyncStatus(ctx context.Context, req *pb.StatusUpdate) 
 		return nil, status.Errorf(codes.Internal, "DB update failed: %v", err)
 	}
 
-	// TODO: 记录到 task_run_logs
+	// 1. 记录到 task_run_logs
+	taskLog := db.TaskRunLog{
+		TaskID:    taskID,
+		Status:    statusStr,
+		Output:    req.GetError(),
+		StartedAt: time.Now().UTC().Format(time.RFC3339Nano),
+		EndedAt:   time.Now().UTC().Format(time.RFC3339Nano),
+	}
+	if _, err := db.InsertTaskRunLog(db.GetDB(), taskLog); err != nil {
+		slog.Warn("Failed to insert task run log", "task_id", taskID, "err", err)
+	}
+
+	// 2. 如果任务完成 (DONE)，计算并更新下一次运行时间
+	if req.GetStatus() == pb.TaskStatus_DONE && s.sched != nil {
+		task, err := db.GetTaskByID(db.GetDB(), taskID)
+		if err != nil {
+			slog.Error("Failed to fetch task info for rescheduling", "task_id", taskID, "err", err)
+		} else {
+			nextRun := s.sched.CalculateNextRun(task)
+			if nextRun != nil {
+				nextRunStr := nextRun.UTC().Format(time.RFC3339)
+				if err := db.UpdateTaskNextRun(db.GetDB(), task.ID, nextRunStr); err != nil {
+					slog.Error("Scheduled next run update failed from SyncStatus", "task_id", task.ID, "err", err)
+				}
+				slog.Info("Task rescheduled from SyncStatus", "task_id", task.ID, "next_run", nextRunStr)
+			}
+		}
+	}
 
 	return &pb.Ack{Ok: true, Message: "状态已同步至内核"}, nil
 }

@@ -89,6 +89,7 @@ func main() {
 	// 启动 Go 任务调度器 (Phase 2+)
 	pool := scheduler.NewGroupPool(5) // max 5 concurrent tasks globally
 	sched := scheduler.NewScheduler(pool, srv)
+	srv.SetScheduler(sched) // 注入调度器以支持 SyncStatus 触发重新调度
 	sched.Start(time.Minute) // 对应 SCHEDULER_POLL_INTERVAL = 60000ms
 	defer sched.Stop()
 
