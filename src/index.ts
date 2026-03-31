@@ -1,165 +1,81 @@
-import * as grpc from "@grpc/grpc-js";
-import * as protoLoader from "@grpc/proto-loader";
-import { resolve } from "path";
-import { SandboxRunner } from "./agent/sandbox-runner.js";
-import { logger } from "./logger.js";
-import { ASSISTANT_NAME } from "./config.js";
-// 确保适配器自动注册（目前仅保留协作主体适配器，由其自身注册）
-
 /**
- * GrpcKernelBusClient - 正式 gRPC 客户端连接 Go 内核
+ * CloseClaw 系统主入口 (TS 哑终端层)
+ * 仅负责监听内核指令并分发到沙盒或适配器执行
  */
-class GrpcKernelBusClient {
-  private client: any; // gRPC 动态生成的客户端通常为 any，但我们会通过类型守卫保护调用
-  private readonly protoPath: string;
 
-  constructor() {
-    this.protoPath = resolve(process.cwd(), "proto/messages.proto");
-
-    try {
-      const packageDefinition = protoLoader.loadSync(this.protoPath, {
-        keepCase: true,
-        longs: String,
-        enums: String,
-        defaults: true,
-        oneofs: true,
-      });
-      const protoDescriptor = grpc.loadPackageDefinition(
-        packageDefinition,
-      ) as any;
-      const KernelBus = protoDescriptor.closeclaw.v1.KernelBus;
-
-      const isWindows = process.platform === "win32";
-      const target = isWindows
-        ? "pipe:////./pipe/closeclaw_ipc"
-        : "unix:///tmp/closeclaw.sock";
-
-      this.client = new KernelBus(target, grpc.credentials.createInsecure());
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      logger.error(`[TS Sandbox] Failed to load proto: ${message}`);
-    }
-  }
-
-  start() {
-    const isWindows = process.platform === "win32";
-    const target = isWindows
-      ? "\\\\.\\pipe\\closeclaw_ipc"
-      : "/tmp/closeclaw.sock";
-    logger.info(
-      `[TS Sandbox] Connecting to Go Kernel via ${isWindows ? "Named Pipe" : "Unix Socket"} at ${target}...`,
-    );
-    this.subscribeTasks();
-  }
-
-  private subscribeTasks() {
-    // 调用我们在 proto 中新增的 SubscribeTasks stream
-    const call = this.client.SubscribeTasks({ ok: true, message: "Ready" });
-
-    call.on(
-      "data",
-      async (task: {
-        task_id?: string;
-        id?: string;
-        group_folder?: string;
-        payload?: Buffer;
-        history?: any[];
-        trace?: { trace_id?: string };
-      }) => {
-        const taskId = task.task_id || task.id;
-        if (!taskId) {
-          logger.warn("[TS Sandbox] Received task without ID, ignoring.");
-          return;
-        }
-        logger.info(`[TS Sandbox] Received dispatched task: ${taskId}`);
-
-        const runner = new SandboxRunner(this.client);
-
-        try {
-          const context = {
-            groupFolder: task.group_folder || "global",
-            prompt: task.payload ? task.payload.toString() : "",
-            history: task.history || [],
-            trace_id: task.trace?.trace_id || "ts-" + Date.now(),
-          };
-
-          const responseText = await runner.execute(context);
-          logger.info(`[TS Sandbox] Task ${taskId} execution completed.`);
-
-          await this.syncStatus({
-            task_id: taskId,
-            trace_id: context.trace_id,
-            status: "DONE",
-            result: Buffer.from(responseText),
-          });
-        } catch (err: unknown) {
-          const message = err instanceof Error ? err.message : String(err);
-          logger.error(
-            `[TS Sandbox] Task ${taskId} execution failed: ${message}`,
-          );
-          await this.syncStatus({
-            task_id: taskId,
-            trace_id: task.trace?.trace_id || "unknown",
-            status: "FAILED",
-            error: message,
-          });
-        } finally {
-          await runner.close();
-        }
-      },
-    );
-
-    call.on("error", (err: Error) => {
-      logger.error(`[TS Sandbox] gRPC Stream Error: ${err.message}`);
-      // 指数退避重连
-      setTimeout(() => this.subscribeTasks(), 5000);
-    });
-
-    call.on("status", (status: grpc.StatusObject) => {
-      logger.debug(
-        `[TS Sandbox] gRPC Stream Status: ${JSON.stringify(status)}`,
-      );
-    });
-
-    call.on("end", () => {
-      logger.warn("[TS Sandbox] gRPC Stream ended by server. Reconnecting...");
-      setTimeout(() => this.subscribeTasks(), 5000);
-    });
-  }
-
-  private async syncStatus(update: {
-    task_id: string;
-    trace_id?: string;
-    status: string;
-    result?: Buffer;
-    error?: string;
-  }): Promise<void> {
-    return new Promise((resolve, reject) => {
-      this.client.SyncStatus(update, (err: Error | null, response: any) => {
-        if (err) {
-          logger.error(`[TS Sandbox] SyncStatus report failed: ${err.message}`);
-          reject(err);
-        } else {
-          logger.debug(
-            `[TS Sandbox] Status synced: ${update.task_id} -> ${update.status}`,
-          );
-          resolve(response);
-        }
-      });
-    });
-  }
-}
+import { GrpcKernelBusClient } from "./bus/grpc-client.js";
+import { SandboxManager } from "./sandbox/manager.js";
+import { LLMAdapterRegistry } from "./adapters/registry.js";
+import { logger } from "./logger.js";
+import { config } from "./config.js";
+import { cleanupTmpFiles } from "./utils/fs-cleanup.js";
 
 async function main() {
-  logger.info(
-    `[TS Sandbox] ${ASSISTANT_NAME} Stateless Execution Plane starting...`,
-  );
-  const client = new GrpcKernelBusClient();
-  client.start();
+  logger.info("CloseClaw TS Sandbox Starting...");
+
+  // 1. 初始化沙盒管理器
+  const sandboxManager = new SandboxManager();
+  
+  // 2. 初始化 LLM 适配器注册表
+  const adapterRegistry = new LLMAdapterRegistry();
+
+  // 3. 核心加固 (P031): 初始化 IPC 通讯
+  // 强制使用 Named Pipe (Win) 或 Unix Socket (Unix)，绝不回退到 TCP 127.0.0.1:50051
+  const busClient = new GrpcKernelBusClient({
+    target: process.platform === "win32" 
+      ? `\\\\.\\pipe\\closeclaw_bus` 
+      : `unix:///tmp/closeclaw_bus.sock`
+  });
+
+  try {
+    // 4. 连接内核总线
+    await busClient.connect();
+    logger.info(`Connected to kernel bus via ${busClient.target}`);
+
+    // 5. 注册消息处理器
+    busClient.onMessage(async (msg) => {
+      const { type, payload, traceId } = msg;
+      logger.debug(`[${traceId}] Received message: ${type}`);
+
+      try {
+        switch (type) {
+          case "EXEC_SANDBOX":
+            return await sandboxManager.run(payload, traceId);
+          case "LLM_CHAT":
+            return await adapterRegistry.get(payload.provider).chat(payload.params);
+          case "HEALTH_CHECK":
+            return { status: "OK", version: "0.1.0" };
+          default:
+            throw new Error(`Unknown message type: ${type}`);
+        }
+      } catch (err: any) {
+        logger.error(`[${traceId}] Error processing message: ${err.message}`);
+        return { error: err.message };
+      }
+    });
+
+    // 6. 定期清理临时文件 (P033 定时任务)
+    setInterval(() => {
+      cleanupTmpFiles().catch(err => logger.warn(`[Cleanup] Failed: ${err.message}`));
+    }, 1000 * 60 * 60); // 每小时执行一次
+
+    // 监听关闭信号
+    const gracefulShutdown = async (signal: string) => {
+      logger.info(`Received ${signal}, shutting down gracefully...`);
+      await sandboxManager.close();
+      process.exit(0);
+    };
+
+    process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+    process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+
+  } catch (err: any) {
+    logger.error(`CloseClaw TS Sandbox failed to start: ${err.message}`);
+    process.exit(1);
+  }
 }
 
-main().catch((err: unknown) => {
-  const message = err instanceof Error ? err.message : String(err);
-  logger.error(`[TS Sandbox] Fatal error: ${message}`);
+main().catch((err) => {
+  console.error("Fatal error:", err);
   process.exit(1);
 });

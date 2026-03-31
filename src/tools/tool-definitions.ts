@@ -1,124 +1,68 @@
 /**
- * MCP Tool Definitions (Unified JSON Schema)
+ * 工具定义集合
+ * 统一管理所有 Agent 可用的工具函数描述
  */
 
-export const TOOL_DEFINITIONS = [
-  {
+export const TOOL_DEFINITIONS = {
+  /** 读取文件 */
+  read_file: {
     name: "read_file",
-    description: "读取工作区内的文件内容。支持读取代码、配置文件、日志等。",
+    description: "读取指定路径的文件内容",
     parameters: {
       type: "object",
       properties: {
-        filePath: { type: "string", description: "相对于工作区的文件路径" },
+        path: { type: "string", description: "相对于工作空间的路径" },
       },
-      required: ["filePath"],
+      required: ["path"],
     },
-    handler: "readFile",
-    aliases: ["/read"],
-    noContext: false,
   },
-  {
+  /** 写入文件 */
+  write_file: {
     name: "write_file",
-    description: "将内容写入工作区内的文件。支持创建新文件或覆盖现有文件。",
+    description: "写入内容到指定路径的文件",
     parameters: {
       type: "object",
       properties: {
-        filePath: { type: "string", description: "相对于工作区的文件路径" },
-        content: { type: "string", description: "要写入的文件内容" },
+        path: { type: "string", description: "相对于工作空间的路径" },
+        content: { type: "string", description: "要写入的内容" },
       },
-      required: ["filePath", "content"],
+      required: ["path", "content"],
     },
-    handler: "writeFile",
-    aliases: ["/write"],
-    noContext: false,
   },
-  {
-    name: "fetch_url",
-    description:
-      "抓取指定 URL 的网页内容。支持 HTTP/HTTPS 请求，返回文本内容。",
+  /** 执行代码 */
+  execute_code: {
+    name: "execute_code",
+    description: "在安全沙盒中执行 JavaScript 代码",
     parameters: {
       type: "object",
       properties: {
-        url: { type: "string", description: "要抓取的 URL 地址" },
+        code: { type: "string", description: "要执行的 JS 代码" },
       },
-      required: ["url"],
+      required: ["code"],
     },
-    handler: "fetchUrl",
-    aliases: ["/fetch"],
-    noContext: false,
   },
-  {
-    name: "git_backup",
-    description: "执行 Git 备份：自动 add、commit 当前工作区变更。",
+  /** 列出目录 */
+  list_dir: {
+    name: "list_dir",
+    description: "列出指定目录下的文件和子目录",
     parameters: {
       type: "object",
       properties: {
-        message: {
-          type: "string",
-          description: "提交信息（可选，默认自动生成）",
-        },
+        path: { type: "string", description: "相对于工作空间的路径" },
       },
-      required: [],
+      required: ["path"],
     },
-    handler: "gitBackup",
-    aliases: ["/backup"],
-    noContext: false,
   },
-  {
-    name: "git_sync",
-    description: "执行 Git 同步：pull 最新代码并 push 本地变更。",
+  /** 搜索 Web */
+  search_web: {
+    name: "search_web",
+    description: "使用搜索引擎进行实时搜索",
     parameters: {
       type: "object",
-      properties: {},
-      required: [],
+      properties: {
+        query: { type: "string", description: "搜索关键词" },
+      },
+      required: ["query"],
     },
-    handler: "gitSync",
-    aliases: ["/sync"],
-    noContext: false,
   },
-  {
-    name: "get_status",
-    description: "获取 Agent OS 运行状态，包括内存、工作区、运行时间等信息。",
-    parameters: {
-      type: "object",
-      properties: {},
-      required: [],
-    },
-    handler: "getStatus",
-    aliases: ["/status"],
-    noContext: true,
-  },
-  {
-    name: "heartbeat",
-    description: "执行系统健康检查，验证所有核心组件状态。",
-    parameters: {
-      type: "object",
-      properties: {},
-      required: [],
-    },
-    handler: "heartbeat",
-    aliases: ["/heartbeat"],
-    noContext: true,
-  },
-];
-
-export function getToolsForLLM() {
-  return TOOL_DEFINITIONS.map((tool) => ({
-    name: tool.name,
-    description: tool.description,
-    parameters: tool.parameters,
-  }));
-}
-
-export function findToolByAlias(slashCmd: string) {
-  const normalized = slashCmd.toLowerCase();
-  return (
-    TOOL_DEFINITIONS.find((t) =>
-      t.aliases.some((a) => a.toLowerCase() === normalized),
-    ) || null
-  );
-}
-
-export function findToolByName(name: string) {
-  return TOOL_DEFINITIONS.find((t) => t.name === name) || null;
-}
+};
