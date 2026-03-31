@@ -60,7 +60,7 @@ groups/*/CONTEXT.md
 .gitnexus/
 .codebuddy/
 .codebuddy-cn/
-.pearai/
+.codebuddy-cn/
 .catpawai/
 .gemini-cli/
 .codex/
@@ -68,7 +68,6 @@ groups/*/CONTEXT.md
 .verdent/
 .opencode/
 .cascade/
-.kimi-closeclaw/
 .zed/
 .codeflicker/
 .codearts/
