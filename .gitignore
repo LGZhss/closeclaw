@@ -52,6 +52,7 @@ groups/*/CONTEXT.md
 !.arts/
 !.claude/
 !.jules/
+!.workbuddy/
 
 # 🔴 仍保持忽略或归档的主体
 .gitnexus/
@@ -115,7 +116,6 @@ logs-*.zip
 # 8. 专项治理与测试临时文件 (Governance & Test Junk)
 # -----------------------------------------------------------------------------
 coverage/
-.workbuddy/
 /config/mcporter.json
 
 # -----------------------------------------------------------------------------
