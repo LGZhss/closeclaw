@@ -7,6 +7,7 @@ import { spawn, ChildProcess } from "child_process";
 import os from "os";
 import path from "path";
 import fs from "fs";
+import fsPromises from "fs/promises";
 import { logger } from "../logger.js";
 import { config } from "../config.js";
 
@@ -52,9 +53,9 @@ export class ProcessExecutor {
     const tempFile = path.join(os.tmpdir(), `temp_${executionId}.js`);
 
     try {
-      // 写入代码到临时文件 (异步)
+      // 写入代码到临时文件，使用异步操作避免阻塞事件循环 (P033 优化)
       // eslint-disable-next-line security/detect-non-literal-fs-filename
-      await fs.promises.writeFile(tempFile, code);
+      await fsPromises.writeFile(tempFile, code);
 
       // 安全地使用 spawn 执行 node 命令
       return await this._executeProcess(
@@ -69,12 +70,12 @@ export class ProcessExecutor {
       );
       throw error;
     } finally {
-      // 核心加固：使用 finally 确保即使在 _executeProcess 抛错时也会清理
+      // 核心加固 (P031): 使用 finally 确保即使在 _executeProcess 抛错时也会清理
       try {
         // eslint-disable-next-line security/detect-non-literal-fs-filename
         if (fs.existsSync(tempFile)) {
           // eslint-disable-next-line security/detect-non-literal-fs-filename
-          await fs.promises.unlink(tempFile);
+          await fsPromises.unlink(tempFile);
         }
       } catch (e) {
         logger.warn(`[ProcessExecutor] 清理临时文件失败: ${tempFile}`);
@@ -201,15 +202,16 @@ export class ProcessExecutor {
         // 移除进程记录
         this.runningProcesses.delete(executionId!);
 
-        // 补齐：在进程错误时也尝试清理临时文件 (Item 8)
+        // 补齐 (P031): 在进程错误时也尝试清理临时文件
         const argsStr = args.join(" ");
         if (argsStr.includes("temp_")) {
           const tempPath = args.find((a) => a.includes("temp_"));
           // eslint-disable-next-line security/detect-non-literal-fs-filename
           if (tempPath && fs.existsSync(tempPath)) {
             try {
+              // 使用异步 unlink 优化 (P033)
               // eslint-disable-next-line security/detect-non-literal-fs-filename
-              fs.unlinkSync(tempPath);
+              fsPromises.unlink(tempPath).catch(() => {});
             } catch {}
           }
         }
