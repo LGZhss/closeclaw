@@ -7,7 +7,6 @@ import { GrpcKernelBusClient } from "./bus/grpc-client.js";
 import { SandboxManager } from "./sandbox/manager.js";
 import { LLMAdapterRegistry } from "./adapters/registry.js";
 import { logger } from "./logger.js";
-import { config } from "./config.js";
 import { cleanupTmpFiles } from "./utils/fs-cleanup.js";
 
 async function main() {
@@ -24,8 +23,8 @@ async function main() {
   const busClient = new GrpcKernelBusClient({
     target:
       process.platform === "win32"
-        ? `\\\\.\\pipe\\closeclaw_bus`
-        : `unix:///tmp/closeclaw_bus.sock`,
+        ? "\\\\.\\pipe\\closeclaw_bus"
+        : "unix:///tmp/closeclaw_bus.sock",
   });
 
   try {
@@ -50,19 +49,20 @@ async function main() {
             return { status: "OK", version: "0.1.0" };
           default:
             throw new Error(`Unknown message type: ${type}`);
-        }
-      } catch (err: any) {
-        logger.error(`[${traceId}] Error processing message: ${err.message}`);
-        return { error: err.message };
+        }    } catch (e: unknown) {
+              const err = e instanceof Error ? e : new Error(String(e));
+              logger.error(`[${traceId}] Error processing message: ${err.message}`);
+              return { error: err.message };
       }
     });
 
     // 6. 定期清理临时文件 (P033 定时任务)
     setInterval(
       () => {
-        cleanupTmpFiles().catch((err) =>
-          logger.warn(`[Cleanup] Failed: ${err.message}`),
-        );
+              cleanupTmpFiles().catch((e: unknown) => {
+                  const err = e instanceof Error ? e : new Error(String(e));
+                  logger.warn(`[Cleanup] Failed: ${err.message}`);
+        });
       },
       1000 * 60 * 60,
     ); // 每小时执行一次
@@ -76,7 +76,8 @@ async function main() {
 
     process.on("SIGINT", () => gracefulShutdown("SIGINT"));
     process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
-  } catch (err: any) {
+  } catch (e: unknown) {
+          const err = e instanceof Error ? e : new Error(String(e));
     logger.error(`CloseClaw TS Sandbox failed to start: ${err.message}`);
     process.exit(1);
   }
