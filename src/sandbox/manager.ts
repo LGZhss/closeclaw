@@ -57,38 +57,25 @@ export class SandboxManager {
     try {
       let result: ExecutionResult;
 
-      if (params.type === "code") {
-        // 执行 JavaScript 代码
-        result = await this.executor.execute(params.content, {
-          timeout: config.sandbox.timeout,
-        });
-      } else if (params.type === "cmd") {
-        // 执行 Shell 命令
-        result = await this.executor.executeCommand(params.content, {
-          timeout: config.sandbox.timeout,
-        });
-      } else {
-        throw new Error(
-          `Unsupported sandbox type: ${(params as { type: string }).type}`,
-        );
+                  if (params.type === "code") {
+                      result = await this.executor.execute(params.content, {
+                                  timeout: config.sandbox.timeout,
+                      });
+            } else if (params.type === "cmd") {
+                      result = await this.executor.executeCommand(params.content, {
+                                  timeout: config.sandbox.timeout,
+                      });
+            } else {
+                      throw new Error(`Unsupported sandbox type: ${(params as { type: string }).type}`);
+            }
+
+            const duration = Date.now() - startTime;
+            const safeStdout = result.stdout.length > 500
+              ? `${result.stdout.slice(0, 500)}... [truncated]`
+                      : result.stdout;
+
+            logger.info(`[Sandbox] Execution finished (${traceId}) in ${duration}ms, exitCode: ${result.exitCode}, stdout: ${safeStdout}`);
       }
-
-      const duration = Date.now() - startTime;
-
-      // P033: 高性能审计日志实现
-      // 使用截断逻辑防止日志因 stdout 过大而溢出，仅对 traceId、退出码和截断后的输出进行基础记录
-      const safeStdout =
-        result.stdout.length > 500
-          ? result.stdout.slice(0, 500) + "... [truncated]"
-          : result.stdout;
-
-      logger.info(
-        `[Sandbox] Execution finished (${traceId}) in ${duration}ms, exitCode: ${result.exitCode}`,
-      );
-      if (result.stderr) {
-        logger.warn(
-          `[Sandbox] Execution stderr (${traceId}): ${result.stderr}`,
-        );
       }
 
       return result;
@@ -105,7 +92,7 @@ export class SandboxManager {
    * 强制停止特定任务
    * @param traceId 追踪 ID
    */
-  async stop(traceId: string): Promise<boolean> {
+  stop(traceId: string): Promise<boolean> {
     logger.warn(`[Sandbox] Force stopping execution (${traceId})`);
     // 注意: 当前 ProcessExecutor.stop 需要 executionId 而非 traceId
     // 这里需要后续进一步完善 traceId 与 executionId 的映射，目前仅作示意
