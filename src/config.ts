@@ -14,7 +14,14 @@ export const MAX_CONCURRENT_CONTAINERS = Math.max(
   parseInt(process.env.MAX_CONCURRENT_CONTAINERS || "5", 10) || 5,
 );
 
-export const TRIGGER_PATTERN = new RegExp(`^@${ASSISTANT_NAME}\\b`, "i");
+function escapeRegExp(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+export const TRIGGER_PATTERN = new RegExp(
+  `^@${escapeRegExp(ASSISTANT_NAME)}\\b`,
+  "i",
+);
 
 export const config = {
   sandbox: {

@@ -30,7 +30,9 @@ export async function cliAnything(
   try {
     const safeDir = resolveSafePath(workingDir);
 
-    logger.info(`[CLI-Anything] 执行命令: ${prompt} 在目录: ${safeDir}`);
+    const safePrompt =
+      prompt.length > 80 ? prompt.slice(0, 80) + "..." : prompt;
+    logger.info(`[CLI-Anything] 执行命令: ${safePrompt} 在目录: ${safeDir}`);
 
     const result = await executeCliAnything(prompt, safeDir, timeout);
 
@@ -77,7 +79,7 @@ async function executeCliAnything(
 
   const baseCommand = command.trim().split(/\s+/)[0];
 
-  if (/[;&|`<>$]/.test(command)) {
+  if (/[;&|`<>$()\n\r{}\^]/.test(command)) {
     throw new Error(`检测到非法的 shell 元字符: ${command}`);
   }
 
@@ -100,11 +102,16 @@ async function executeCliAnything(
   }
 
   const dangerousPatterns = [
-    /rm\s+-rf\s+\//,
+    /rm\s+-rf\s+/,
+    /rm\s+-r\s+~/,
     /format/,
     /del\s+\/s/,
     /shutdown/,
     /reboot/,
+    /mkfs/,
+    /dd\s+if=/,
+    />\s*\/dev\//,
+    /find\s+.*-exec\s+rm/,
   ];
 
   for (const pattern of dangerousPatterns) {

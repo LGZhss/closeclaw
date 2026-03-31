@@ -8,86 +8,12 @@ import { logger } from "../logger.js";
 export const WORKSPACE = process.cwd();
 
 /**
- * 执行系统命令（PowerShell 风格）
- */
-export async function executeSystemCommand(command: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const cmd = process.platform === "win32" ? "powershell.exe" : "/bin/sh";
-    const args =
-      process.platform === "win32" ? ["-Command", command] : ["-c", command];
-
-    const child: any = spawn(cmd, args, { stdio: "pipe" });
-    let stdout = "";
-    let stderr = "";
-
-    child.stdout.on("data", (data: Buffer) => (stdout += data.toString()));
-    child.stderr.on("data", (data: Buffer) => (stderr += data.toString()));
-
-    child.on("close", (code: number | null) => {
-      if (code === 0) {
-        resolve(stdout);
-      } else {
-        reject(new Error(stderr || `Command failed with code ${code}`));
-      }
-    });
-  });
-}
-
-/**
- * 异步执行命令（安全防注入版本）
- */
-export async function execAsync(
-  command: string,
-): Promise<{ stdout: string; stderr: string }> {
-  return new Promise((resolve, reject) => {
-    // 简单解析命令和参数（支持双引号包裹的参数）
-    const parts = command.match(/(?:[^\s"]+|"[^"]*")+/g) || [];
-    if (parts.length === 0) {
-      return reject(new Error("Empty command"));
-    }
-
-    const executable = parts[0] as string;
-    const args = parts.slice(1).map((arg) => {
-      // 如果是被引号包裹的，则去掉引号并处理其中的转义字符
-      if (arg.startsWith('"') && arg.endsWith('"')) {
-        return arg.slice(1, -1).replace(/\\([\s\S])/g, "$1");
-      }
-      return arg;
-    });
-
-    // nosemgrep
-    const child: any = spawn(executable, args, { stdio: "pipe", shell: false });
-    let stdout = "";
-    let stderr = "";
-
-    child.stdout.on("data", (data: Buffer) => (stdout += data.toString()));
-    child.stderr.on("data", (data: Buffer) => (stderr += data.toString()));
-
-    child.on("close", (code: number | null) => {
-      if (code === 0) {
-        resolve({ stdout, stderr });
-      } else {
-        const error: any = new Error(
-          stderr || `Process exited with code ${code}`,
-        );
-        error.code = code;
-        error.cmd = command;
-        reject(error);
-      }
-    });
-
-    child.on("error", (error: any) => {
-      reject(error);
-    });
-  });
-}
-
-/**
  * 读取工作区文件
  */
 export async function readWsFile(filePath: string): Promise<string> {
   const fullPath = resolveSafePath(filePath);
   try {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
     return await fsPromises.readFile(fullPath, "utf8");
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
@@ -97,16 +23,46 @@ export async function readWsFile(filePath: string): Promise<string> {
 }
 
 /**
+ * 受保护的路径列表 — 禁止通过工具写入
+ */
+const PROTECTED_PATHS = [
+  ".git",
+  ".env",
+  ".env.local",
+  ".env.production",
+  ".env.development",
+  "package.json",
+  "package-lock.json",
+  "tsconfig.json",
+  ".gitignore",
+  ".gitattributes",
+  ".npmrc",
+  "node_modules",
+];
+
+/**
  * 写入工作区文件
  */
 export async function writeWsFile(
   filePath: string,
   content: string,
 ): Promise<string> {
+  const normalized = filePath.replace(/\\/g, "/").replace(/^\.\/+/, "");
+  for (const protectedPath of PROTECTED_PATHS) {
+    if (
+      normalized === protectedPath ||
+      normalized.startsWith(protectedPath + "/")
+    ) {
+      return `Access denied: ${filePath} is a protected path`;
+    }
+  }
+
   const fullPath = resolveSafePath(filePath);
   try {
     const dir = path.dirname(fullPath);
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
     await fsPromises.mkdir(dir, { recursive: true });
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
     await fsPromises.writeFile(fullPath, content, "utf8");
     return "OK";
   } catch (error: unknown) {
@@ -117,93 +73,152 @@ export async function writeWsFile(
 }
 
 /**
- * 抓取 URL 内容
+ * 抓取 URL 内容（含 SSRF 防护）
  */
+const BLOCKED_HOSTNAME_PATTERNS = [
+  /^127\.\d+\.\d+\.\d+$/,
+  /^10\.\d+\.\d+\.\d+$/,
+  /^172\.(1[6-9]|2\d|3[01])\.\d+\.\d+$/,
+  /^192\.168\.\d+\.\d+$/,
+  /^169\.254\.\d+\.\d+$/,
+  /^0\.0\.0\.0$/,
+  /^localhost$/i,
+  /^\[::1\]$/,
+];
+
+const MAX_FETCH_SIZE = 1_048_576; // 1MB
+
 export async function fetchUrl(url: string): Promise<string> {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new Error(`Invalid URL: ${url}`);
+  }
+
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    throw new Error(`URL scheme not allowed: ${parsed.protocol}`);
+  }
+
+  if (BLOCKED_HOSTNAME_PATTERNS.some((p) => p.test(parsed.hostname))) {
+    throw new Error(
+      `Access to private/internal network is blocked: ${parsed.hostname}`,
+    );
+  }
+
   try {
     const response = await fetch(url);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return await response.text();
+
+    const contentLength = response.headers.get("content-length");
+    if (contentLength && parseInt(contentLength, 10) > MAX_FETCH_SIZE) {
+      throw new Error("Response too large (max 1MB)");
+    }
+
+    const text = await response.text();
+    if (text.length > MAX_FETCH_SIZE) {
+      throw new Error("Response body too large (max 1MB)");
+    }
+    return text;
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
-    logger.error(`Fetch error ${url}: ${message}`);
+    if (error instanceof TypeError) {
+      throw new Error(`Fetch failed: ${error.message}`);
+    }
     throw error;
   }
 }
 
 /**
- * 执行 Git 操作
+ * 执行 Git 操作 (引入 Renovate 风格的自动重试机制)
  */
 export async function runGit(
   action: "backup" | "sync",
   message?: string,
+  retries = 3,
 ): Promise<string> {
-  try {
-    if (action === "backup") {
-      const msg = message || `Backup at ${new Date().toISOString()}`;
-      // 使用 spawn 直接调用 git，不经过 shell
-      return new Promise((resolve) => {
-        const add = spawn("git", ["add", "."], { cwd: WORKSPACE });
-        add.on("close", (code) => {
-          if (code !== 0) return resolve("❌ git add failed");
-          const commit = spawn("git", ["commit", "-m", msg], {
-            cwd: WORKSPACE,
-          });
-          commit.on("close", (c) => {
-            if (c === 0) resolve("✅ Backup successful");
-            else resolve(`❌ git commit failed (code ${c})`);
-          });
-        });
-      });
-    } else {
-      return new Promise((resolve) => {
-        const pull = spawn("git", ["pull"], { cwd: WORKSPACE });
-        pull.on("close", (code) => {
-          if (code !== 0) return resolve("❌ git pull failed");
-          const push = spawn("git", ["push"], { cwd: WORKSPACE });
-          push.on("close", (c) => {
-            if (c === 0) resolve("✅ Sync successful");
-            else resolve(`❌ git push failed (code ${c})`);
+  const attempt = async (count: number): Promise<string> => {
+    try {
+      if (action === "backup") {
+        const msg = message || `Backup at ${new Date().toISOString()}`;
+        return new Promise((resolve) => {
+          const add = spawn("git", ["add", "."], { cwd: WORKSPACE });
+          add.on("close", (code) => {
+            if (code !== 0) return resolve("❌ git add failed");
+            const commit = spawn("git", ["commit", "-m", msg], {
+              cwd: WORKSPACE,
+            });
+            commit.on("close", (c) => {
+              if (c === 0) resolve("✅ Backup successful");
+              else resolve(`❌ git commit failed (code ${c})`);
+            });
           });
         });
-      });
+      } else {
+        return new Promise((resolve) => {
+          const pull = spawn("git", ["pull"], { cwd: WORKSPACE });
+          pull.on("close", (code) => {
+            if (code !== 0) return resolve("❌ git pull failed");
+            const push = spawn("git", ["push"], { cwd: WORKSPACE });
+            push.on("close", (c) => {
+              if (c === 0) resolve("✅ Sync successful");
+              else resolve(`❌ git push failed (code ${c})`);
+            });
+          });
+        });
+      }
+    } catch (error: unknown) {
+      if (count > 0) {
+        const delay = (4 - count) * 2000;
+        logger.warn(
+          `Git operation failed, retrying in ${delay}ms... (${count} retries left)`,
+        );
+        await new Promise((r) => setTimeout(r, delay));
+        return attempt(count - 1);
+      }
+      const errMessage = error instanceof Error ? error.message : String(error);
+      logger.error(`Git error after retries: ${errMessage}`);
+      return `❌ Git failed: ${errMessage}`;
     }
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
-    logger.error(`Git error: ${message}`);
-    return `❌ Git failed: ${message}`;
-  }
+  };
+
+  return attempt(retries);
 }
 
 /**
  * 安全路径解析，防止目录穿越 (Item 10 加固)
+ * 采用 Deno 风格的 "Partial Canonicalization" 模式：
+ * 1. 尝试对完整路径进行物理还原。
+ * 2. 如果文件不存在，则递归向上寻找已存在的父目录进行物理还原，再拼接剩余部分。
+ * 3. 最终校验物理路径是否在工作区内。
  */
-function isPathInside(target: string, parent: string): boolean {
-  if (target === parent) return true;
-  const safeParent = parent.endsWith(path.sep) ? parent : parent + path.sep;
-  return target.startsWith(safeParent);
+export function resolveSafePath(userPath: string): string {
+  const workspaceRoot = path.resolve(WORKSPACE);
+  // eslint-disable-next-line security/detect-non-literal-fs-filename
+  const realWorkspace = fs.realpathSync.native(workspaceRoot);
+
+  const getRealCapture = (p: string): string => {
+    try {
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
+      return fs.realpathSync.native(p);
+    } catch {
+      const parent = path.dirname(p);
+      if (parent === p) return p; // 已到达根目录
+      const realParent = getRealCapture(parent);
+      return path.join(realParent, path.basename(p));
+    }
+  };
+
+  const resolvedPath = path.resolve(workspaceRoot, userPath);
+  const realTarget = getRealCapture(resolvedPath);
+
+  if (!isPathInside(realTarget, realWorkspace)) {
+    throw new Error(`Access denied: path is outside workspace (${userPath})`);
+  }
+
+  return realTarget;
 }
 
-export function resolveSafePath(userPath: string): string {
-  try {
-    const resolvedPath = path.resolve(WORKSPACE, userPath);
-    // 物理还原真实路径 (处理符号链接绕过)
-    const realWorkspace = path.resolve(fs.realpathSync.native(WORKSPACE));
-    const realTarget = path.resolve(fs.realpathSync.native(resolvedPath));
-
-    if (!isPathInside(realTarget, realWorkspace)) {
-      throw new Error(`Access denied: path is outside workspace (${userPath})`);
-    }
-    return realTarget;
-  } catch (err: unknown) {
-    if (err instanceof Error && err.message.startsWith("Access denied")) {
-      throw err;
-    }
-    // 如果文件尚不存在，fs.realpathSync 可能抛错，此时回退到基础路径校验
-    const resolvedPath = path.resolve(WORKSPACE, userPath);
-    if (!isPathInside(resolvedPath, WORKSPACE)) {
-      throw new Error(`Access denied: path is outside workspace (${userPath})`);
-    }
-    return resolvedPath;
-  }
+function isPathInside(target: string, parent: string): boolean {
+  const relative = path.relative(parent, target);
+  return !relative.startsWith("..") && !path.isAbsolute(relative);
 }

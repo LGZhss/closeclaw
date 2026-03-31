@@ -24,9 +24,9 @@ var (
 // 主要供测试和 Benchmark 使用，生产环境应使用 InitDB。
 func OpenDB(storeDir string) (*sql.DB, error) {
 	dbPath := filepath.Join(storeDir, "messages.db")
-	// SQLite WAL 模式：读写并发互不阻塞
+	// SQLite WAL 模式：读写并发互不阻塞 (引入 PocketBase 的级联高维并发 PRAGMAs)
 	dsn := fmt.Sprintf(
-		"%s?_journal_mode=WAL&_synchronous=NORMAL&_busy_timeout=5000&_foreign_keys=ON",
+		"%s?_journal_mode=WAL&_synchronous=NORMAL&_busy_timeout=10000&_foreign_keys=ON&_temp_store=MEMORY&_cache_size=-32000&_journal_size_limit=200000000",
 		dbPath,
 	)
 	db, err := sql.Open("sqlite3", dsn)

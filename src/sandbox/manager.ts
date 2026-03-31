@@ -91,7 +91,9 @@ export class SandboxManager {
       });
 
       // 使用子进程执行命令
-      logger.info(`[Sandbox] 尝试使用子进程执行命令: ${command}`);
+      const safeCmd =
+        command.length > 50 ? command.slice(0, 50) + "..." : command;
+      logger.info(`[Sandbox] 尝试使用子进程执行命令: ${safeCmd}`);
       const result = await this.executors.process.executeCommand(
         command,
         options,

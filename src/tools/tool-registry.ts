@@ -8,13 +8,7 @@ import {
   findToolByName,
 } from "./tool-definitions.js";
 import { logger } from "../logger.js";
-import {
-  executeSystemCommand,
-  readWsFile,
-  writeWsFile,
-  fetchUrl,
-  runGit,
-} from "../utils/utils.js";
+import { readWsFile, writeWsFile, fetchUrl, runGit } from "../utils/utils.js";
 import { cliAnything } from "./cli-anything.js";
 
 export class ToolRegistry {
@@ -26,7 +20,6 @@ export class ToolRegistry {
   }
 
   private _bindHandlers() {
-    this.handlers.set("execCommand", this.execCommand.bind(this));
     this.handlers.set("readFile", this.readFile.bind(this));
     this.handlers.set("writeFile", this.writeFile.bind(this));
     this.handlers.set("fetchUrl", this.fetchUrl.bind(this));
@@ -88,13 +81,10 @@ export class ToolRegistry {
       }
     }
 
-    if (tool.name === "execute_command") {
-      return { command: args.join(" ") };
-    }
-
     const result: any = {};
     propNames.forEach((prop, i) => {
       if (args[i] !== undefined) {
+        // eslint-disable-next-line security/detect-object-injection
         result[prop] = args[i];
       }
     });
@@ -102,11 +92,6 @@ export class ToolRegistry {
   }
 
   // ============ 工具实现 ============
-
-  private async execCommand({ command }: any) {
-    if (!command) return "用法：/exec <PowerShell命令>";
-    return await executeSystemCommand(command);
-  }
 
   private async readFile({ filePath }: any) {
     if (!filePath) return "用法：/read <相对工作区路径>";

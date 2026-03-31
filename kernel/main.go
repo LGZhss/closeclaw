@@ -33,7 +33,7 @@ func loadEnv(path string) {
 		parts := strings.SplitN(line, "=", 2)
 		if len(parts) == 2 {
 			key := strings.TrimSpace(parts[0])
-			val := strings.TrimSpace(parts[1])
+			val := strings.Trim(strings.TrimSpace(parts[1]), `'"`)
 			os.Setenv(key, val)
 		}
 	}

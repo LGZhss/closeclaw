@@ -4,21 +4,6 @@
 
 export const TOOL_DEFINITIONS = [
   {
-    name: "execute_command",
-    description:
-      "在系统终端执行 PowerShell 命令。用于运行脚本、管理进程、安装依赖等系统操作。",
-    parameters: {
-      type: "object",
-      properties: {
-        command: { type: "string", description: "要执行的 PowerShell 命令" },
-      },
-      required: ["command"],
-    },
-    handler: "execCommand",
-    aliases: ["/exec"],
-    noContext: false,
-  },
-  {
     name: "read_file",
     description: "读取工作区内的文件内容。支持读取代码、配置文件、日志等。",
     parameters: {

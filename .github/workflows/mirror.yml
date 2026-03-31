@@ -15,6 +15,8 @@ on:
 jobs:
   sync-mirrors:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -25,7 +27,7 @@ jobs:
 
 
       - name: Mirror to Gitee
-        uses: Yikun/hub-mirror-action@master
+        uses: Yikun/hub-mirror-action@v1.5
         with:
           src: github/LGZhss
           dst: gitee/lgzhss
@@ -65,20 +67,7 @@ jobs:
           git push origin 'refs/heads/sentinel/*' --force || true
           git push origin 'refs/heads/vulnerability/*' --force || true
           
-          # 4. 自动为拉回的分支创建 PR (如果不存在)
-          for branch in $(git branch -r | grep 'gitlab/sentinel/\|gitlab/vulnerability/' | sed 's/gitlab\///'); do
-            echo "Processing AI branch: $branch"
-            # 检查 PR 是否已存在
-            PR_EXISTS=$(gh pr list --head "$branch" --json number --jq '.[0].number')
-            if [ -z "$PR_EXISTS" ]; then
-              echo "Creating PR for $branch..."
-              gh pr create --base main --head "$branch" \
-                --title "🤖 AI Fix from JihuLab: $branch" \
-                --body "Automated synchronization of vulnerability resolution from JihuLab AI Agent." || true
-            else
-              echo "PR already exists for $branch (PR #$PR_EXISTS)"
-            fi
-          done
+          # 4. 自动创建 PR 已移除（安全加固：防止外部分支注入和无审核合并）
 
           # 5. 推送 GitHub main 到 JihuLab (保持镜像更新)
           echo "Mirroring main to JihuLab..."

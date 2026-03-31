@@ -21,6 +21,9 @@ export interface ExecutionOptions {
   cwd?: string;
 }
 
+/** 沙盒代码最大允许大小 */
+const MAX_CODE_SIZE = 10_240; // 10KB
+
 export class ProcessExecutor {
   private runningProcesses: Map<string, ChildProcess>;
 
@@ -38,23 +41,39 @@ export class ProcessExecutor {
     code: string,
     options: ExecutionOptions = {},
   ): Promise<ExecutionResult> {
+    if (code.length > MAX_CODE_SIZE) {
+      throw new Error(
+        `Code too large: ${code.length} bytes (max ${MAX_CODE_SIZE})`,
+      );
+    }
+
     const executionId = `exec_${Date.now()}_${Math.random().toString(36).substring(2, 11)}_${process.hrtime.bigint()}`;
     const timeout = options.timeout || config.sandbox.timeout;
     const tempFile = path.join(os.tmpdir(), `temp_${executionId}.js`);
 
     try {
       // 写入代码到临时文件 (异步)
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       await fs.promises.writeFile(tempFile, code);
 
       // 安全地使用 spawn 执行 node 命令
-      return await this._executeProcess("node", [tempFile], { timeout }, executionId);
+      return await this._executeProcess(
+        "node",
+        [tempFile],
+        { timeout },
+        executionId,
+      );
     } catch (error) {
-      logger.error(`[ProcessExecutor] 执行失败: ${error instanceof Error ? error.message : String(error)}`);
+      logger.error(
+        `[ProcessExecutor] 执行失败: ${error instanceof Error ? error.message : String(error)}`,
+      );
       throw error;
     } finally {
       // 核心加固：使用 finally 确保即使在 _executeProcess 抛错时也会清理
       try {
+        // eslint-disable-next-line security/detect-non-literal-fs-filename
         if (fs.existsSync(tempFile)) {
+          // eslint-disable-next-line security/detect-non-literal-fs-filename
           await fs.promises.unlink(tempFile);
         }
       } catch (e) {
@@ -164,8 +183,10 @@ export class ProcessExecutor {
           exitCode,
         };
 
+        const safeCmd =
+          displayCmd.length > 50 ? displayCmd.slice(0, 50) + "..." : displayCmd;
         logger.debug(
-          `[ProcessExecutor] 命令执行完成: ${displayCmd}，退出码: ${exitCode}`,
+          `[ProcessExecutor] 命令执行完成: ${safeCmd}，退出码: ${exitCode}`,
         );
         resolve(result);
       });
@@ -184,8 +205,10 @@ export class ProcessExecutor {
         const argsStr = args.join(" ");
         if (argsStr.includes("temp_exec_")) {
           const tempPath = args.find((a) => a.includes("temp_exec_"));
+          // eslint-disable-next-line security/detect-non-literal-fs-filename
           if (tempPath && fs.existsSync(tempPath)) {
             try {
+              // eslint-disable-next-line security/detect-non-literal-fs-filename
               fs.unlinkSync(tempPath);
             } catch {}
           }
