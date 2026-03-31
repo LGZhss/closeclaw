@@ -1,4 +1,5 @@
 ## 2024-05-24 - Path Traversal bypass in Protected Paths Check
+
 **Vulnerability:** The application attempts to block access to protected files (like `.env` and `package.json`) in `readWsFile` and `writeWsFile` by checking `filePath.startsWith`. However, it does not normalize the paths with `path.resolve` or `path.normalize` before checking against `PROTECTED_PATHS`. This allows an attacker to bypass the protection using path traversal techniques like `src/../.env`.
 **Learning:** Basic string replacement (`.replace(/\\/g, "/").replace(/^\.\/+/, "")`) is insufficient for sanitizing file paths against traversal bypasses. Path segments like `..` must be resolved before any prefix checking occurs.
 **Prevention:** Always use `path.resolve` or `path.normalize` on the user input relative to the base directory before performing path-based security checks against a blocklist.
