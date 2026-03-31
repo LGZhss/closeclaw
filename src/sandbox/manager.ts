@@ -68,7 +68,9 @@ export class SandboxManager {
           timeout: config.sandbox.timeout,
         });
       } else {
-              throw new Error(`Unsupported sandbox type: ${(params as { type: string }).type}`);
+        throw new Error(
+          `Unsupported sandbox type: ${(params as { type: string }).type}`,
+        );
       }
 
       const duration = Date.now() - startTime;
@@ -91,7 +93,7 @@ export class SandboxManager {
 
       return result;
     } catch (e: unknown) {
-            const error = e instanceof Error ? e : new Error(String(e));
+      const error = e instanceof Error ? e : new Error(String(e));
       logger.error(`[Sandbox] Execution failed (${traceId}): ${error.message}`);
       throw error;
     } finally {
