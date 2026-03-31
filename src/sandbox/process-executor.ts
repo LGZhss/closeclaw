@@ -64,7 +64,7 @@ export class ProcessExecutor {
         { timeout },
         executionId,
       );
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error(
         `[ProcessExecutor] 执行失败: ${error instanceof Error ? error.message : String(error)}`,
       );
@@ -75,8 +75,9 @@ export class ProcessExecutor {
         // eslint-disable-next-line security/detect-non-literal-fs-filename
         if (fs.existsSync(tempFile)) {
           // eslint-disable-next-line security/detect-non-literal-fs-filename
-          await fsPromises.unlink(tempFile);
+                  await fsPromises.unlink(tempFile);
         }
+      } catch (e: unknown) {
       } catch (e) {
         logger.warn(`[ProcessExecutor] 清理临时文件失败: ${tempFile}`);
       }
@@ -155,20 +156,19 @@ export class ProcessExecutor {
           childProcess.kill();
           reject(new Error(`命令执行超时: ${timeout}ms`));
         }, timeout);
-      }
-
+ 
       // 捕获标准输出
-      childProcess.stdout!.on("data", (data) => {
+          childProcess.stdout!.on("data", (data: any) => {
         stdout += data.toString();
       });
 
       // 捕获标准错误
-      childProcess.stderr!.on("data", (data) => {
+          childProcess.stderr!.on("data", (data: any) => {
         stderr += data.toString();
       });
 
       // 进程结束
-      childProcess.on("close", (exitCode) => {
+          childProcess.on("close", (exitCode: number | null) => {
         // 清除超时
         if (timeoutId) {
           clearTimeout(timeoutId);
@@ -193,7 +193,7 @@ export class ProcessExecutor {
       });
 
       // 进程错误
-      childProcess.on("error", (error) => {
+          childProcess.on("error", (error: Error) => {
         // 清除超时
         if (timeoutId) {
           clearTimeout(timeoutId);
@@ -227,7 +227,7 @@ export class ProcessExecutor {
    * @param executionId 执行ID
    * @returns 是否成功停止
    */
-  async stop(executionId: string): Promise<boolean> {
+    stop(executionId: string): Promise<boolean> {
     const childProcess = this.runningProcesses.get(executionId);
     if (!childProcess) {
       return false;
