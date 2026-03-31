@@ -6,11 +6,11 @@
 
 ## 设计决策
 
-| 决策项 | 选择 | 理由 |
-|--------|------|------|
+| 决策项                      | 选择                 | 理由                                                                             |
+| --------------------------- | -------------------- | -------------------------------------------------------------------------------- |
 | `executeSystemCommand` 处置 | **方案 A: 直接删除** | `cli-anything` 已提供更安全的替代方案，`/exec` 工具零验证直通 shell 是最高危漏洞 |
-| `mirror.yml` 自动 PR | **废除** | 存在命令注入和无审核合并风险，改为仅单向镜像推送 |
-| Named Pipe ACL | **添加安全描述符** | 限制为当前用户 SID，利用已有的 go-winio 依赖 |
+| `mirror.yml` 自动 PR        | **废除**             | 存在命令注入和无审核合并风险，改为仅单向镜像推送                                 |
+| Named Pipe ACL              | **添加安全描述符**   | 限制为当前用户 SID，利用已有的 go-winio 依赖                                     |
 
 ---
 
@@ -66,7 +66,9 @@ export async function fetchUrl(url: string): Promise<string> {
     /^\[::1\]$/,
   ];
   if (blockedPatterns.some((p) => p.test(hostname))) {
-    throw new Error(`Access to private/internal network is blocked: ${hostname}`);
+    throw new Error(
+      `Access to private/internal network is blocked: ${hostname}`,
+    );
   }
 
   // 响应大小限制 1MB
@@ -106,10 +108,16 @@ const PROTECTED_PATHS = [
   "node_modules",
 ];
 
-export async function writeWsFile(filePath: string, content: string): Promise<string> {
+export async function writeWsFile(
+  filePath: string,
+  content: string,
+): Promise<string> {
   const normalized = filePath.replace(/\\/g, "/").replace(/^\.\/+/, "");
   for (const protectedPath of PROTECTED_PATHS) {
-    if (normalized === protectedPath || normalized.startsWith(protectedPath + "/")) {
+    if (
+      normalized === protectedPath ||
+      normalized.startsWith(protectedPath + "/")
+    ) {
       return `Access denied: ${filePath} is a protected path`;
     }
   }
@@ -126,7 +134,10 @@ function escapeRegExp(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-export const TRIGGER_PATTERN = new RegExp(`^@${escapeRegExp(ASSISTANT_NAME)}\\b`, "i");
+export const TRIGGER_PATTERN = new RegExp(
+  `^@${escapeRegExp(ASSISTANT_NAME)}\\b`,
+  "i",
+);
 ```
 
 ---
@@ -158,7 +169,8 @@ async execute(code: string, options: ExecutionOptions = {}): Promise<ExecutionRe
 
 ```typescript
 // 脱敏：仅显示命令前 50 字符
-const safeCmd = displayCmd.length > 50 ? displayCmd.slice(0, 50) + "..." : displayCmd;
+const safeCmd =
+  displayCmd.length > 50 ? displayCmd.slice(0, 50) + "..." : displayCmd;
 logger.debug(`[ProcessExecutor] 命令执行完成: ${safeCmd}，退出码: ${exitCode}`);
 ```
 
@@ -276,12 +288,12 @@ func listen() (net.Listener, error) {
 
 ### 5.1 固定第三方 Action SHA
 
-**文件** | **变更**
---------|----------
-`sonarcloud.yml:41` | `sonarsource/sonarcloud-github-action@master` → 固定 SHA
-`snyk.yml:24` | `snyk/actions/node@master` → 固定 SHA
-`codacy-analysis.yml:21` | `codacy/codacy-analysis-cli-action@master` → 固定 SHA
-`mirror.yml:28` | `Yikun/hub-mirror-action@master` → 固定 SHA
+| **文件**                 | **变更**                                                 |
+| ------------------------ | -------------------------------------------------------- |
+| `sonarcloud.yml:41`      | `sonarsource/sonarcloud-github-action@master` → 固定 SHA |
+| `snyk.yml:24`            | `snyk/actions/node@master` → 固定 SHA                    |
+| `codacy-analysis.yml:21` | `codacy/codacy-analysis-cli-action@master` → 固定 SHA    |
+| `mirror.yml:28`          | `Yikun/hub-mirror-action@master` → 固定 SHA              |
 
 > SHA 将在实施阶段通过 `git ls-remote` 获取各仓库最新 commit。
 
@@ -299,24 +311,24 @@ func listen() (net.Listener, error) {
 
 ## 影响范围
 
-| 修改文件 | 类型 | 受影响调用方 |
-|----------|------|-------------|
-| `src/utils/utils.ts` | MODIFY | tool-registry.ts (删除 exec 引用) |
-| `src/tools/tool-registry.ts` | MODIFY | LLM tool execution path |
-| `src/tools/tool-definitions.ts` | MODIFY | LLM tool list |
-| `src/sandbox/process-executor.ts` | MODIFY | sandbox/manager.ts |
-| `src/sandbox/manager.ts` | MODIFY | cli-anything.ts |
-| `src/tools/cli-anything.ts` | MODIFY | tool-registry.ts |
-| `src/config.ts` | MODIFY | router.ts, trigger detection |
-| `tsconfig.json` | MODIFY | TypeScript compilation |
-| `kernel/router/router.go` | MODIFY | Go kernel router |
-| `kernel/main.go` | MODIFY | Go kernel startup |
-| `kernel/server/listen_windows.go` | MODIFY | Go kernel gRPC listener |
-| `.github/workflows/sonarcloud.yml` | MODIFY | CI |
-| `.github/workflows/snyk.yml` | MODIFY | CI |
-| `.github/workflows/codacy-analysis.yml` | MODIFY | CI |
-| `.github/workflows/mirror.yml` | MODIFY | CI/CD |
-| `.github/workflows/code_quality.yml` | MODIFY | CI |
+| 修改文件                                | 类型   | 受影响调用方                      |
+| --------------------------------------- | ------ | --------------------------------- |
+| `src/utils/utils.ts`                    | MODIFY | tool-registry.ts (删除 exec 引用) |
+| `src/tools/tool-registry.ts`            | MODIFY | LLM tool execution path           |
+| `src/tools/tool-definitions.ts`         | MODIFY | LLM tool list                     |
+| `src/sandbox/process-executor.ts`       | MODIFY | sandbox/manager.ts                |
+| `src/sandbox/manager.ts`                | MODIFY | cli-anything.ts                   |
+| `src/tools/cli-anything.ts`             | MODIFY | tool-registry.ts                  |
+| `src/config.ts`                         | MODIFY | router.ts, trigger detection      |
+| `tsconfig.json`                         | MODIFY | TypeScript compilation            |
+| `kernel/router/router.go`               | MODIFY | Go kernel router                  |
+| `kernel/main.go`                        | MODIFY | Go kernel startup                 |
+| `kernel/server/listen_windows.go`       | MODIFY | Go kernel gRPC listener           |
+| `.github/workflows/sonarcloud.yml`      | MODIFY | CI                                |
+| `.github/workflows/snyk.yml`            | MODIFY | CI                                |
+| `.github/workflows/codacy-analysis.yml` | MODIFY | CI                                |
+| `.github/workflows/mirror.yml`          | MODIFY | CI/CD                             |
+| `.github/workflows/code_quality.yml`    | MODIFY | CI                                |
 
 ## 验证计划
 
@@ -327,6 +339,7 @@ npm run format:check # 格式合规
 ```
 
 手动验证：
+
 - `fetchUrl` 拒绝 `file://`、`http://169.254.169.254`、`http://127.0.0.1`
 - `writeWsFile` 拒绝 `.git/config`、`.env` 等路径
 - `cli-anything` 元字符过滤拦截 `\n`、`()`

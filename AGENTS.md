@@ -1,4 +1,5 @@
 <!-- gitnexus:start -->
+
 # GitNexus — Code Intelligence
 
 This project is indexed by GitNexus as **.closeclaw** (577 symbols, 1227 relationships, 27 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
@@ -35,35 +36,36 @@ This project is indexed by GitNexus as **.closeclaw** (577 symbols, 1227 relatio
 
 ## Tools Quick Reference
 
-| Tool | When to use | Command |
-|------|-------------|---------|
-| `query` | Find code by concept | `gitnexus_query({query: "auth validation"})` |
-| `context` | 360-degree view of one symbol | `gitnexus_context({name: "validateUser"})` |
-| `impact` | Blast radius before editing | `gitnexus_impact({target: "X", direction: "upstream"})` |
-| `detect_changes` | Pre-commit scope check | `gitnexus_detect_changes({scope: "staged"})` |
-| `rename` | Safe multi-file rename | `gitnexus_rename({symbol_name: "old", new_name: "new", dry_run: true})` |
-| `cypher` | Custom graph queries | `gitnexus_cypher({query: "MATCH ..."})` |
+| Tool             | When to use                   | Command                                                                 |
+| ---------------- | ----------------------------- | ----------------------------------------------------------------------- |
+| `query`          | Find code by concept          | `gitnexus_query({query: "auth validation"})`                            |
+| `context`        | 360-degree view of one symbol | `gitnexus_context({name: "validateUser"})`                              |
+| `impact`         | Blast radius before editing   | `gitnexus_impact({target: "X", direction: "upstream"})`                 |
+| `detect_changes` | Pre-commit scope check        | `gitnexus_detect_changes({scope: "staged"})`                            |
+| `rename`         | Safe multi-file rename        | `gitnexus_rename({symbol_name: "old", new_name: "new", dry_run: true})` |
+| `cypher`         | Custom graph queries          | `gitnexus_cypher({query: "MATCH ..."})`                                 |
 
 ## Impact Risk Levels
 
-| Depth | Meaning | Action |
-|-------|---------|--------|
-| d=1 | WILL BREAK — direct callers/importers | MUST update these |
-| d=2 | LIKELY AFFECTED — indirect deps | Should test |
-| d=3 | MAY NEED TESTING — transitive | Test if critical path |
+| Depth | Meaning                               | Action                |
+| ----- | ------------------------------------- | --------------------- |
+| d=1   | WILL BREAK — direct callers/importers | MUST update these     |
+| d=2   | LIKELY AFFECTED — indirect deps       | Should test           |
+| d=3   | MAY NEED TESTING — transitive         | Test if critical path |
 
 ## Resources
 
-| Resource | Use for |
-|----------|---------|
-| `gitnexus://repo/.closeclaw/context` | Codebase overview, check index freshness |
-| `gitnexus://repo/.closeclaw/clusters` | All functional areas |
-| `gitnexus://repo/.closeclaw/processes` | All execution flows |
-| `gitnexus://repo/.closeclaw/process/{name}` | Step-by-step execution trace |
+| Resource                                    | Use for                                  |
+| ------------------------------------------- | ---------------------------------------- |
+| `gitnexus://repo/.closeclaw/context`        | Codebase overview, check index freshness |
+| `gitnexus://repo/.closeclaw/clusters`       | All functional areas                     |
+| `gitnexus://repo/.closeclaw/processes`      | All execution flows                      |
+| `gitnexus://repo/.closeclaw/process/{name}` | Step-by-step execution trace             |
 
 ## Self-Check Before Finishing
 
 Before completing any code modification task, verify:
+
 1. `gitnexus_impact` was run for all modified symbols
 2. No HIGH/CRITICAL risk warnings were ignored
 3. `gitnexus_detect_changes()` confirms changes match expected scope
@@ -89,14 +91,14 @@ To check whether embeddings exist, inspect `.gitnexus/meta.json` — the `stats.
 
 ## CLI
 
-| Task | Read this skill file |
-|------|---------------------|
-| Understand architecture / "How does X work?" | `.claude/skills/gitnexus/gitnexus-exploring/SKILL.md` |
-| Blast radius / "What breaks if I change X?" | `.claude/skills/gitnexus/gitnexus-impact-analysis/SKILL.md` |
-| Trace bugs / "Why is X failing?" | `.claude/skills/gitnexus/gitnexus-debugging/SKILL.md` |
-| Rename / extract / split / refactor | `.claude/skills/gitnexus/gitnexus-refactoring/SKILL.md` |
-| Tools, resources, schema reference | `.claude/skills/gitnexus/gitnexus-guide/SKILL.md` |
-| Index, status, clean, wiki CLI commands | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
+| Task                                         | Read this skill file                                        |
+| -------------------------------------------- | ----------------------------------------------------------- |
+| Understand architecture / "How does X work?" | `.claude/skills/gitnexus/gitnexus-exploring/SKILL.md`       |
+| Blast radius / "What breaks if I change X?"  | `.claude/skills/gitnexus/gitnexus-impact-analysis/SKILL.md` |
+| Trace bugs / "Why is X failing?"             | `.claude/skills/gitnexus/gitnexus-debugging/SKILL.md`       |
+| Rename / extract / split / refactor          | `.claude/skills/gitnexus/gitnexus-refactoring/SKILL.md`     |
+| Tools, resources, schema reference           | `.claude/skills/gitnexus/gitnexus-guide/SKILL.md`           |
+| Index, status, clean, wiki CLI commands      | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md`             |
 
 <!-- gitnexus:end -->
 
@@ -107,6 +109,7 @@ To check whether embeddings exist, inspect `.gitnexus/meta.json` — the `stats.
 ## Common Commands
 
 ### Setup & Installation
+
 ```bash
 npm install                  # Install dependencies
 npm run setup               # Initialize development environment
@@ -114,6 +117,7 @@ npm run check-env           # Verify environment configuration
 ```
 
 ### Development Workflow
+
 ```bash
 npm run dev                 # Development mode with hot reload (via tsx)
 npm run build               # Compile TypeScript to dist/
@@ -122,6 +126,7 @@ npm run typecheck           # Type check without emitting (tsc --noEmit)
 ```
 
 ### Code Quality
+
 ```bash
 npm run format              # Format code with Prettier
 npm run format:fix          # Format and fix issues
@@ -129,6 +134,7 @@ npm run format:check        # Check formatting without fixing
 ```
 
 ### Testing
+
 ```bash
 npm test                    # Run tests once
 npm run test:watch         # Watch mode for tests
@@ -167,18 +173,22 @@ votes/                       # 协作提案决议区
 ### 三语言微内核栈 (Three-Language Micro-kernel)
 
 **Layer 1: 控制平面 (Dart)**
+
 - `cmd/` — 负责生命周期管理、MCP Server 对外暴露、CLI 交互。
 - 编译为原生 `closeclaw.exe`，实现零环境依赖启动。
 
 **Layer 2: 状态与网络总线 (Go)**
+
 - `kernel/` — 负责高性能 SQLite WAL 并发读写、SSE 网络流处理、分布式 TraceID 生成。
 - 作为系统的“神经中枢”，通过 Named Pipe 与 TS 握手。
 
 **Layer 3: 生态执行沙盒 (TypeScript)**
+
 - `src/` — 负责具体 SDK 调用、Telegram 复杂媒体处理。
 - 角色调整为“哑终端”，仅执行内核下发的指令。
 
 ### Message Flow
+
 ```
 Channel (Telegram)
   ↓
@@ -210,16 +220,19 @@ markMessagesProcessed()
 ### Core Concepts
 
 **Per-Group Memory**
+
 - Each group has `groups/{groupName}/CONTEXT.md`
 - Contains conversation history, group-specific instructions, shared context
 - All messages in a group use this context
 
 **Task Scheduling Patterns**
+
 - **cron**: Standard cron expressions (e.g., `"0 9 * * MON"`)
 - **interval**: Fixed milliseconds (e.g., `"60000"`)
 - **once**: One-time execution
 
 **Channel Callback Handlers**
+
 - `onMessage(jid, message)` — Process incoming message
 - `onChatMetadata(jid, metadata)` — Handle group info updates
 - `registeredGroups()` — List active chats
@@ -229,6 +242,7 @@ markMessagesProcessed()
 ### Environment Variables (.env)
 
 **LLM Providers** (choose at least one):
+
 - `ANTHROPIC_API_KEY` — Claude
 - `OPENROUTER_API_KEY` — 350+ models
 - `ZHIPU_API_KEY` — Recommended for Chinese, free tier available
@@ -236,15 +250,18 @@ markMessagesProcessed()
 - Plus: GitHub Models, SiliconFlow, Cerebras, Google Gemini, ModelScope, Mistral, Groq, Cohere, Hyperbolic, Databricks, etc.
 
 **Telegram**:
+
 - `TELEGRAM_TOKEN` — Bot token from @BotFather
 - `TELEGRAM_ALLOWED_USER_IDS` — Comma-separated user IDs
 
 **System**:
+
 - `ASSISTANT_NAME` — Bot name (default: "Andy")
 - `WORKSPACE_DIR` — Data directory (e.g., `E:\.closeclaw\data`)
 - `DEFAULT_PROVIDER` — Primary LLM provider
 
 **Verification**:
+
 ```bash
 npm run check-env              # Verify configuration
 node scripts/test-llm-apis.js  # Test LLM provider connectivity
@@ -262,15 +279,18 @@ node scripts/test-llm-apis.js  # Test LLM provider connectivity
 ### Voting System
 
 **Weights**:
+
 - IDE collaborator: +1 / -2 (reverse weight for opposition)
 - User: ±0.5n (where n = total IDE count)
 
 **Decision Tiers**:
+
 - **Level 1**: ≥2 IDE votes (documentation, minor fixes)
 - **Level 2**: ≥5 IDE votes (features, optimization)
 - **Level 3**: ≥8 IDE votes (architecture, major changes)
 
 **Critical Thinking Requirement**: All votes must include:
+
 - ✅ Technical reasoning (why support/oppose?)
 - ✅ Risk assessment (identify potential issues)
 - ✅ Improvement suggestions (if problems found)
@@ -279,6 +299,7 @@ node scripts/test-llm-apis.js  # Test LLM provider connectivity
 ### Collaborator Registration
 
 27 registered collaborator IDEs (see `.subjects.json`):
+
 - Cursor, Antigravity, PearAI, Trae, CodeBuddy, JoyCode, Kiro, Qoder, etc.
 - Each IDE has `.{name}/` directory for IDE-specific data
 
@@ -297,14 +318,14 @@ node scripts/test-llm-apis.js  # Test LLM provider connectivity
 
 **SQLite Tables**:
 
-| Table | Purpose |
-|-------|---------|
-| `messages(id, channel, jid, from, type, content, created_at, processed)` | Incoming messages |
-| `registered_groups(jid, name, description, created_at)` | Chat metadata |
-| `scheduled_tasks(id, group_jid, trigger_type, trigger_value, task_config, created_at)` | Task definitions |
-| `task_run_logs(id, task_id, status, output, started_at, ended_at)` | Execution history |
-| `sessions(group_jid, context, created_at, updated_at)` | Active session state |
-| `router_state(group_jid, last_processed_id, updated_at)` | Polling state |
+| Table                                                                                  | Purpose              |
+| -------------------------------------------------------------------------------------- | -------------------- |
+| `messages(id, channel, jid, from, type, content, created_at, processed)`               | Incoming messages    |
+| `registered_groups(jid, name, description, created_at)`                                | Chat metadata        |
+| `scheduled_tasks(id, group_jid, trigger_type, trigger_value, task_config, created_at)` | Task definitions     |
+| `task_run_logs(id, task_id, status, output, started_at, ended_at)`                     | Execution history    |
+| `sessions(group_jid, context, created_at, updated_at)`                                 | Active session state |
+| `router_state(group_jid, last_processed_id, updated_at)`                               | Polling state        |
 
 **Connection**: WAL mode enabled for concurrent readers/writers
 
@@ -328,6 +349,7 @@ node scripts/test-llm-apis.js  # Test LLM provider connectivity
 ## Dependencies
 
 **Core**:
+
 - `better-sqlite3` (11.8.1) — Synchronous SQLite bindings
 - `openai` (6.32.0) — LLM API client
 - `cron-parser` (5.5.0) — Cron expression parsing
@@ -336,6 +358,7 @@ node scripts/test-llm-apis.js  # Test LLM provider connectivity
 - `zod` (4.3.6) — Schema validation
 
 **Dev**:
+
 - TypeScript 5.7.0
 - tsx 4.19.0 (TypeScript executor)
 - Vitest 4.1.0 (testing)
@@ -345,6 +368,7 @@ node scripts/test-llm-apis.js  # Test LLM provider connectivity
 ## GitNexus Integration
 
 This project uses GitNexus for code intelligence:
+
 - **2164 symbols** tracked, **4202 relationships** mapped, **143 execution flows** documented
 - Index location: `.gitnexus/`
 - After committing: `npx gitnexus analyze` to refresh

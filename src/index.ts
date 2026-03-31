@@ -15,16 +15,17 @@ async function main() {
 
   // 1. 初始化沙盒管理器
   const sandboxManager = new SandboxManager();
-  
+
   // 2. 初始化 LLM 适配器注册表
   const adapterRegistry = new LLMAdapterRegistry();
 
   // 3. 核心加固 (P031): 初始化 IPC 通讯
   // 强制使用 Named Pipe (Win) 或 Unix Socket (Unix)，绝不回退到 TCP 127.0.0.1:50051
   const busClient = new GrpcKernelBusClient({
-    target: process.platform === "win32" 
-      ? `\\\\.\\pipe\\closeclaw_bus` 
-      : `unix:///tmp/closeclaw_bus.sock`
+    target:
+      process.platform === "win32"
+        ? `\\\\.\\pipe\\closeclaw_bus`
+        : `unix:///tmp/closeclaw_bus.sock`,
   });
 
   try {
@@ -42,7 +43,9 @@ async function main() {
           case "EXEC_SANDBOX":
             return await sandboxManager.run(payload, traceId);
           case "LLM_CHAT":
-            return await adapterRegistry.get(payload.provider).chat(payload.params);
+            return await adapterRegistry
+              .get(payload.provider)
+              .chat(payload.params);
           case "HEALTH_CHECK":
             return { status: "OK", version: "0.1.0" };
           default:
@@ -55,9 +58,14 @@ async function main() {
     });
 
     // 6. 定期清理临时文件 (P033 定时任务)
-    setInterval(() => {
-      cleanupTmpFiles().catch(err => logger.warn(`[Cleanup] Failed: ${err.message}`));
-    }, 1000 * 60 * 60); // 每小时执行一次
+    setInterval(
+      () => {
+        cleanupTmpFiles().catch((err) =>
+          logger.warn(`[Cleanup] Failed: ${err.message}`),
+        );
+      },
+      1000 * 60 * 60,
+    ); // 每小时执行一次
 
     // 监听关闭信号
     const gracefulShutdown = async (signal: string) => {
@@ -68,7 +76,6 @@ async function main() {
 
     process.on("SIGINT", () => gracefulShutdown("SIGINT"));
     process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
-
   } catch (err: any) {
     logger.error(`CloseClaw TS Sandbox failed to start: ${err.message}`);
     process.exit(1);

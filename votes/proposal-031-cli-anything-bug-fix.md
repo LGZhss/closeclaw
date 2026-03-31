@@ -8,6 +8,7 @@
 ---
 
 ## 📋 1. 环境拓扑与进度点 (进场必备)
+
 - **当前基准**: P027 结项状态 (三语言微内核架构) + P030 安全审计加固完成
 - **关联任务**: 功能 Bug 修复、cli_anything 工具正常工作。
 
@@ -16,6 +17,7 @@
 ## 🐛 2. 严重 Bug 说明
 
 ### 2.1 Bug 描述
+
 在 `src/tools/cli-anything.ts` 中发现**严重功能 Bug**：
 
 **问题**: `cli_anything` 工具的自然语言命令映射逻辑会**丢失用户输入的参数**！
@@ -56,6 +58,7 @@ async function executeCliAnything(
 ### 2.3 Bug 复现场景
 
 **场景 1: 创建目录失败**
+
 1. 用户输入：`/cli create directory my-folder`
 2. `prompt = "create directory my-folder"`
 3. `prompt.includes("create directory")` → true
@@ -63,6 +66,7 @@ async function executeCliAnything(
 5. 执行 `mkdir`（不带参数），命令失败或创建了错误的目录
 
 **场景 2: 删除文件失败**
+
 1. 用户输入：`/cli remove file test.txt`
 2. `prompt = "remove file test.txt"`
 3. `prompt.includes("remove file")` → true
@@ -70,6 +74,7 @@ async function executeCliAnything(
 5. 执行 `rm`（不带参数），命令失败
 
 **场景 3: 复制文件失败**
+
 1. 用户输入：`/cli copy file a.txt b.txt`
 2. `prompt = "copy file a.txt b.txt"`
 3. `prompt.includes("copy file")` → true
@@ -81,9 +86,11 @@ async function executeCliAnything(
 ## 🛠️ 3. 修复方案
 
 ### 3.1 核心修复
+
 问题根源：当匹配到自然语言关键词时，直接用 `cmd` 替换整个 `command`，没有保留用户输入的参数部分！
 
 **正确的修复方案**：
+
 1. 匹配到关键词时，提取关键词**之后**的内容作为参数
 2. 将参数追加到 `cmd` 后面
 
@@ -123,6 +130,7 @@ async function executeCliAnything(
 ### 3.3 修复后的行为
 
 **场景 1: 创建目录（修复后）**
+
 1. 用户输入：`/cli create directory my-folder`
 2. `prompt = "create directory my-folder"`
 3. `keyIndex = 0`（"create directory" 从位置 0 开始）
@@ -131,6 +139,7 @@ async function executeCliAnything(
 6. 执行 `mkdir my-folder`，成功创建目录
 
 **场景 2: 删除文件（修复后）**
+
 1. 用户输入：`/cli remove file test.txt`
 2. `prompt = "remove file test.txt"`
 3. `keyIndex = 0`
@@ -143,16 +152,18 @@ async function executeCliAnything(
 ## 🔍 4. 影响范围与风险
 
 ### 4.1 受影响文件清单
-| 文件 | 修改类型 | 说明 |
-| :--- | :--- | :--- |
-| `src/tools/cli-anything.ts` | 修改 | 修复自然语言命令映射丢失参数的 Bug |
+
+| 文件                        | 修改类型 | 说明                               |
+| :-------------------------- | :------- | :--------------------------------- |
+| `src/tools/cli-anything.ts` | 修改     | 修复自然语言命令映射丢失参数的 Bug |
 
 ### 4.2 风险评估
-| 风险项 | 严重程度 | 说明 |
-| :--- | :--- | :--- |
-| 未修复时的功能问题 | 🟡 HIGH | cli_anything 工具无法正确处理带参数的命令 |
-| 修复后的兼容性 | 🟢 LOW | 完全向后兼容，不改变无参数命令的行为 |
-| 修复的正确性 | 🟢 LOW | 逻辑简单清晰，易于验证 |
+
+| 风险项             | 严重程度 | 说明                                      |
+| :----------------- | :------- | :---------------------------------------- |
+| 未修复时的功能问题 | 🟡 HIGH  | cli_anything 工具无法正确处理带参数的命令 |
+| 修复后的兼容性     | 🟢 LOW   | 完全向后兼容，不改变无参数命令的行为      |
+| 修复的正确性       | 🟢 LOW   | 逻辑简单清晰，易于验证                    |
 
 **总体评估**: 建议修复，这是一个影响用户体验的严重功能 Bug！
 
@@ -161,16 +172,19 @@ async function executeCliAnything(
 ## 🗳️ 5. 投票表 (Quorum: 4)
 
 ### 协作主体投票
-| 协作主体 | 态度 | 理由与风险评估 |
-| :--- | :--- | :--- |
-| Trae-CN | ✅ 赞同 | 发起者。通过代码审计发现此严重功能 Bug：cli_anything 在映射自然语言命令时会丢失用户输入的参数，导致命令执行失败。修复方案简单有效，完全向后兼容。 |
+
+| 协作主体 | 态度    | 理由与风险评估                                                                                                                                    |
+| :------- | :------ | :------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Trae-CN  | ✅ 赞同 | 发起者。通过代码审计发现此严重功能 Bug：cli_anything 在映射自然语言命令时会丢失用户输入的参数，导致命令执行失败。修复方案简单有效，完全向后兼容。 |
 
 ### 用户投票
+
 | 用户 | 态度 | 备注 |
 | :--- | :--- | :--- |
-| 用户 | | |
+| 用户 |      |      |
 
 ---
 
 ## 🕒 6. 更新日志
+
 - 2026-03-31 - 创建提案 P031；发现并报告 cli_anything 自然语言命令映射丢失参数的严重 Bug。
