@@ -24,6 +24,9 @@ export interface ExecutionOptions {
 /** 沙盒代码最大允许大小 */
 const MAX_CODE_SIZE = 10_240; // 10KB
 
+/** 性能优化：缓存 OS 临时目录，避免高频执行时重复同步查询环境变量 */
+const SYSTEM_TMP_DIR = os.tmpdir();
+
 export class ProcessExecutor {
   private runningProcesses: Map<string, ChildProcess>;
 
@@ -49,7 +52,7 @@ export class ProcessExecutor {
 
     const executionId = `exec_${Date.now()}_${Math.random().toString(36).substring(2, 11)}_${process.hrtime.bigint()}`;
     const timeout = options.timeout || config.sandbox.timeout;
-    const tempFile = path.join(os.tmpdir(), `temp_${executionId}.js`);
+    const tempFile = path.join(SYSTEM_TMP_DIR, `temp_${executionId}.js`);
 
     try {
       // 写入代码到临时文件 (异步)
