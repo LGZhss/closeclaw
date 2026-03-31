@@ -32,6 +32,7 @@ jobs:
       - name: Run JS Tests & Generate Coverage
         run: |
           npm ci
+          mkdir -p data dist .idea
           npm run test:coverage
 
       - name: Run Go Tests & Generate Coverage
