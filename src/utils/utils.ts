@@ -53,15 +53,11 @@ export function isProtectedPath(filePath: string): boolean {
   const relative = path.relative(workspaceRoot, resolvedPath);
   const normalized = relative.replace(/\\/g, "/");
 
-  for (const protectedPath of PROTECTED_PATHS) {
-    if (
+  return PROTECTED_PATHS.some(
+    (protectedPath) =>
       normalized === protectedPath ||
-      normalized.startsWith(protectedPath + "/")
-    ) {
-      return true;
-    }
-  }
-  return false;
+      normalized.startsWith(protectedPath + "/"),
+  );
 }
 
 /**
