@@ -25,6 +25,7 @@ jobs:
         uses: semgrep/semgrep-action@v1
         with:
           config: auto
+                  generateSarif: true
          
       - name: Upload SARIF
         uses: github/codeql-action/upload-sarif@v3
