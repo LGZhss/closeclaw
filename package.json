@@ -14,9 +14,9 @@
     "format:fix": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
     "prepare": "husky",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test": "mkdir -p data dist .idea && vitest run",
+    "test:watch": "mkdir -p data dist .idea && vitest",
+    "test:coverage": "mkdir -p data dist .idea && vitest run --coverage"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.33.1",
