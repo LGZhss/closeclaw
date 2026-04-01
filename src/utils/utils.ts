@@ -7,6 +7,11 @@ import { logger } from "../logger.js";
 /** 工作区目录，默认当前目录 */
 export const WORKSPACE = process.cwd();
 
+// 缓存工作区根目录的绝对路径及真实物理路径，避免频繁同步 I/O 开销
+const WORKSPACE_ROOT_CACHED = path.resolve(WORKSPACE);
+// eslint-disable-next-line security/detect-non-literal-fs-filename
+const REAL_WORKSPACE_CACHED = fs.realpathSync.native(WORKSPACE_ROOT_CACHED);
+
 /**
  * 读取工作区文件
  */
@@ -202,10 +207,6 @@ export async function runGit(
  * 3. 最终校验物理路径是否在工作区内。
  */
 export function resolveSafePath(userPath: string): string {
-  const workspaceRoot = path.resolve(WORKSPACE);
-  // eslint-disable-next-line security/detect-non-literal-fs-filename
-  const realWorkspace = fs.realpathSync.native(workspaceRoot);
-
   const getRealCapture = (p: string): string => {
     try {
       // eslint-disable-next-line security/detect-non-literal-fs-filename
@@ -218,10 +219,10 @@ export function resolveSafePath(userPath: string): string {
     }
   };
 
-  const resolvedPath = path.resolve(workspaceRoot, userPath);
+  const resolvedPath = path.resolve(WORKSPACE_ROOT_CACHED, userPath);
   const realTarget = getRealCapture(resolvedPath);
 
-  if (!isPathInside(realTarget, realWorkspace)) {
+  if (!isPathInside(realTarget, REAL_WORKSPACE_CACHED)) {
     throw new Error(`Access denied: path is outside workspace (${userPath})`);
   }
 
@@ -229,6 +230,17 @@ export function resolveSafePath(userPath: string): string {
 }
 
 function isPathInside(target: string, parent: string): boolean {
-  const relative = path.relative(parent, target);
-  return !relative.startsWith("..") && !path.isAbsolute(relative);
+  if (target === parent) return true;
+  if (!target.startsWith(parent)) return false;
+
+  const parentLen = parent.length;
+  if (parentLen === 0) return true;
+  if (parent[parentLen - 1] === path.sep) {
+    return true;
+  }
+  if (target[parentLen] === path.sep) {
+    return true;
+  }
+
+  return false;
 }
