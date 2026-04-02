@@ -11,7 +11,9 @@ export const WORKSPACE = process.cwd();
  * 读取工作区文件
  */
 export async function readWsFile(filePath: string): Promise<string> {
-  const normalized = filePath.replace(/\\/g, "/").replace(/^\.\/+/, "");
+  const resolved = path.resolve(WORKSPACE, filePath);
+  const normalized = path.relative(WORKSPACE, resolved).replace(/\\/g, "/");
+
   for (const protectedPath of PROTECTED_PATHS) {
     if (
       normalized === protectedPath ||
@@ -57,7 +59,9 @@ export async function writeWsFile(
   filePath: string,
   content: string,
 ): Promise<string> {
-  const normalized = filePath.replace(/\\/g, "/").replace(/^\.\/+/, "");
+  const resolved = path.resolve(WORKSPACE, filePath);
+  const normalized = path.relative(WORKSPACE, resolved).replace(/\\/g, "/");
+
   for (const protectedPath of PROTECTED_PATHS) {
     if (
       normalized === protectedPath ||
