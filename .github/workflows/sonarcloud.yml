@@ -35,7 +35,7 @@ jobs:
           npm run test:coverage
 
       - name: Run Go Tests & Generate Coverage
-        run: go test -coverprofile=coverage.txt ./kernel/...
+        run: cd kernel && go test -coverprofile=../coverage.txt ./...
 
       - name: SonarCloud Scan
         uses: sonarsource/sonarcloud-github-action@v5.0.0
