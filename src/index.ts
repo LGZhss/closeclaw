@@ -19,12 +19,14 @@ async function main() {
   const adapterRegistry = new LLMAdapterRegistry();
 
   // 3. 核心加固 (P031): 初始化 IPC 通讯
-  // 强制使用 Named Pipe (Win) 或 Unix Socket (Unix)，绝不回退到 TCP 127.0.0.1:50051
+  // ⚠️  P032 待解决: @grpc/grpc-js 不支持 Windows Named Pipe
+  // 当前使用 TCP fallback (127.0.0.1:50051)
+  // TODO: Go 内核需要同时监听 TCP 和 Named Pipe
   const busClient = new GrpcKernelBusClient({
     target:
       process.platform === "win32"
-        ? `\\\\.\\pipe\\closeclaw_bus`
-        : `unix:///tmp/closeclaw_bus.sock`,
+        ? "127.0.0.1:50051"  // TCP fallback for Windows
+        : `unix:///tmp/closeclaw_ipc.sock`,
   });
 
   try {
