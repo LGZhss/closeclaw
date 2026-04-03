@@ -11,7 +11,9 @@ export const WORKSPACE = process.cwd();
  * 读取工作区文件
  */
 export async function readWsFile(filePath: string): Promise<string> {
-  const normalized = filePath.replace(/\\/g, "/").replace(/^\.\/+/, "");
+  const fullPath = resolveSafePath(filePath);
+  const normalized = path.relative(WORKSPACE, fullPath).replace(/\\/g, "/");
+
   for (const protectedPath of PROTECTED_PATHS) {
     if (
       normalized === protectedPath ||
@@ -21,7 +23,6 @@ export async function readWsFile(filePath: string): Promise<string> {
     }
   }
 
-  const fullPath = resolveSafePath(filePath);
   try {
     // eslint-disable-next-line security/detect-non-literal-fs-filename
     return await fsPromises.readFile(fullPath, "utf8");
@@ -57,7 +58,9 @@ export async function writeWsFile(
   filePath: string,
   content: string,
 ): Promise<string> {
-  const normalized = filePath.replace(/\\/g, "/").replace(/^\.\/+/, "");
+  const fullPath = resolveSafePath(filePath);
+  const normalized = path.relative(WORKSPACE, fullPath).replace(/\\/g, "/");
+
   for (const protectedPath of PROTECTED_PATHS) {
     if (
       normalized === protectedPath ||
@@ -67,7 +70,6 @@ export async function writeWsFile(
     }
   }
 
-  const fullPath = resolveSafePath(filePath);
   try {
     const dir = path.dirname(fullPath);
     // eslint-disable-next-line security/detect-non-literal-fs-filename
