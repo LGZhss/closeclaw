@@ -21,7 +21,7 @@ func DefaultConfig(assistantName string) *Config {
 		assistantName = "Andy"
 	}
 	return &Config{
-		AssistantName:  assistantName,
+		AssistantName: assistantName,
 		// (?i) makes it case-insensitive
 		TriggerPattern: regexp.MustCompile("(?i)^@" + regexp.QuoteMeta(assistantName) + "\\b"),
 	}
