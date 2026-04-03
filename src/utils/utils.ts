@@ -10,7 +10,27 @@ import { execSync, spawn } from "child_process";
 import { logger } from "../logger.js";
 
 /** 核心加固 (P031): 敏感文件名黑名单，防止 Agent 越权读取 */
-const PROTECTED_FILES = [".env", "config.json", ".subjects.json", "dropstone_memory.db"];
+const PROTECTED_FILES = [
+  ".env",
+  "config.json",
+  ".subjects.json",
+  "dropstone_memory.db",
+];
+
+/** 核心加固 (P031): 敏感目录路径黑名单，防止 Agent 越权读取 (Bug B2.2 修复) */
+const PROTECTED_PATHS = [
+  ".env",
+  ".env.local",
+  ".env.production",
+  ".env.development",
+  ".git",
+  "node_modules",
+  ".kiro/settings",
+  ".dropstone",
+  ".subjects.json",
+  "config.json",
+  "dropstone_memory.db",
+];
 
 /**
  * 等待指定时间
@@ -56,7 +76,10 @@ export const ensureDirAsync = async (dirPath: string): Promise<void> => {
  * @param relativePath 相对路径
  * @returns 绝对路径
  */
-export const resolveSafePath = (baseDir: string, relativePath: string): string => {
+export const resolveSafePath = (
+  baseDir: string,
+  relativePath: string,
+): string => {
   const absoluteBase = path.resolve(baseDir);
   const targetPath = path.resolve(baseDir, relativePath);
 
@@ -65,7 +88,18 @@ export const resolveSafePath = (baseDir: string, relativePath: string): string =
     throw new Error(`[Security] 拒绝越权访问路径: ${relativePath}`);
   }
 
-  // 核心加固 (P031): 禁止访问敏感文件
+  // 核心加固 (P031 Bug B2.2): 禁止访问敏感路径（目录和文件）
+  const normalized = relativePath.replace(/\\/g, "/").replace(/^\.\/+/, "");
+  for (const protectedPath of PROTECTED_PATHS) {
+    if (
+      normalized === protectedPath ||
+      normalized.startsWith(protectedPath + "/")
+    ) {
+      throw new Error(`[Security] 拒绝访问受保护路径: ${relativePath}`);
+    }
+  }
+
+  // 核心加固 (P031): 禁止访问敏感文件（向后兼容）
   const fileName = path.basename(targetPath);
   if (PROTECTED_FILES.includes(fileName)) {
     throw new Error(`[Security] 拒绝访问核心敏感文件: ${fileName}`);
@@ -79,7 +113,10 @@ export const resolveSafePath = (baseDir: string, relativePath: string): string =
  * @param workspaceDir 工作空间根目录
  * @param relativePath 相对路径
  */
-export const readWsFile = (workspaceDir: string, relativePath: string): string => {
+export const readWsFile = (
+  workspaceDir: string,
+  relativePath: string,
+): string => {
   const safePath = resolveSafePath(workspaceDir, relativePath);
   // eslint-disable-next-line security/detect-non-literal-fs-filename
   if (!fs.existsSync(safePath)) {
@@ -173,10 +210,10 @@ export const safeCmdAsync = async (
 ): Promise<{ stdout: string; stderr: string; exitCode: number | null }> => {
   return new Promise((resolve) => {
     const { cwd = process.cwd(), timeout = 30000 } = options;
-    
+
     let cmd: string;
     let args: string[];
-    
+
     if (process.platform === "win32") {
       cmd = "cmd.exe";
       args = ["/c", command];
@@ -191,7 +228,7 @@ export const safeCmdAsync = async (
 
     cp.stdout?.on("data", (d) => (stdout += d.toString()));
     cp.stderr?.on("data", (d) => (stderr += d.toString()));
-    
+
     cp.on("close", (code) => {
       resolve({ stdout: stdout.trim(), stderr: stderr.trim(), exitCode: code });
     });
@@ -224,11 +261,7 @@ export const isGitRepo = (dirPath: string): boolean => {
  * @param cwd 工作目录
  * @param retries 重试次数
  */
-export const runGit = (
-  args: string[],
-  cwd: string,
-  retries = 2,
-): string => {
+export const runGit = (args: string[], cwd: string, retries = 2): string => {
   let attempt = 0;
   while (attempt <= retries) {
     try {
@@ -241,7 +274,9 @@ export const runGit = (
       attempt++;
       const stderr = error.stderr?.toString() || "";
       if (attempt > retries) {
-        logger.error(`[runGit] Git 命令失败 (尝试 ${attempt} 次): git ${args.join(" ")}, 错误: ${stderr}`);
+        logger.error(
+          `[runGit] Git 命令失败 (尝试 ${attempt} 次): git ${args.join(" ")}, 错误: ${stderr}`,
+        );
         throw new Error(stderr || "Git 执行失败");
       }
       logger.warn(`[runGit] Git 命令重试 (${attempt}/${retries}): ${args[0]}`);

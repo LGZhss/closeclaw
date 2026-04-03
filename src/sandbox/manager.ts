@@ -45,14 +45,17 @@ export class SandboxManager {
    * @param traceId 追踪 ID
    * @returns 执行结果
    */
-  async run(params: SandboxRunParams, traceId: string): Promise<ExecutionResult> {
+  async run(
+    params: SandboxRunParams,
+    traceId: string,
+  ): Promise<ExecutionResult> {
     const startTime = Date.now();
     this.activeSessions.set(traceId, { traceId, startTime });
 
     logger.info(`[Sandbox] Starting ${params.type} execution (${traceId})`);
 
     try {
-      let result: ExecutionResult;
+      let result: ExecutionResult = { stdout: "", stderr: "", exitCode: -1 };
 
       if (params.type === "code") {
         // 执行 JavaScript 代码
@@ -69,16 +72,22 @@ export class SandboxManager {
       }
 
       const duration = Date.now() - startTime;
-      
+
       // P033: 高性能审计日志实现
       // 使用截断逻辑防止日志因 stdout 过大而溢出，仅对 traceId、退出码和截断后的输出进行基础记录
-      const safeStdout = result.stdout.length > 500 
-        ? result.stdout.slice(0, 500) + "... [truncated]" 
-        : result.stdout;
-      
-      logger.info(`[Sandbox] Execution finished (${traceId}) in ${duration}ms, exitCode: ${result.exitCode}`);
+      const safeStdout =
+        result.stdout.length > 500
+          ? result.stdout.slice(0, 500) + "... [truncated]"
+          : result.stdout;
+
+      logger.info(
+        `[Sandbox] Execution finished (${traceId}) in ${duration}ms, exitCode: ${result.exitCode}`,
+      );
+      logger.debug(`[Sandbox] Output preview (${traceId}): ${safeStdout}`);
       if (result.stderr) {
-        logger.warn(`[Sandbox] Execution stderr (${traceId}): ${result.stderr}`);
+        logger.warn(
+          `[Sandbox] Execution stderr (${traceId}): ${result.stderr}`,
+        );
       }
 
       return result;

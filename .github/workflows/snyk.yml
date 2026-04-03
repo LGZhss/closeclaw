@@ -20,6 +20,8 @@ jobs:
           egress-policy: audit
 
       - uses: actions/checkout@v4
+      # Run Snyk security scan with high severity threshold
+      # --severity-threshold=high: Only report high and critical vulnerabilities, filtering out low/medium severity issues
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/node@v1.0.0
         env:

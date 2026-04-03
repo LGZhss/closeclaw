@@ -3,11 +3,49 @@
  * 将工具名称映射到具体的执行逻辑
  */
 
-import { readWsFile, writeWsFile, safeCmd } from "../utils/utils.js";
+import { readWsFile, writeWsFile } from "../utils/utils.js";
 import { SandboxManager } from "../sandbox/manager.js";
 
 /** 工具处理函数类型 */
 export type ToolHandler = (args: any, context: any) => Promise<any>;
+
+/**
+ * 解析命令行风格的参数到对象
+ * 支持特殊处理带空格的文件名
+ * @param tool 工具定义
+ * @param args 参数数组
+ * @param rawText 原始命令文本
+ * @returns 解析后的参数对象
+ */
+export function parseArgsToObject(tool: any, args: string[], rawText: string): any {
+  const props = tool.parameters?.properties || {};
+  const propNames = Object.keys(props);
+
+  // 特殊处理 write_file: /write <filename> <content>
+  if (tool.name === "write_file") {
+    const match = rawText.match(/^\/write\s+(\S+)\s+([\s\S]*)$/i);
+    if (match) {
+      return { filePath: match[1], content: match[2] };
+    }
+  }
+
+  // 特殊处理 read_file: /read <filename with spaces>
+  if (tool.name === "read_file") {
+    const match = rawText.match(/^\/read\s+([\s\S]*)$/i);
+    if (match) {
+      return { filePath: match[1].trim() };
+    }
+  }
+
+  // 默认处理：按位置映射参数
+  const result: any = {};
+  propNames.forEach((prop, i) => {
+    if (args[i] !== undefined) {
+      result[prop] = args[i];
+    }
+  });
+  return result;
+}
 
 /**
  * 初始化工具注册表
@@ -36,7 +74,7 @@ export const createToolRegistry = (
     },
 
     /** 列出目录处理器 */
-    list_dir: async ({ path: dirPath }) => {
+    list_dir: async ({ path: _dirPath }) => {
       // 简单模拟，实际应用中应使用更复杂的逻辑
       return { files: ["."] };
     },
