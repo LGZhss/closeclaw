@@ -547,8 +547,8 @@ graph LR
       "Dropstone",
       "Kimi-CloseClaw",
       "Zed",
-      "CodeFlicker",
       "CodeArts",
+      "CodeRider",
       "Junie",
       "WorkBuddy",
       "CodeArtsDoer"

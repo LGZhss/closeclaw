@@ -550,8 +550,8 @@ Please report security vulnerabilities via:
       "Comate", "CodeBuddy", "JoyCode", "CatPawAI", "TalkCody",
       "Qwen Code", "Gemini-CLI", "Codex", "Copilot", "Verdent",
       "Kiro", "OpenCode", "CodeBuddy-CN", "Qoder", "Cascade",
-      "Dropstone", "Kimi-CloseClaw", "Zed", "CodeFlicker",
-      "CodeArts", "Junie", "WorkBuddy", "CodeArtsDoer"
+      "Dropstone", "Kimi-CloseClaw", "Zed",
+      "CodeArts", "CodeRider", "Junie", "WorkBuddy", "CodeArtsDoer"
     ]
   },
   "trust_model": "Attribution",
