@@ -21,7 +21,10 @@ describe("Bug B1.3-B1.4 Exploration: TypeScript Type Errors", () => {
 
   it("should confirm config import is used or removed (Bug B1.3)", () => {
     // Check if config is imported
-    const hasConfigImport = /import\s+\{[^}]*config[^}]*\}\s+from\s+["']\.\/config\.js["']/.test(indexContent);
+    const hasConfigImport =
+      /import\s+\{[^}]*config[^}]*\}\s+from\s+["']\.\/config\.js["']/.test(
+        indexContent,
+      );
 
     if (hasConfigImport) {
       // If imported, it should be used in the code
@@ -32,7 +35,7 @@ describe("Bug B1.3-B1.4 Exploration: TypeScript Type Errors", () => {
       expect(
         matches.length,
         `Bug B1.3 confirmed: config is imported but only appears ${matches.length} time(s). ` +
-        `Expected at least 2 (import + usage). This causes TS6133: 'config' is declared but its value is never read.`
+          `Expected at least 2 (import + usage). This causes TS6133: 'config' is declared but its value is never read.`,
       ).toBeGreaterThan(1);
     }
 
@@ -41,7 +44,8 @@ describe("Bug B1.3-B1.4 Exploration: TypeScript Type Errors", () => {
 
   it("should confirm busClient.onMessage callback has explicit type for msg parameter (Bug B1.4)", () => {
     // Look for the onMessage callback
-    const onMessagePattern = /busClient\.onMessage\s*\(\s*async\s*\(\s*(\w+)\s*(?::\s*(\w+))?\s*\)/;
+    const onMessagePattern =
+      /busClient\.onMessage\s*\(\s*async\s*\(\s*(\w+)\s*(?::\s*(\w+))?\s*\)/;
     const match = indexContent.match(onMessagePattern);
 
     expect(match).toBeTruthy();
@@ -53,21 +57,23 @@ describe("Bug B1.3-B1.4 Exploration: TypeScript Type Errors", () => {
       expect(
         paramType,
         `Bug B1.4 confirmed: Parameter '${paramName}' in busClient.onMessage callback has no explicit type. ` +
-        `This causes TS7006: Parameter '${paramName}' implicitly has an 'any' type. ` +
-        `Expected explicit type like 'BusMessage'.`
+          `This causes TS7006: Parameter '${paramName}' implicitly has an 'any' type. ` +
+          `Expected explicit type like 'BusMessage'.`,
       ).toBeDefined();
     }
   });
 
   it("should confirm BusMessage type is imported if msg parameter needs typing", () => {
     // If msg parameter needs typing, BusMessage should be imported
-    const hasBusMessageImport = /import\s+\{[^}]*BusMessage[^}]*\}\s+from/.test(indexContent);
+    const hasBusMessageImport = /import\s+\{[^}]*BusMessage[^}]*\}\s+from/.test(
+      indexContent,
+    );
     const hasOnMessage = /busClient\.onMessage/.test(indexContent);
 
     if (hasOnMessage) {
       expect(
         hasBusMessageImport,
-        `Bug B1.4 related: BusMessage type is not imported, but busClient.onMessage callback needs it for type safety.`
+        `Bug B1.4 related: BusMessage type is not imported, but busClient.onMessage callback needs it for type safety.`,
       ).toBe(true);
     }
   });

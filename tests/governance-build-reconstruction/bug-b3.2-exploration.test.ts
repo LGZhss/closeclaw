@@ -21,7 +21,12 @@ import { tmpdir } from "os";
 
 describe("Bug B3.2 Exploration: read_file Parameter Parsing", () => {
   const testWorkspace = join(tmpdir(), `test-workspace-b3.2-${Date.now()}`);
-  const toolRegistryPath = join(process.cwd(), "src", "tools", "tool-registry.ts");
+  const toolRegistryPath = join(
+    process.cwd(),
+    "src",
+    "tools",
+    "tool-registry.ts",
+  );
 
   beforeAll(() => {
     // Create test workspace
@@ -30,10 +35,18 @@ describe("Bug B3.2 Exploration: read_file Parameter Parsing", () => {
     }
 
     // Create test file with spaces in name
-    writeFileSync(join(testWorkspace, "file with spaces.txt"), "Content with spaces", "utf-8");
+    writeFileSync(
+      join(testWorkspace, "file with spaces.txt"),
+      "Content with spaces",
+      "utf-8",
+    );
 
     // Create test file without spaces
-    writeFileSync(join(testWorkspace, "file-no-spaces.txt"), "Content without spaces", "utf-8");
+    writeFileSync(
+      join(testWorkspace, "file-no-spaces.txt"),
+      "Content without spaces",
+      "utf-8",
+    );
   });
 
   it("should confirm _parseArgsToObject method does NOT exist in tool-registry.ts", () => {
@@ -45,7 +58,7 @@ describe("Bug B3.2 Exploration: read_file Parameter Parsing", () => {
     expect(
       hasParseMethod,
       "Bug B3.2 confirmed: _parseArgsToObject method does not exist in current implementation. " +
-      "This means there's no special argument parsing for commands like '/read file with spaces.txt'"
+        "This means there's no special argument parsing for commands like '/read file with spaces.txt'",
     ).toBe(false);
   });
 
@@ -54,7 +67,9 @@ describe("Bug B3.2 Exploration: read_file Parameter Parsing", () => {
 
     // Check if write_file has any special parsing logic
     // In the bug scenario, write_file SHOULD have special handling but read_file should NOT
-    const writeFileMatch = content.match(/write_file:\s*async\s*\([^)]+\)\s*=>\s*\{[^}]+\}/s);
+    const writeFileMatch = content.match(
+      /write_file:\s*async\s*\([^)]+\)\s*=>\s*\{[^}]+\}/s,
+    );
 
     expect(writeFileMatch).toBeTruthy();
 
@@ -62,11 +77,13 @@ describe("Bug B3.2 Exploration: read_file Parameter Parsing", () => {
       const writeFileBody = writeFileMatch[0];
 
       // Verify it uses simple destructuring (no special parsing)
-      const hasDestructuring = /\{\s*path:\s*filePath,\s*content\s*\}/.test(writeFileBody);
+      const hasDestructuring = /\{\s*path:\s*filePath,\s*content\s*\}/.test(
+        writeFileBody,
+      );
 
       expect(
         hasDestructuring,
-        "write_file currently uses simple destructuring (no special parsing for spaces)"
+        "write_file currently uses simple destructuring (no special parsing for spaces)",
       ).toBe(true);
     }
   });
@@ -75,7 +92,9 @@ describe("Bug B3.2 Exploration: read_file Parameter Parsing", () => {
     const content = readFileSync(toolRegistryPath, "utf-8");
 
     // Check if read_file has any special parsing logic
-    const readFileMatch = content.match(/read_file:\s*async\s*\([^)]+\)\s*=>\s*\{[^}]+\}/s);
+    const readFileMatch = content.match(
+      /read_file:\s*async\s*\([^)]+\)\s*=>\s*\{[^}]+\}/s,
+    );
 
     expect(readFileMatch).toBeTruthy();
 
@@ -88,7 +107,7 @@ describe("Bug B3.2 Exploration: read_file Parameter Parsing", () => {
       expect(
         hasDestructuring,
         "Bug B3.2 confirmed: read_file uses simple destructuring with no special handling for spaces. " +
-        "This is the expected bug condition - read_file lacks special argument parsing."
+          "This is the expected bug condition - read_file lacks special argument parsing.",
       ).toBe(true);
     }
   });
@@ -105,17 +124,18 @@ describe("Bug B3.2 Exploration: read_file Parameter Parsing", () => {
 
     expect(
       hasWriteRegex,
-      "Bug B3.2 confirmed: write_file does not have special regex parsing (will be added in fix)"
+      "Bug B3.2 confirmed: write_file does not have special regex parsing (will be added in fix)",
     ).toBe(false);
 
     expect(
       hasReadRegex,
-      "Bug B3.2 confirmed: read_file does not have special regex parsing (will be added in fix)"
+      "Bug B3.2 confirmed: read_file does not have special regex parsing (will be added in fix)",
     ).toBe(false);
   });
 
   it("should verify current implementation can handle files without spaces", async () => {
-    const { createToolRegistry } = await import("../../src/tools/tool-registry.js");
+    const { createToolRegistry } =
+      await import("../../src/tools/tool-registry.js");
     const { SandboxManager } = await import("../../src/sandbox/manager.js");
 
     const sandboxManager = new SandboxManager();
@@ -127,7 +147,8 @@ describe("Bug B3.2 Exploration: read_file Parameter Parsing", () => {
   });
 
   it("should verify current implementation CAN handle files with spaces (when passed as object)", async () => {
-    const { createToolRegistry } = await import("../../src/tools/tool-registry.js");
+    const { createToolRegistry } =
+      await import("../../src/tools/tool-registry.js");
     const { SandboxManager } = await import("../../src/sandbox/manager.js");
 
     const sandboxManager = new SandboxManager();
@@ -135,7 +156,10 @@ describe("Bug B3.2 Exploration: read_file Parameter Parsing", () => {
 
     // When arguments are passed as an object (current implementation), spaces work fine
     // The bug is about parsing command-line style input like "/read file with spaces.txt"
-    const result = await registry.read_file({ path: "file with spaces.txt" }, {});
+    const result = await registry.read_file(
+      { path: "file with spaces.txt" },
+      {},
+    );
 
     expect(result.content).toContain("Content with spaces");
   });
@@ -153,8 +177,8 @@ describe("Bug B3.2 Exploration: read_file Parameter Parsing", () => {
     expect(
       hasParseMethod || hasCommandParsing,
       "Bug B3.2 confirmed: No command-line style argument parsing exists. " +
-      "Users cannot send '/read file with spaces.txt' - the system expects pre-parsed objects. " +
-      "The fix will add _parseArgsToObject method with regex-based parsing."
+        "Users cannot send '/read file with spaces.txt' - the system expects pre-parsed objects. " +
+        "The fix will add _parseArgsToObject method with regex-based parsing.",
     ).toBe(false);
   });
 });

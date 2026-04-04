@@ -34,7 +34,11 @@ describe("Bug B2.2 Exploration: readWsFile Missing Protection", () => {
     }
 
     // Create test .git/config file
-    writeFileSync(join(gitDir, "config"), "[core]\n\trepositoryformatversion = 0", "utf-8");
+    writeFileSync(
+      join(gitDir, "config"),
+      "[core]\n\trepositoryformatversion = 0",
+      "utf-8",
+    );
 
     // Create test node_modules directory
     const nodeModulesDir = join(testWorkspace, "node_modules");
@@ -83,8 +87,8 @@ describe("Bug B2.2 Exploration: readWsFile Missing Protection", () => {
     expect(
       canReadGitConfig,
       `Bug B2.2 confirmed: readWsFile can read .git/config. ` +
-      `Error: ${errorMessage}. ` +
-      `Expected protection for .git directory to be added.`
+        `Error: ${errorMessage}. ` +
+        `Expected protection for .git directory to be added.`,
     ).toBe(true);
   });
 
@@ -110,8 +114,8 @@ describe("Bug B2.2 Exploration: readWsFile Missing Protection", () => {
     expect(
       canReadNodeModules,
       `Bug B2.2 confirmed: readWsFile can read node_modules/package.json. ` +
-      `Error: ${errorMessage}. ` +
-      `Expected protection for node_modules directory to be added.`
+        `Error: ${errorMessage}. ` +
+        `Expected protection for node_modules directory to be added.`,
     ).toBe(true);
   });
 
@@ -121,7 +125,9 @@ describe("Bug B2.2 Exploration: readWsFile Missing Protection", () => {
     const utilsContent = readFileSync(utilsPath, "utf-8");
 
     // Find PROTECTED_FILES definition
-    const protectedFilesMatch = utilsContent.match(/const PROTECTED_FILES\s*=\s*\[(.*?)\]/s);
+    const protectedFilesMatch = utilsContent.match(
+      /const PROTECTED_FILES\s*=\s*\[(.*?)\]/s,
+    );
 
     expect(protectedFilesMatch).toBeTruthy();
 
