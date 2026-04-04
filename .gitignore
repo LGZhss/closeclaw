@@ -44,7 +44,6 @@ groups/*/CONTEXT.md
 !.antigravity/
 !.cursor/
 !.trae/
-!.lingma/
 !.joycode/
 !.kiro/
 !.qoder/
@@ -56,8 +55,9 @@ groups/*/CONTEXT.md
 !.comate/
 !.codeartsdoer/
 
-# 🔴 仍保持忽略或归档的主体
+# 🔴 保持忽略的主体 (Ignored Subjects)
 .gitnexus/
+.lingma/
 .codebuddy/
 .codebuddy-cn/
 .catpawai/
@@ -110,13 +110,20 @@ logs-*.zip
 /dangling_search.txt
 
 # -----------------------------------------------------------------------------
-# 8. 专项治理与测试临时文件 (Governance & Test Junk)
+# 7. 专项治理与测试临时文件 (Governance & Test Junk)
 # -----------------------------------------------------------------------------
 coverage/
 /config/mcporter.json
 
 # -----------------------------------------------------------------------------
-# 7. 保留核心文档 (Force Keep Core Files)
+# 8. 本地缓存与大文件归档 (Local Caches & Large Archives)
+# -----------------------------------------------------------------------------
+.lingma/
+archive/claude-code-leaked-src/
+tmp/
+
+# -----------------------------------------------------------------------------
+# 9. 保留核心文档 (Force Keep Core Files)
 # -----------------------------------------------------------------------------
 !README.md
 !RULES.md

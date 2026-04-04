@@ -1,0 +1,59 @@
+{
+  "version": 2,
+  "sessions": {
+    "0ff5810736184716aa26dab292287431": [
+      {
+        "expertId": "CodeReviewExpert",
+        "name": "Kim",
+        "profession": "代码审查专家",
+        "avatarUrl": "https://acc-1258344699.cos.accelerate.myqcloud.com/workbuddy/experts/avatars/02-Engineering/CodeReviewExpert/CodeReviewExpert.png",
+        "promptUrl": "https://acc-1258344699.cos.accelerate.myqcloud.com/workbuddy/experts/experts/02-Engineering/CodeReviewExpert/CodeReviewExpert_zh.md",
+        "usedAt": 1774950614515,
+        "industryId": "02-Engineering"
+      }
+    ],
+    "6563707784eb4310abd17416cd7a4fcb": [
+      {
+        "expertId": "GitWorkflowExpert",
+        "name": "Ruby",
+        "profession": "Git工作流专家",
+        "avatarUrl": "https://acc-1258344699.cos.accelerate.myqcloud.com/workbuddy/experts/avatars/02-Engineering/GitWorkflowExpert/GitWorkflowExpert.png",
+        "promptUrl": "https://acc-1258344699.cos.accelerate.myqcloud.com/workbuddy/experts/experts/02-Engineering/GitWorkflowExpert/GitWorkflowExpert_zh.md",
+        "usedAt": 1774950978584,
+        "industryId": "02-Engineering"
+      },
+      {
+        "expertId": "PerformanceTestingExpert",
+        "name": "Jasper",
+        "profession": "性能测试专家",
+        "avatarUrl": "https://acc-1258344699.cos.accelerate.myqcloud.com/workbuddy/experts/avatars/08-QualityAssurance/PerformanceTestingExpert/PerformanceTestingExpert.png",
+        "promptUrl": "https://acc-1258344699.cos.accelerate.myqcloud.com/workbuddy/experts/experts/08-QualityAssurance/PerformanceTestingExpert/PerformanceTestingExpert_zh.md",
+        "usedAt": 1774950773300,
+        "industryId": "08-QualityAssurance"
+      }
+    ],
+    "38123fc4a4a0403c8e4a0dff44289b5b": [
+      {
+        "expertId": "GitWorkflowExpert",
+        "name": "Ruby",
+        "profession": "Git工作流专家",
+        "avatarUrl": "https://acc-1258344699.cos.accelerate.myqcloud.com/workbuddy/experts/avatars/02-Engineering/GitWorkflowExpert/GitWorkflowExpert.png",
+        "promptUrl": "https://acc-1258344699.cos.accelerate.myqcloud.com/workbuddy/experts/experts/02-Engineering/GitWorkflowExpert/GitWorkflowExpert_zh.md",
+        "usedAt": 1774951826288,
+        "industryId": "02-Engineering"
+      }
+    ],
+    "0bfb1e529b74412ab3b2bfc71f853068": [
+      {
+        "expertId": "SeniorDeveloper",
+        "name": "Will",
+        "profession": "高级开发工程师",
+        "avatarUrl": "https://acc-1258344699.cos.accelerate.myqcloud.com/workbuddy/experts/avatars/02-Engineering/SeniorDeveloper/SeniorDeveloper.png",
+        "promptUrl": "https://acc-1258344699.cos.accelerate.myqcloud.com/workbuddy/experts/experts/02-Engineering/SeniorDeveloper/SeniorDeveloper_zh.md",
+        "usedAt": 1774965906803,
+        "industryId": "all"
+      }
+    ]
+  },
+  "lastUpdated": 1774966042213
+}

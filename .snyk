@@ -1,12 +1,40 @@
-# CloseClaw Snyk 策略文件
-# 本文件是 Snyk App 和 Snyk Action 共用的唯一真理源。
-# 所有漏洞 ignore 操作必须通过 `snyk ignore` CLI 写入本文件，禁止在控制台手动操作。
-# 参考文档: https://docs.snyk.io/snyk-cli/commands/ignore
-
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
 version: v1.25.0
 
-# 忽略策略 (示例结构，按需通过 `snyk ignore` 命令填充)
-ignore: {}
+# Language-specific settings
+language-settings:
+  javascript:
+    # Ignore devDependencies vulnerabilities by default
+    ignoreDevDependencies: false
 
-# 补丁策略
+# Ignore specific vulnerabilities
+# Format:
+#   'SNYK-{LANGUAGE}-{PACKAGE}-{ID}':
+#     - '{PACKAGE}@{VERSION}':
+#         reason: 'Explanation for ignoring this vulnerability'
+#         expires: 'YYYY-MM-DDTHH:MM:SS.000Z'
+#         created: 'YYYY-MM-DDTHH:MM:SS.000Z'
+ignore:
+  # Example: Ignore a low-severity vulnerability in a dev dependency
+  # 'SNYK-JS-EXAMPLE-123456':
+  #   - 'example-package@1.0.0':
+  #       reason: 'Dev dependency only, not used in production'
+  #       expires: '2026-12-31T23:59:59.000Z'
+  #       created: '2025-01-15T00:00:00.000Z'
+
+# Patch specific vulnerabilities (if patches are available)
 patch: {}
+
+# Usage Instructions:
+# 1. Run `npx snyk test` to scan for vulnerabilities
+# 2. To ignore a specific vulnerability, add it to the 'ignore' section above
+# 3. Always provide a reason and expiration date for ignored vulnerabilities
+# 4. Use `npx snyk wizard` for interactive vulnerability management
+# 5. Review and update this file regularly, especially before expiration dates
+#
+# Best Practices:
+# - Only ignore vulnerabilities after careful risk assessment
+# - Set reasonable expiration dates (typically 3-6 months)
+# - Document the business justification in the 'reason' field
+# - Prioritize fixing over ignoring when possible
+# - Review expired ignores during security audits

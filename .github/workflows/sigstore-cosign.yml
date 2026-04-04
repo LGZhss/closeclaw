@@ -1,5 +1,10 @@
 name: Sigstore Cosign
 
+# 触发条件：仅在发布 Release 时执行签名
+# 原因：
+# 1. 避免在每次 push 时执行不必要的签名操作，节省 CI/CD 资源
+# 2. 签名应该只针对正式发布的版本，而不是开发过程中的每次提交
+# 3. 符合 P033 CI/CD 加固要求，确保签名操作的严肃性和可追溯性
 on:
   release:
     types: [ published ]

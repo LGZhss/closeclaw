@@ -37,6 +37,9 @@ jobs:
       - name: Run Go Tests & Generate Coverage
         run: go test -coverprofile=coverage.txt ./kernel/...
 
+      # SonarCloud Scan with Quality Gate enforcement
+      # The -Dsonar.qualitygate.wait=true parameter ensures the workflow waits for
+      # Quality Gate results and fails the build if quality standards are not met
       - name: SonarCloud Scan
         uses: sonarsource/sonarcloud-github-action@v5.0.0
         env:

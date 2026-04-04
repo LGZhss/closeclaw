@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -26,6 +27,8 @@ const (
 	pipePath = `\\.\pipe\closeclaw_ipc`
 	// Unix fallback
 	sockPath = "/tmp/closeclaw.sock"
+	// TCP fallback for @grpc/grpc-js (不支持 Named Pipe)
+	tcpAddr = "127.0.0.1:50051"
 )
 
 // KernelBusServer 实现 pb.KernelBusServer 接口。
@@ -285,18 +288,35 @@ func (s *KernelBusServer) Chat(ctx context.Context, req *pb.ChatRequest) (*pb.Ch
 	}, nil
 }
 // Start 启动 gRPC 服务并阻塞监听。
+// P032: 同时监听 TCP 和 Named Pipe/Unix Socket
+// - TCP: 用于 @grpc/grpc-js 客户端（不支持 Named Pipe）
+// - Named Pipe/Unix Socket: 用于原生 IPC 通信
 func Start(srv *KernelBusServer) error {
-	lis, err := listen()
-	if err != nil {
-		return fmt.Errorf("创建监听器失败: %w", err)
-	}
 	s := grpc.NewServer(
 		grpc.MaxRecvMsgSize(4*1024*1024),
 		grpc.MaxSendMsgSize(4*1024*1024),
 	)
 	pb.RegisterKernelBusServer(s, srv)
 
-	slog.Info("KernelBus gRPC 服务已启动", "addr", lis.Addr())
+	// 启动 TCP 监听器（用于 TS 沙盒层）
+	go func() {
+		tcpLis, err := net.Listen("tcp", tcpAddr)
+		if err != nil {
+			slog.Error("TCP 监听器启动失败", "addr", tcpAddr, "err", err)
+			return
+		}
+		slog.Info("KernelBus TCP 服务已启动", "addr", tcpAddr)
+		if err := s.Serve(tcpLis); err != nil {
+			slog.Error("TCP 服务异常", "err", err)
+		}
+	}()
+
+	// 启动 Named Pipe / Unix Socket 监听器（用于 Dart 控制层）
+	lis, err := listen()
+	if err != nil {
+		return fmt.Errorf("创建 IPC 监听器失败: %w", err)
+	}
+	slog.Info("KernelBus IPC 服务已启动", "addr", lis.Addr())
 	return s.Serve(lis)
 }
 

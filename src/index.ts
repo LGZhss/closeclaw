@@ -1,16 +1,15 @@
-import * as grpc from "@grpc/grpc-js";
+﻿import * as grpc from "@grpc/grpc-js";
 import * as protoLoader from "@grpc/proto-loader";
 import { resolve } from "path";
 import { SandboxRunner } from "./agent/sandbox-runner.js";
 import { logger } from "./logger.js";
 import { ASSISTANT_NAME } from "./config.js";
-// 确保适配器自动注册（目前仅保留协作主体适配器，由其自身注册）
-
+// 纭繚閫傞厤鍣ㄨ嚜鍔ㄦ敞鍐岋紙鐩墠浠呬繚鐣欏崗浣滀富浣撻€傞厤鍣紝鐢卞叾鑷韩娉ㄥ唽锛?
 /**
- * GrpcKernelBusClient - 正式 gRPC 客户端连接 Go 内核
+ * GrpcKernelBusClient - 姝ｅ紡 gRPC 瀹㈡埛绔繛鎺?Go 鍐呮牳
  */
 class GrpcKernelBusClient {
-  private client: any; // gRPC 动态生成的客户端通常为 any，但我们会通过类型守卫保护调用
+  private client: any; // gRPC 鍔ㄦ€佺敓鎴愮殑瀹㈡埛绔€氬父涓?any锛屼絾鎴戜滑浼氶€氳繃绫诲瀷瀹堝崼淇濇姢璋冪敤
   private readonly protoPath: string;
 
   constructor() {
@@ -29,10 +28,9 @@ class GrpcKernelBusClient {
       ) as any;
       const KernelBus = protoDescriptor.closeclaw.v1.KernelBus;
 
-      const isWindows = process.platform === "win32";
-      const target = isWindows
-        ? "pipe:////./pipe/closeclaw_ipc"
-        : "unix:///tmp/closeclaw.sock";
+      // @grpc/grpc-js 不支持 Named Pipe，使用 TCP 连接
+      // Go 内核同时监听 TCP (127.0.0.1:50051) 和 Named Pipe
+      const target = "127.0.0.1:50051";
 
       this.client = new KernelBus(target, grpc.credentials.createInsecure());
     } catch (err: unknown) {
@@ -42,18 +40,14 @@ class GrpcKernelBusClient {
   }
 
   start() {
-    const isWindows = process.platform === "win32";
-    const target = isWindows
-      ? "\\\\.\\pipe\\closeclaw_ipc"
-      : "/tmp/closeclaw.sock";
     logger.info(
-      `[TS Sandbox] Connecting to Go Kernel via ${isWindows ? "Named Pipe" : "Unix Socket"} at ${target}...`,
+      `[TS Sandbox] Connecting to Go Kernel via TCP at 127.0.0.1:50051...`,
     );
     this.subscribeTasks();
   }
 
   private subscribeTasks() {
-    // 调用我们在 proto 中新增的 SubscribeTasks stream
+    // 璋冪敤鎴戜滑鍦?proto 涓柊澧炵殑 SubscribeTasks stream
     const call = this.client.SubscribeTasks({ ok: true, message: "Ready" });
 
     call.on(
@@ -111,8 +105,7 @@ class GrpcKernelBusClient {
 
     call.on("error", (err: Error) => {
       logger.error(`[TS Sandbox] gRPC Stream Error: ${err.message}`);
-      // 指数退避重连
-      setTimeout(() => this.subscribeTasks(), 5000);
+      // 鎸囨暟閫€閬块噸杩?      setTimeout(() => this.subscribeTasks(), 5000);
     });
 
     call.on("status", (status: grpc.StatusObject) => {
