@@ -202,29 +202,37 @@ export class ProcessExecutor {
         this.runningProcesses.delete(executionId!);
 
         // 补齐 (P031): 在进程错误时也尝试清理临时文件
-        const argsStr = args.join(" ");
-        if (argsStr.includes("temp_")) {
-          const tempPath = args.find((a) => a.includes("temp_"));
-          // eslint-disable-next-line security/detect-non-literal-fs-filename
-          if (tempPath) {
-            // 使用异步 unlink 优化 (P033)
-            // eslint-disable-next-line security/detect-non-literal-fs-filename
-            fsPromises
-              .unlink(tempPath)
-              .catch(
-                (e: any) =>
-                  e.code === "ENOENT" ||
-                  logger.warn(
-                    `[ProcessExecutor] 错误清理临时文件失败: ${tempPath}, 错误: ${e.message}`,
-                  ),
-              );
-          }
-        }
+        this._cleanupTempFileOnCrash(args);
 
         logger.error(`[ProcessExecutor] 命令执行错误: ${error.message}`);
         reject(error);
       });
     });
+  }
+
+  /**
+   * 在进程错误时清理临时文件
+   * @param args 进程参数
+   * @private
+   */
+  private _cleanupTempFileOnCrash(args: string[]): void {
+    const argsStr = args.join(" ");
+    if (argsStr.includes("temp_")) {
+      const tempPath = args.find((a) => a.includes("temp_"));
+      if (tempPath) {
+        // 使用异步 unlink 优化 (P033)
+        // eslint-disable-next-line security/detect-non-literal-fs-filename
+        fsPromises
+          .unlink(tempPath)
+          .catch(
+            (e: any) =>
+              e.code === "ENOENT" ||
+              logger.warn(
+                `[ProcessExecutor] 错误清理临时文件失败: ${tempPath}, 错误: ${e.message}`,
+              ),
+          );
+      }
+    }
   }
 
   /**
