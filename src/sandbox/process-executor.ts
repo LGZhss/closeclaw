@@ -75,7 +75,9 @@ export class ProcessExecutor {
         await fsPromises.unlink(tempFile);
       } catch (e: any) {
         if (e.code !== "ENOENT") {
-          logger.warn(`[ProcessExecutor] 清理临时文件失败: ${tempFile}, 错误: ${e.message}`);
+          logger.warn(
+            `[ProcessExecutor] 清理临时文件失败: ${tempFile}, 错误: ${e.message}`,
+          );
         }
       }
     }
@@ -210,7 +212,9 @@ export class ProcessExecutor {
             // eslint-disable-next-line security/detect-non-literal-fs-filename
             fsPromises.unlink(tempPath).catch((e: any) => {
               if (e.code !== "ENOENT") {
-                logger.warn(`[ProcessExecutor] 错误清理临时文件失败: ${tempPath}, 错误: ${e.message}`);
+                logger.warn(
+                  `[ProcessExecutor] 错误清理临时文件失败: ${tempPath}, 错误: ${e.message}`,
+                );
               }
             });
           }
