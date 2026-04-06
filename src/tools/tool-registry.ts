@@ -25,7 +25,7 @@ export function parseArgsToObject(tool: any, args: string[], rawText: string): a
   if (tool.name === "write_file") {
     const match = rawText.match(/^\/write\s+(\S+)\s+([\s\S]*)$/i);
     if (match) {
-      return { filePath: match[1], content: match[2] };
+      return { path: match[1], content: match[2] };
     }
   }
 
@@ -33,7 +33,7 @@ export function parseArgsToObject(tool: any, args: string[], rawText: string): a
   if (tool.name === "read_file") {
     const match = rawText.match(/^\/read\s+([\s\S]*)$/i);
     if (match) {
-      return { filePath: match[1].trim() };
+      return { path: match[1].trim() };
     }
   }
 
