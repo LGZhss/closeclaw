@@ -109,6 +109,25 @@ export class ProcessExecutor {
     return this._executeProcess(cmd, args, options, executionId, command);
   }
 
+  private _cleanupTempFile(args: string[]): void {
+    const argsStr = args.join(" ");
+    if (argsStr.includes("temp_")) {
+      const tempPath = args.find((a) => a.includes("temp_"));
+      if (tempPath) {
+        try {
+          // 使用异步 unlink 优化 (P033)
+          // eslint-disable-next-line security/detect-non-literal-fs-filename
+          fsPromises.unlink(tempPath).catch((err) => {
+            err.code === "ENOENT" ||
+              logger.debug(`Failed to cleanup temp file: ${tempPath}`, err);
+          });
+        } catch (err) {
+          logger.debug(`Cleanup error: ${err}`);
+        }
+      }
+    }
+  }
+
   /**
    * 底层进程执行抽象，安全地传递参数
    * @private
@@ -200,22 +219,7 @@ export class ProcessExecutor {
         this.runningProcesses.delete(executionId!);
 
         // 补齐 (P031): 在进程错误时也尝试清理临时文件
-        const argsStr = args.join(" ");
-        if (argsStr.includes("temp_")) {
-          const tempPath = args.find((a) => a.includes("temp_"));
-          if (tempPath) {
-            try {
-              // 使用异步 unlink 优化 (P033)
-              // eslint-disable-next-line security/detect-non-literal-fs-filename
-              fsPromises.unlink(tempPath).catch((err) => {
-                err.code === "ENOENT" ||
-                  logger.debug(`Failed to cleanup temp file: ${tempPath}`, err);
-              });
-            } catch (err) {
-              logger.debug(`Cleanup error: ${err}`);
-            }
-          }
-        }
+        this._cleanupTempFile(args);
 
         logger.error(`[ProcessExecutor] 命令执行错误: ${error.message}`);
         reject(error);
