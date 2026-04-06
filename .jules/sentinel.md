@@ -1,4 +1,5 @@
 ## 2026-04-06 - [Critical Security Fix: Path Traversal Bypass]
+
 **Vulnerability:** A bypass in the path traversal logic (`resolveSafePath` in `src/utils/utils.ts`) allowed partial prefix matching because `targetPath.startsWith(absoluteBase)` could be tricked when `absoluteBase` was `/app/data` and `targetPath` was `/app/data-secrets`. In addition, string replacement on relative path for protected paths blocklist allowed `../` based path bypasses (e.g. `../data/.env`).
 **Learning:** Basic `startsWith` on strings is insufficient for path traversal prevention without checking path separators (`path.sep`). Evaluating unnormalized relative paths against protected path blacklists can also lead to directory traversal bypasses.
 **Prevention:** Always normalize the final path check to explicitly ensure that either the `targetPath` completely matches the `absoluteBase`, or `targetPath.startsWith(absoluteBase + path.sep)`. Also, use `path.relative` resolved from the actual fully resolved base against blocklists.
