@@ -41,10 +41,6 @@ describe('Telegram Channel - Message Receiving', () => {
       expect(body.timeout).toBe(30); expect(body.offset).toBeDefined();
     }
     await ch.disconnect();
-  });wait new Promise(resolve => setTimeout(resolve, 30));
-    const call = mockFetch.mock.calls.find((c: any) => c[0].includes('getUpdates'));
-    expect(call).toBeDefined();
-    await channel.disconnect();
   });
 
   it('should call getUpdates with correct parameters', async () => {
