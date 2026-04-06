@@ -4,13 +4,14 @@ import { resolve } from "path";
 import { SandboxRunner } from "./agent/sandbox-runner.js";
 import { logger } from "./logger.js";
 import { ASSISTANT_NAME } from "./config.js";
-// 纭繚閫傞厤鍣ㄨ嚜鍔ㄦ敞鍐岋紙鐩墠浠呬繚鐣欏崗浣滀富浣撻€傞厤鍣紝鐢卞叾鑷韩娉ㄥ唽锛?
+
 /**
- * GrpcKernelBusClient - 姝ｅ紡 gRPC 瀹㈡埛绔繛鎺?Go 鍐呮牳
+ * GrpcKernelBusClient - 正式 gRPC 客户端连接 Go 内核
  */
 class GrpcKernelBusClient {
-  private client: any; // gRPC 鍔ㄦ€佺敓鎴愮殑瀹㈡埛绔€氬父涓?any锛屼絾鎴戜滑浼氶€氳繃绫诲瀷瀹堝崼淇濇姢璋冪敤
+  private client: any; // gRPC 动态生成的客户端通常为 any，但我们会通过类型守卫保护调用
   private readonly protoPath: string;
+  private reconnectTimer: NodeJS.Timeout | null = null;
 
   constructor() {
     this.protoPath = resolve(process.cwd(), "proto/messages.proto");
@@ -47,7 +48,7 @@ class GrpcKernelBusClient {
   }
 
   private subscribeTasks() {
-    // 璋冪敤鎴戜滑鍦?proto 涓柊澧炵殑 SubscribeTasks stream
+    // 调用我们在 proto 中新增的 SubscribeTasks stream
     const call = this.client.SubscribeTasks({ ok: true, message: "Ready" });
 
     call.on(
@@ -105,7 +106,14 @@ class GrpcKernelBusClient {
 
     call.on("error", (err: Error) => {
       logger.error(`[TS Sandbox] gRPC Stream Error: ${err.message}`);
-      // 鎸囨暟閫€閬块噸杩?      setTimeout(() => this.subscribeTasks(), 5000);
+      // 指数退避重连 - 修复资源泄漏
+      if (this.reconnectTimer) {
+        clearTimeout(this.reconnectTimer);
+      }
+      this.reconnectTimer = setTimeout(() => {
+        this.reconnectTimer = null;
+        this.subscribeTasks();
+      }, 5000);
     });
 
     call.on("status", (status: grpc.StatusObject) => {
@@ -116,7 +124,14 @@ class GrpcKernelBusClient {
 
     call.on("end", () => {
       logger.warn("[TS Sandbox] gRPC Stream ended by server. Reconnecting...");
-      setTimeout(() => this.subscribeTasks(), 5000);
+      // 指数退避重连 - 修复资源泄漏
+      if (this.reconnectTimer) {
+        clearTimeout(this.reconnectTimer);
+      }
+      this.reconnectTimer = setTimeout(() => {
+        this.reconnectTimer = null;
+        this.subscribeTasks();
+      }, 5000);
     });
   }
 
@@ -140,6 +155,13 @@ class GrpcKernelBusClient {
         }
       });
     });
+  }
+
+  close() {
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
   }
 }
 
