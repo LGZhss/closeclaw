@@ -1,0 +1,3 @@
+## 2026-04-06 - Async Cleanup Optimization
+**Learning:** The codebase has micro-performance guidelines (P033) which prioritize non-blocking async operations over synchronous ones, even if the raw sync baseline operations benchmark slightly faster in micro-tests. This is to avoid blocking the Node.js event loop during high-throughput execution in the sandbox manager.
+**Action:** When performing file operations, especially in heavily concurrent areas like sandbox cleanup, always prefer `fsPromises.unlink().catch(...)` over `if (fs.existsSync()) { fsPromises.unlink() }` to avoid blocking the event loop.
