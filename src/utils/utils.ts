@@ -84,16 +84,16 @@ export const resolveSafePath = (
   const targetPath = path.resolve(baseDir, relativePath);
 
   // 核心加固 (P031): 禁止目录穿越
-  if (!targetPath.startsWith(absoluteBase)) {
+  if (targetPath !== absoluteBase && !targetPath.startsWith(absoluteBase + path.sep)) {
     throw new Error(`[Security] 拒绝越权访问路径: ${relativePath}`);
   }
 
   // 核心加固 (P031 Bug B2.2): 禁止访问敏感路径（目录和文件）
-  const normalized = relativePath.replace(/\\/g, "/").replace(/^\.\/+/, "");
+  const resolvedRelative = path.relative(absoluteBase, targetPath).replace(/\\/g, "/");
   for (const protectedPath of PROTECTED_PATHS) {
     if (
-      normalized === protectedPath ||
-      normalized.startsWith(protectedPath + "/")
+      resolvedRelative === protectedPath ||
+      resolvedRelative.startsWith(protectedPath + "/")
     ) {
       throw new Error(`[Security] 拒绝访问受保护路径: ${relativePath}`);
     }
