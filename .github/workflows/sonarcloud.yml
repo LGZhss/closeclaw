@@ -16,26 +16,35 @@ jobs:
           egress-policy: audit
 
       - uses: actions/checkout@v4
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
           fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
           node-version: 20
 
       - name: Setup Go
         uses: actions/setup-go@v5
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
           go-version: '1.22'
+          cache-dependency-path: 'kernel/go.sum'
 
       - name: Run JS Tests & Generate Coverage
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         run: |
           npm ci
           npm run test:coverage
 
       - name: Run Go Tests & Generate Coverage
-        run: go test -coverprofile=coverage.txt ./kernel/...
+        run: cd kernel && go test -coverprofile=../coverage.txt ./...
 
       # SonarCloud Scan with Quality Gate enforcement
       # The -Dsonar.qualitygate.wait=true parameter ensures the workflow waits for
