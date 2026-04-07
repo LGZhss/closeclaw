@@ -203,17 +203,20 @@ export class ProcessExecutor {
         this.runningProcesses.delete(executionId!);
 
         // 补齐 (P031): 在进程错误时也尝试清理临时文件
-        const tempPath = args.find((a) => a.includes("temp_"));
-        if (tempPath) {
-          try {
-            // 使用异步 unlink 优化 (P033)
-            // eslint-disable-next-line security/detect-non-literal-fs-filename
-            fsPromises.unlink(tempPath).catch((err: any) => {
-              err.code === "ENOENT" ||
-                logger.debug(`Failed to cleanup temp file: ${tempPath}`, err);
-            });
-          } catch (err) {
-            logger.debug(`Cleanup error: ${err}`);
+        const argsStr = args.join(" ");
+        if (argsStr.includes("temp_")) {
+          const tempPath = args.find((a) => a.includes("temp_"));
+          if (tempPath) {
+            try {
+              // 使用异步 unlink 优化 (P033)
+              // eslint-disable-next-line security/detect-non-literal-fs-filename
+              fsPromises.unlink(tempPath).catch((err: any) => {
+                err.code === "ENOENT" ||
+                  logger.debug(`Failed to cleanup temp file: ${tempPath}`, err);
+              });
+            } catch (err) {
+              logger.debug(`Cleanup error: ${err}`);
+            }
           }
         }
 
