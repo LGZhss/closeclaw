@@ -85,7 +85,11 @@ export const resolveSafePath = (
 
   // 核心加固 (P031): 禁止目录穿越
   const relativeFromBase = path.relative(absoluteBase, targetPath);
-  if (relativeFromBase.startsWith("..") || path.isAbsolute(relativeFromBase)) {
+  if (
+    relativeFromBase === ".." ||
+    relativeFromBase.startsWith(".." + path.sep) ||
+    path.isAbsolute(relativeFromBase)
+  ) {
     throw new Error(`[Security] 拒绝越权访问路径: ${relativePath}`);
   }
 
