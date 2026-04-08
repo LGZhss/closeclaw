@@ -1,3 +1,4 @@
 ## 2026-04-08 - Eliminate blocking fs.existsSync in hot paths
+
 **Learning:** Checking `fs.existsSync()` before asynchronous file system operations (like `unlink` or `mkdir`) blocks the Node.js event loop unnecessarily. It is an anti-pattern when we can just call the async function directly and handle the `ENOENT` or `EEXIST` error in a try/catch block.
 **Action:** Always prefer direct asynchronous operations with appropriate error handling (e.g., catching `ENOENT` for unlinking a file that might not exist) over synchronous pre-checks like `fs.existsSync()`.
