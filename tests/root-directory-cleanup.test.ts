@@ -165,6 +165,10 @@ describe('Property 2: Preservation - Core Files and Directories', () => {
 
   it('should preserve all core directories', () => {
     const missingDirs = CORE_DIRECTORIES.filter(dir => {
+      // Exclude build/data artifacts that might not exist in a fresh clone
+      if (['data', 'dist'].includes(dir)) {
+        return false;
+      }
       const dirPath = path.join(ROOT_DIR, dir);
       return !fs.existsSync(dirPath) || !fs.statSync(dirPath).isDirectory();
     });
@@ -174,6 +178,10 @@ describe('Property 2: Preservation - Core Files and Directories', () => {
 
   it('should preserve IDE configuration directories', () => {
     const missingDirs = IDE_CONFIG_DIRS.filter(dir => {
+      // Exclude IDE configurations that might not exist in a fresh clone
+      if (['.idea'].includes(dir)) {
+        return false;
+      }
       const dirPath = path.join(ROOT_DIR, dir);
       return !fs.existsSync(dirPath) || !fs.statSync(dirPath).isDirectory();
     });
