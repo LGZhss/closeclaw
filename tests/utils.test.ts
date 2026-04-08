@@ -7,7 +7,7 @@ describe("resolveSafePath Security Enhancements", () => {
     const bypassPath = "../workspace-secrets/foo";
 
     expect(() => resolveSafePath(baseDir, bypassPath)).toThrowError(
-      /\[Security\] 拒绝越权访问路径/
+      /\[Security\] 拒绝越权访问路径/,
     );
   });
 });
