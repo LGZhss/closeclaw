@@ -1,4 +1,3 @@
 ## 2025-04-10 - Event Loop Blocking via Synchronous Pre-checks
-
 **Learning:** Using `fs.existsSync()` before asynchronous file operations (like `fsPromises.readFile` or `fsPromises.unlink`) needlessly blocks the Node.js event loop. Furthermore, for operations like `mkdir(path, { recursive: true })`, the pre-check is entirely redundant because the underlying system call handles the check natively without erroring.
 **Action:** Always prefer native asynchronous API features (like `{ recursive: true }`) and catch/handle `ENOENT` errors from async calls instead of synchronously pre-checking for file existence.
