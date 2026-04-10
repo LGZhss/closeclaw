@@ -67,8 +67,7 @@ const CORE_DIRECTORIES = [
   'scripts',
   'votes',
   'tests',
-  'data',
-  'dist',
+  // 'data', 'dist' are build/runtime directories and may not exist on a fresh clone
 ];
 
 const IDE_CONFIG_DIRS = [
@@ -76,8 +75,8 @@ const IDE_CONFIG_DIRS = [
   '.git',
   '.github',
   '.husky',
-  '.idea',
   '.kiro',
+  // '.idea' is IDE-specific and might not exist on a fresh clone
 ];
 
 describe('Property 1: Bug Condition - Root Directory Temporary Files', () => {
