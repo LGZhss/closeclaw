@@ -200,8 +200,13 @@ export class ProcessExecutor {
 
       // 进程错误
       childProcess.on("error", (error) => {
-        timeoutId && clearTimeout(timeoutId);
-        executionId && this.runningProcesses.delete(executionId);
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+
+        if (executionId) {
+          this.runningProcesses.delete(executionId);
+        }
 
         const tempPath = args.find((a) => a.includes("temp_"));
         if (tempPath) {
