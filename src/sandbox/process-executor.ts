@@ -147,7 +147,9 @@ export class ProcessExecutor {
       });
 
       // 记录运行中的进程
-      this.runningProcesses.set(executionId!, childProcess);
+      if (executionId) {
+        this.runningProcesses.set(executionId, childProcess);
+      }
 
       // 设置超时
       if (timeout) {
@@ -158,14 +160,18 @@ export class ProcessExecutor {
       }
 
       // 捕获标准输出
-      childProcess.stdout!.on("data", (data) => {
-        stdout += data.toString();
-      });
+      if (childProcess.stdout) {
+        childProcess.stdout.on("data", (data) => {
+          stdout += data.toString();
+        });
+      }
 
       // 捕获标准错误
-      childProcess.stderr!.on("data", (data) => {
-        stderr += data.toString();
-      });
+      if (childProcess.stderr) {
+        childProcess.stderr.on("data", (data) => {
+          stderr += data.toString();
+        });
+      }
 
       // 进程结束
       childProcess.on("close", (exitCode) => {
@@ -175,7 +181,9 @@ export class ProcessExecutor {
         }
 
         // 移除进程记录
-        this.runningProcesses.delete(executionId!);
+        if (executionId) {
+          this.runningProcesses.delete(executionId);
+        }
 
         // 解析结果
         const result: ExecutionResult = {
@@ -198,7 +206,9 @@ export class ProcessExecutor {
         timeoutId && clearTimeout(timeoutId);
 
         // 移除进程记录
-        this.runningProcesses.delete(executionId!);
+        if (executionId) {
+          this.runningProcesses.delete(executionId);
+        }
 
         // 补齐 (P031): 在进程错误时也尝试清理临时文件
         const tempPath = args.find((a) => a.includes("temp_"));
