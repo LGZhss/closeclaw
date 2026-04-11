@@ -9,6 +9,8 @@ on:
 jobs:
   sonarcloud:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@v2
@@ -27,7 +29,8 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
+          go-version: '1.25.0'
+          cache-dependency-path: 'kernel/go.sum'
 
       - name: Run JS Tests & Generate Coverage
         run: |
@@ -35,7 +38,7 @@ jobs:
           npm run test:coverage
 
       - name: Run Go Tests & Generate Coverage
-        run: go test -coverprofile=coverage.txt ./kernel/...
+        run: cd kernel && go test -coverprofile=../coverage.txt ./...
 
       # SonarCloud Scan with Quality Gate enforcement
       # The -Dsonar.qualitygate.wait=true parameter ensures the workflow waits for
