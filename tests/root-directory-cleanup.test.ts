@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest";
-import * as fs from "fs";
-import * as path from "path";
+import { describe, it, expect } from 'vitest';
+import * as fs from 'fs';
+import * as path from 'path';
 
 /**
  * Root Directory Cleanup Bug Condition Tests
@@ -12,195 +12,168 @@ import * as path from "path";
  * **Validates: Requirements 3.1, 3.2, 3.3, 3.4, 3.5**
  */
 
-const ROOT_DIR = path.resolve(__dirname, "..");
+const ROOT_DIR = path.resolve(__dirname, '..');
 
 // Temporary files that should NOT exist in root directory
 const TEMP_PYTHON_SCRIPTS = [
-  "add_vote_temp.py",
-  "add_vote.py",
-  "addvote.py",
-  "find_line_count.py",
-  "find_votes.py",
-  "find_votes2.py",
-  "read_txt.py",
-  "read_vote.py",
+  'add_vote_temp.py',
+  'add_vote.py',
+  'addvote.py',
+  'find_line_count.py',
+  'find_votes.py',
+  'find_votes2.py',
+  'read_txt.py',
+  'read_vote.py',
 ];
 
-const TEMP_JS_FILES = ["findcodex.js", "js1.js", "script.js", "temp.js"];
+const TEMP_JS_FILES = [
+  'findcodex.js',
+  'js1.js',
+  'script.js',
+  'temp.js',
+];
 
 const TEMP_MD_FILES = [
-  "clean_vote.md",
-  "final_check.md",
-  "original.md",
-  "walkthrough.md",
+  'clean_vote.md',
+  'final_check.md',
+  'original.md',
+  'walkthrough.md',
 ];
 
 const TEMP_TXT_FILES = [
-  "votes_content_copy.txt",
-  "votes_content.txt",
-  "votes_out.txt",
-  "encoding_check.txt",
+  'votes_content_copy.txt',
+  'votes_content.txt',
+  'votes_out.txt',
+  'encoding_check.txt',
 ];
 
 const UNKNOWN_FILES = ["tash'"];
 
 // Core files that MUST be preserved
 const CORE_CONFIG_FILES = [
-  "package.json",
-  "tsconfig.json",
-  "README.md",
-  "RULES.md",
-  "SECURITY.md",
-  ".env.example",
-  ".gitignore",
-  "vitest.config.ts",
+  'package.json',
+  'tsconfig.json',
+  'README.md',
+  'RULES.md',
+  'SECURITY.md',
+  '.env.example',
+  '.gitignore',
+  'vitest.config.ts',
 ];
 
 const CORE_DIRECTORIES = [
-  "src",
-  "docs",
-  "scripts",
-  "votes",
-  "tests",
-  "data",
-  "dist",
+  'src',
+  'docs',
+  'scripts',
+  'votes',
+  'tests',
+  'data',
+  'dist',
 ];
 
 const IDE_CONFIG_DIRS = [
-  ".arts",
-  ".git",
-  ".github",
-  ".husky",
-  ".idea",
-  ".kiro",
+  '.arts',
+  '.git',
+  '.github',
+  '.husky',
+  '.idea',
+  '.kiro',
 ];
 
-describe("Property 1: Bug Condition - Root Directory Temporary Files", () => {
+describe('Property 1: Bug Condition - Root Directory Temporary Files', () => {
   /**
    * CRITICAL: This test MUST FAIL on unfixed code - failure confirms the bug exists
    * DO NOT attempt to fix the test or the code when it fails
    * GOAL: Surface counterexamples that demonstrate temporary files exist in root directory
    */
 
-  it("should NOT have temporary Python scripts in root directory", () => {
-    const existingFiles = TEMP_PYTHON_SCRIPTS.filter((file) =>
-      fs.existsSync(path.join(ROOT_DIR, file)),
-    );
+  const tempFileChecks = [
+    { type: 'Python scripts', files: TEMP_PYTHON_SCRIPTS },
+    { type: 'JavaScript files', files: TEMP_JS_FILES },
+    { type: 'Markdown documents', files: TEMP_MD_FILES },
+    { type: 'output text files', files: TEMP_TXT_FILES },
+    { type: 'unknown files', files: UNKNOWN_FILES },
+  ];
 
-    expect(existingFiles).toEqual([]);
+  tempFileChecks.forEach(({ type, files }) => {
+    it(`should NOT have temporary ${type} in root directory`, () => {
+      const existingFiles = files.filter(file =>
+        fs.existsSync(path.join(ROOT_DIR, file))
+      );
+      expect(existingFiles).toEqual([]);
+    });
   });
 
-  it("should NOT have temporary JavaScript files in root directory", () => {
-    const existingFiles = TEMP_JS_FILES.filter((file) =>
-      fs.existsSync(path.join(ROOT_DIR, file)),
-    );
-
-    expect(existingFiles).toEqual([]);
-  });
-
-  it("should NOT have temporary Markdown documents in root directory", () => {
-    const existingFiles = TEMP_MD_FILES.filter((file) =>
-      fs.existsSync(path.join(ROOT_DIR, file)),
-    );
-
-    expect(existingFiles).toEqual([]);
-  });
-
-  it("should NOT have temporary output text files in root directory", () => {
-    const existingFiles = TEMP_TXT_FILES.filter((file) =>
-      fs.existsSync(path.join(ROOT_DIR, file)),
-    );
-
-    expect(existingFiles).toEqual([]);
-  });
-
-  it("should NOT have unknown files in root directory", () => {
-    const existingFiles = UNKNOWN_FILES.filter((file) =>
-      fs.existsSync(path.join(ROOT_DIR, file)),
-    );
-
-    expect(existingFiles).toEqual([]);
-  });
-
-  it("should NOT have logs-*.zip files in root directory", () => {
+  it('should NOT have logs-*.zip files in root directory', () => {
     const files = fs.readdirSync(ROOT_DIR);
-    const logZipFiles = files.filter((file) => /^logs-.*\.zip$/.test(file));
+    const logZipFiles = files.filter(file => /^logs-.*\.zip$/.test(file));
 
     expect(logZipFiles).toEqual([]);
   });
 
-  it("should have temporary file ignore rules in .gitignore", () => {
-    const gitignorePath = path.join(ROOT_DIR, ".gitignore");
-    const gitignoreContent = fs.readFileSync(gitignorePath, "utf-8");
+  it('should have temporary file ignore rules in .gitignore', () => {
+    const gitignorePath = path.join(ROOT_DIR, '.gitignore');
+    const gitignoreContent = fs.readFileSync(gitignorePath, 'utf-8');
 
     // Check for temporary file patterns
     const hasTemporaryRules =
-      gitignoreContent.includes("*_temp.*") &&
-      gitignoreContent.includes("temp.*") &&
-      gitignoreContent.includes("*_copy.*") &&
-      gitignoreContent.includes("*_out.*");
+      gitignoreContent.includes('*_temp.*') &&
+      gitignoreContent.includes('temp.*') &&
+      gitignoreContent.includes('*_copy.*') &&
+      gitignoreContent.includes('*_out.*');
 
     expect(hasTemporaryRules).toBe(true);
   });
 });
 
-describe("Property 2: Preservation - Core Files and Directories", () => {
+describe('Property 2: Preservation - Core Files and Directories', () => {
   /**
    * IMPORTANT: These tests capture baseline behavior to preserve
    * EXPECTED OUTCOME: Tests PASS on unfixed code (confirms what to preserve)
    */
 
-  it("should preserve all core configuration files", () => {
-    const missingFiles = CORE_CONFIG_FILES.filter(
-      (file) => !fs.existsSync(path.join(ROOT_DIR, file)),
+  it('should preserve all core configuration files', () => {
+    const missingFiles = CORE_CONFIG_FILES.filter(file =>
+      !fs.existsSync(path.join(ROOT_DIR, file))
     );
 
     expect(missingFiles).toEqual([]);
   });
 
-  it("should preserve all core directories", () => {
-    const alwaysExpected = ["src", "docs", "scripts", "votes", "tests"];
-    const untracked = ["data", "dist"];
+  const dirChecks = [
+    { desc: 'all core directories', dirs: CORE_DIRECTORIES, untracked: ["data", "dist"] },
+    { desc: 'IDE configuration directories', dirs: IDE_CONFIG_DIRS, untracked: [".arts", ".idea"] },
+  ];
 
-    const missingDirs = CORE_DIRECTORIES.filter((dir) => {
-      const dirPath = path.join(ROOT_DIR, dir);
-      if (untracked.includes(dir) && !fs.existsSync(dirPath)) {
-        return false; // Skip if untracked directory doesn't exist yet
-      }
-      return !fs.existsSync(dirPath) || !fs.statSync(dirPath).isDirectory();
+  dirChecks.forEach(({ desc, dirs, untracked }) => {
+    it(`should preserve ${desc}`, () => {
+      const missingDirs = dirs.filter(dir => {
+        const dirPath = path.join(ROOT_DIR, dir);
+        if (untracked.includes(dir) && !fs.existsSync(dirPath)) {
+           return false; // Skip if untracked directory doesn't exist yet
+        }
+        return !fs.existsSync(dirPath) || !fs.statSync(dirPath).isDirectory();
+      });
+
+      expect(missingDirs).toEqual([]);
     });
-
-    expect(missingDirs).toEqual([]);
   });
 
-  it("should preserve IDE configuration directories", () => {
-    const untracked = [".arts", ".idea"];
-    const missingDirs = IDE_CONFIG_DIRS.filter((dir) => {
-      const dirPath = path.join(ROOT_DIR, dir);
-      if (untracked.includes(dir) && !fs.existsSync(dirPath)) {
-        return false; // Skip if IDE config directory doesn't exist yet
-      }
-      return !fs.existsSync(dirPath) || !fs.statSync(dirPath).isDirectory();
-    });
-
-    expect(missingDirs).toEqual([]);
-  });
-
-  it("should preserve existing .gitignore rules", () => {
-    const gitignorePath = path.join(ROOT_DIR, ".gitignore");
-    const gitignoreContent = fs.readFileSync(gitignorePath, "utf-8");
+  it('should preserve existing .gitignore rules', () => {
+    const gitignorePath = path.join(ROOT_DIR, '.gitignore');
+    const gitignoreContent = fs.readFileSync(gitignorePath, 'utf-8');
 
     // Check for essential existing rules
     const hasEssentialRules =
-      gitignoreContent.includes("node_modules/") &&
-      gitignoreContent.includes("dist/") &&
-      gitignoreContent.includes(".env");
+      gitignoreContent.includes('node_modules/') &&
+      gitignoreContent.includes('dist/') &&
+      gitignoreContent.includes('.env');
 
     expect(hasEssentialRules).toBe(true);
   });
 
-  it("should preserve scripts directory functionality", () => {
-    const scriptsDir = path.join(ROOT_DIR, "scripts");
+  it('should preserve scripts directory functionality', () => {
+    const scriptsDir = path.join(ROOT_DIR, 'scripts');
     expect(fs.existsSync(scriptsDir)).toBe(true);
 
     // Check that scripts directory contains files
