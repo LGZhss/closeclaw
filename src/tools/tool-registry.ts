@@ -6,8 +6,17 @@
 import { readWsFile, writeWsFile } from "../utils/utils.js";
 import { SandboxManager } from "../sandbox/manager.js";
 
+import {
+  ToolArguments,
+  ToolContext,
+  ToolDefinition,
+} from "./tool-definitions.js";
+
 /** 工具处理函数类型 */
-export type ToolHandler = (args: any, context: any) => Promise<any>;
+export type ToolHandler = (
+  args: ToolArguments,
+  context: ToolContext,
+) => Promise<unknown>;
 
 /**
  * 解析命令行风格的参数到对象
@@ -18,10 +27,10 @@ export type ToolHandler = (args: any, context: any) => Promise<any>;
  * @returns 解析后的参数对象
  */
 export function parseArgsToObject(
-  tool: any,
+  tool: ToolDefinition,
   args: string[],
   rawText: string,
-): any {
+): ToolArguments {
   const props = tool.parameters?.properties || {};
   const propNames = Object.keys(props);
 
@@ -42,7 +51,7 @@ export function parseArgsToObject(
   }
 
   // 默认处理：按位置映射参数
-  const result: any = {};
+  const result: ToolArguments = {};
   propNames.forEach((prop, i) => {
     if (args[i] !== undefined) {
       result[prop] = args[i];
@@ -62,29 +71,32 @@ export const createToolRegistry = (
 ): Record<string, ToolHandler> => {
   return {
     /** 读取文件处理器 */
-    read_file: async ({ path: filePath }) => {
-      return { content: readWsFile(workspaceDir, filePath) };
+    read_file: async ({ path: filePath }: ToolArguments) => {
+      return { content: readWsFile(workspaceDir, filePath as string) };
     },
 
     /** 写入文件处理器 */
-    write_file: async ({ path: filePath, content }) => {
-      writeWsFile(workspaceDir, filePath, content);
+    write_file: async ({ path: filePath, content }: ToolArguments) => {
+      writeWsFile(workspaceDir, filePath as string, content as string);
       return { success: true };
     },
 
     /** 在沙盒中执行代码处理器 */
-    execute_code: async ({ code }, { traceId }) => {
-      return await sandboxManager.run({ type: "code", content: code }, traceId);
+    execute_code: async ({ code }: ToolArguments, { traceId }: ToolContext) => {
+      return await sandboxManager.run(
+        { type: "code", content: code as string },
+        traceId as string,
+      );
     },
 
     /** 列出目录处理器 */
-    list_dir: async ({ path: _dirPath }) => {
+    list_dir: async ({ path: _dirPath }: ToolArguments) => {
       // 简单模拟，实际应用中应使用更复杂的逻辑
       return { files: ["."] };
     },
 
     /** 搜索 Web 处理器 (需对接外部 API) */
-    search_web: async ({ query }) => {
+    search_web: async ({ query }: ToolArguments) => {
       return { results: `Searching for: ${query}... (API not configured)` };
     },
   };
