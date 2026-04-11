@@ -67,8 +67,8 @@ const CORE_DIRECTORIES = [
   'scripts',
   'votes',
   'tests',
-  'data',
-  'dist',
+
+
 ];
 
 const IDE_CONFIG_DIRS = [
@@ -76,7 +76,7 @@ const IDE_CONFIG_DIRS = [
   '.git',
   '.github',
   '.husky',
-  '.idea',
+
   '.kiro',
 ];
 
