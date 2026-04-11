@@ -53,13 +53,9 @@ export const sanitizeJid = (jid: string): string => {
  * @param dirPath 目录路径
  */
 export const ensureDir = (dirPath: string): void => {
-  try {
+  if (!fs.existsSync(dirPath)) {
     // eslint-disable-next-line security/detect-non-literal-fs-filename
     fs.mkdirSync(dirPath, { recursive: true });
-  } catch (error: any) {
-    if (error.code !== "EEXIST") {
-      throw error;
-    }
   }
 };
 
@@ -68,13 +64,9 @@ export const ensureDir = (dirPath: string): void => {
  * @param dirPath 目录路径
  */
 export const ensureDirAsync = async (dirPath: string): Promise<void> => {
-  try {
+  if (!fs.existsSync(dirPath)) {
     // eslint-disable-next-line security/detect-non-literal-fs-filename
     await fsPromises.mkdir(dirPath, { recursive: true });
-  } catch (error: any) {
-    if (error.code !== "EEXIST") {
-      throw error;
-    }
   }
 };
 
@@ -126,15 +118,12 @@ export const readWsFile = (
   relativePath: string,
 ): string => {
   const safePath = resolveSafePath(workspaceDir, relativePath);
-  try {
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
-    return fs.readFileSync(safePath, "utf-8");
-  } catch (error: any) {
-    if (error.code === "ENOENT") {
-      throw new Error(`文件不存在: ${relativePath}`);
-    }
-    throw error;
+  // eslint-disable-next-line security/detect-non-literal-fs-filename
+  if (!fs.existsSync(safePath)) {
+    throw new Error(`文件不存在: ${relativePath}`);
   }
+  // eslint-disable-next-line security/detect-non-literal-fs-filename
+  return fs.readFileSync(safePath, "utf-8");
 };
 
 /**
@@ -147,15 +136,12 @@ export const readWsFileAsync = async (
   relativePath: string,
 ): Promise<string> => {
   const safePath = resolveSafePath(workspaceDir, relativePath);
-  try {
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
-    return await fsPromises.readFile(safePath, "utf-8");
-  } catch (error: any) {
-    if (error.code === "ENOENT") {
-      throw new Error(`文件不存在: ${relativePath}`);
-    }
-    throw error;
+  // eslint-disable-next-line security/detect-non-literal-fs-filename
+  if (!fs.existsSync(safePath)) {
+    throw new Error(`文件不存在: ${relativePath}`);
   }
+  // eslint-disable-next-line security/detect-non-literal-fs-filename
+  return await fsPromises.readFile(safePath, "utf-8");
 };
 
 /**

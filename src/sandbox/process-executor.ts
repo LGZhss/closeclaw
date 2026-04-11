@@ -6,6 +6,7 @@
 import { spawn, ChildProcess } from "child_process";
 import os from "os";
 import path from "path";
+import fs from "fs";
 import fsPromises from "fs/promises";
 import { logger } from "../logger.js";
 import { config } from "../config.js";
@@ -72,11 +73,12 @@ export class ProcessExecutor {
       // 核心加固 (P031): 使用 finally 确保即使在 _executeProcess 抛错时也会清理
       try {
         // eslint-disable-next-line security/detect-non-literal-fs-filename
-        await fsPromises.unlink(tempFile);
-      } catch (e: any) {
-        if (e.code !== "ENOENT") {
-          logger.warn(`[ProcessExecutor] 清理临时文件失败: ${tempFile}`);
+        if (fs.existsSync(tempFile)) {
+          // eslint-disable-next-line security/detect-non-literal-fs-filename
+          await fsPromises.unlink(tempFile);
         }
+      } catch (e) {
+        logger.warn(`[ProcessExecutor] 清理临时文件失败: ${tempFile}`);
       }
     }
   }
@@ -193,29 +195,24 @@ export class ProcessExecutor {
       // 进程错误
       childProcess.on("error", (error) => {
         // 清除超时
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-        }
+        timeoutId && clearTimeout(timeoutId);
 
         // 移除进程记录
         this.runningProcesses.delete(executionId!);
 
         // 补齐 (P031): 在进程错误时也尝试清理临时文件
-        const argsStr = args.join(" ");
-        if (argsStr.includes("temp_")) {
-          const tempPath = args.find((a) => a.includes("temp_"));
-          if (tempPath) {
-            try {
-              // 使用异步 unlink 优化 (P033)
-              // eslint-disable-next-line security/detect-non-literal-fs-filename
-              fsPromises.unlink(tempPath).catch((err: any) => {
-                if (err.code !== "ENOENT") {
-                  logger.debug(`Failed to cleanup temp file: ${tempPath}`, err);
-                }
-              });
-            } catch (err) {
-              logger.debug(`Cleanup error: ${err}`);
-            }
+        const tempPath = args.find((a) => a.includes("temp_"));
+        if (tempPath) {
+          try {
+            // 使用异步 unlink 优化 (P033)
+            // eslint-disable-next-line security/detect-non-literal-fs-filename
+            fsPromises.unlink(tempPath).catch((err) => {
+              if (err.code !== "ENOENT") {
+                logger.debug(`Failed to cleanup temp file: ${tempPath}`, err);
+              }
+            });
+          } catch (err) {
+            logger.debug(`Cleanup error: ${err}`);
           }
         }
 

@@ -9,8 +9,6 @@ on:
 jobs:
   codacy-analysis:
     runs-on: ubuntu-latest
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@v2
@@ -21,7 +19,6 @@ jobs:
         uses: actions/checkout@v4
       - name: Run Codacy Analysis
         uses: codacy/codacy-analysis-cli-action@v4.4.7
-        continue-on-error: true
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           upload: true

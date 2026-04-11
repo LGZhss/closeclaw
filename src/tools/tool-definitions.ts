@@ -3,18 +3,6 @@
  * 统一管理所有 Agent 可用的工具函数描述
  */
 
-export type ToolArguments = Record<string, unknown>;
-export type ToolContext = Record<string, unknown>;
-export interface ToolDefinition {
-  name: string;
-  description: string;
-  parameters: {
-    type: string;
-    properties: Record<string, any>;
-    required: string[];
-  };
-}
-
 export const TOOL_DEFINITIONS = {
   /** 读取文件 */
   read_file: {
