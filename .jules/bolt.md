@@ -1,3 +1,4 @@
 ## 2026-04-11 - File System Operations Blocking Event Loop
+
 **Learning:** Using synchronous `fs.existsSync()` before asynchronous file operations like `fsPromises.unlink()` or `fsPromises.readFile()` unnecessarily blocks the Node.js event loop, even if raw latency benchmarks might show it to be fast.
 **Action:** Rely on native options like `{ recursive: true }` for directories, or call the asynchronous operation directly and handle the `ENOENT` error in the catch block to avoid using `fs.existsSync()`.
