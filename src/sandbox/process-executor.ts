@@ -205,17 +205,13 @@ export class ProcessExecutor {
         if (argsStr.includes("temp_")) {
           const tempPath = args.find((a) => a.includes("temp_"));
           if (tempPath) {
-            try {
-              // 使用异步 unlink 优化 (P033)
-              // eslint-disable-next-line security/detect-non-literal-fs-filename
-              fsPromises.unlink(tempPath).catch((err) => {
-                if (err.code !== "ENOENT") {
-                  logger.debug(`Failed to cleanup temp file: ${tempPath}`, err);
-                }
-              });
-            } catch (err) {
-              logger.debug(`Cleanup error: ${err}`);
-            }
+            // 使用异步 unlink 优化 (P033)
+            // eslint-disable-next-line security/detect-non-literal-fs-filename
+            fsPromises.unlink(tempPath).catch((err) => {
+              if (err.code !== "ENOENT") {
+                logger.debug(`Failed to cleanup temp file: ${tempPath}`, err);
+              }
+            });
           }
         }
 

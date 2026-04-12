@@ -1,4 +1,3 @@
 ## 2024-04-12 - Remove Synchronous fs.existsSync Checks Before File Operations
-
 **Learning:** Using synchronous `fs.existsSync()` before executing operations like `fsPromises.unlink()`, `fsPromises.mkdir()`, or `fsPromises.readFile()` unnecessarily blocks the Node.js event loop. Calling the asynchronous operation directly and handling the `ENOENT` error (or relying on `{ recursive: true }` for directories) improves raw latency and complies with memory instructions.
 **Action:** Always prefer native asynchronous file operations and handle errors natively instead of utilizing blocking precondition checks.
