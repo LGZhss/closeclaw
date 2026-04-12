@@ -1,0 +1,4 @@
+## 2026-04-12 - [Path Traversal & Blocklist Bypass in resolveSafePath]
+**Vulnerability:** The path traversal check used `targetPath.startsWith(absoluteBase)` which can be bypassed if the target matches the base prefix but points to a different folder (e.g., base `/app`, target `/app-dev`). Further, the protected paths blocklist checked the unparsed relative input rather than the fully resolved absolute or relative path, allowing paths like `subdir/../../app/.git` to bypass the `PROTECTED_PATHS` check.
+**Learning:** Basic string replacement and `.startsWith()` checks are insufficient against path traversal and blocklist bypasses.
+**Prevention:** Always fully resolve the untrusted path using `path.resolve()` relative to the base directory, then compute the normalized relative path via `path.relative()` before evaluating it against traversal checks and blocklists.
