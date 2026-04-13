@@ -64,10 +64,8 @@ export const ensureDir = (dirPath: string): void => {
  * @param dirPath 目录路径
  */
 export const ensureDirAsync = async (dirPath: string): Promise<void> => {
-  if (!fs.existsSync(dirPath)) {
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
-    await fsPromises.mkdir(dirPath, { recursive: true });
-  }
+  // eslint-disable-next-line security/detect-non-literal-fs-filename
+  await fsPromises.mkdir(dirPath, { recursive: true });
 };
 
 /**
@@ -136,12 +134,15 @@ export const readWsFileAsync = async (
   relativePath: string,
 ): Promise<string> => {
   const safePath = resolveSafePath(workspaceDir, relativePath);
-  // eslint-disable-next-line security/detect-non-literal-fs-filename
-  if (!fs.existsSync(safePath)) {
-    throw new Error(`文件不存在: ${relativePath}`);
+  try {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
+    return await fsPromises.readFile(safePath, "utf-8");
+  } catch (error: unknown) {
+    if (error instanceof Error && (error as any).code === "ENOENT") {
+      throw new Error(`文件不存在: ${relativePath}`);
+    }
+    throw error;
   }
-  // eslint-disable-next-line security/detect-non-literal-fs-filename
-  return await fsPromises.readFile(safePath, "utf-8");
 };
 
 /**
