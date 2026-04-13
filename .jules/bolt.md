@@ -1,4 +1,3 @@
 ## 2026-04-13 - Avoid fs.existsSync before async operations
-
 **Learning:** The codebase relies on asynchronous operations to avoid blocking the Node.js event loop. Using `fs.existsSync()` synchronously before asynchronous operations like `fsPromises.unlink()` or `fsPromises.readFile()` blocks the event loop unnecessarily, especially in high-concurrency sandbox environments.
 **Action:** Rely on native options like `{ recursive: true }` for directory creation or call the asynchronous operation directly and handle the `ENOENT` error in a catch block instead of performing a synchronous check beforehand.
