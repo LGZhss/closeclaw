@@ -53,10 +53,8 @@ export const sanitizeJid = (jid: string): string => {
  * @param dirPath 目录路径
  */
 export const ensureDir = (dirPath: string): void => {
-  if (!fs.existsSync(dirPath)) {
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
-    fs.mkdirSync(dirPath, { recursive: true });
-  }
+  // eslint-disable-next-line security/detect-non-literal-fs-filename
+  fs.mkdirSync(dirPath, { recursive: true });
 };
 
 /**
@@ -64,10 +62,8 @@ export const ensureDir = (dirPath: string): void => {
  * @param dirPath 目录路径
  */
 export const ensureDirAsync = async (dirPath: string): Promise<void> => {
-  if (!fs.existsSync(dirPath)) {
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
-    await fsPromises.mkdir(dirPath, { recursive: true });
-  }
+  // eslint-disable-next-line security/detect-non-literal-fs-filename
+  await fsPromises.mkdir(dirPath, { recursive: true });
 };
 
 /**
@@ -82,14 +78,15 @@ export const resolveSafePath = (
 ): string => {
   const absoluteBase = path.resolve(baseDir);
   const targetPath = path.resolve(baseDir, relativePath);
+  const relativeResult = path.relative(absoluteBase, targetPath);
 
   // 核心加固 (P031): 禁止目录穿越
-  if (!targetPath.startsWith(absoluteBase)) {
+  if (relativeResult.startsWith("..") || path.isAbsolute(relativeResult)) {
     throw new Error(`[Security] 拒绝越权访问路径: ${relativePath}`);
   }
 
   // 核心加固 (P031 Bug B2.2): 禁止访问敏感路径（目录和文件）
-  const normalized = relativePath.replace(/\\/g, "/").replace(/^\.\/+/, "");
+  const normalized = relativeResult.replace(/\\/g, "/");
   for (const protectedPath of PROTECTED_PATHS) {
     if (
       normalized === protectedPath ||
@@ -118,12 +115,16 @@ export const readWsFile = (
   relativePath: string,
 ): string => {
   const safePath = resolveSafePath(workspaceDir, relativePath);
-  // eslint-disable-next-line security/detect-non-literal-fs-filename
-  if (!fs.existsSync(safePath)) {
-    throw new Error(`文件不存在: ${relativePath}`);
+  try {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
+    return fs.readFileSync(safePath, "utf-8");
+  } catch (error: unknown) {
+    const nodeError = error as NodeJS.ErrnoException;
+    if (nodeError.code === "ENOENT") {
+      throw new Error(`文件不存在: ${relativePath}`);
+    }
+    throw error;
   }
-  // eslint-disable-next-line security/detect-non-literal-fs-filename
-  return fs.readFileSync(safePath, "utf-8");
 };
 
 /**
@@ -136,12 +137,16 @@ export const readWsFileAsync = async (
   relativePath: string,
 ): Promise<string> => {
   const safePath = resolveSafePath(workspaceDir, relativePath);
-  // eslint-disable-next-line security/detect-non-literal-fs-filename
-  if (!fs.existsSync(safePath)) {
-    throw new Error(`文件不存在: ${relativePath}`);
+  try {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
+    return await fsPromises.readFile(safePath, "utf-8");
+  } catch (error: unknown) {
+    const nodeError = error as NodeJS.ErrnoException;
+    if (nodeError.code === "ENOENT") {
+      throw new Error(`文件不存在: ${relativePath}`);
+    }
+    throw error;
   }
-  // eslint-disable-next-line security/detect-non-literal-fs-filename
-  return await fsPromises.readFile(safePath, "utf-8");
 };
 
 /**

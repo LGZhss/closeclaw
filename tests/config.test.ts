@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { TRIGGER_PATTERN } from '../src/config.js';
 
 describe('Config', () => {
@@ -16,5 +16,20 @@ describe('Config', () => {
       const matches = TRIGGER_PATTERN.test(text);
       expect(matches).toBe(shouldMatch);
     }
+  });
+
+  it('should reject invalid MAX_CONCURRENT_CONTAINERS at startup', async () => {
+    const original = process.env.MAX_CONCURRENT_CONTAINERS;
+    process.env.MAX_CONCURRENT_CONTAINERS = '0';
+    vi.resetModules();
+
+    await expect(import('../src/config.js')).rejects.toThrow();
+
+    if (original === undefined) {
+      delete process.env.MAX_CONCURRENT_CONTAINERS;
+    } else {
+      process.env.MAX_CONCURRENT_CONTAINERS = original;
+    }
+    vi.resetModules();
   });
 });

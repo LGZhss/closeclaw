@@ -3,13 +3,12 @@
  * 
  * **Validates: Requirements 3.1, 7.1**
  * 
- * **Property 1: Bug Condition** - 临时文件清理逻辑查找错误的文件名模式
+ * **Property 1: Bug Condition** - 临时文件清理逻辑依赖字符串模式推断临时文件路径
  * 
  * Test that process-executor.ts creates temp files with pattern `temp_${executionId}.js`
- * Test that cleanup logic searches for pattern `temp_exec_`
+ * Test that cleanup logic no longer relies on scanning args for `temp_` pattern
  * 
- * **NOTE**: Bug B3.1 appears to already be fixed in the current code.
- * The cleanup logic now uses `temp_` which matches the creation pattern.
+ * **NOTE**: Current implementation passes temp file path explicitly to `_executeProcess`.
  * 
  * Expected Outcome: Test PASSES (bug is already fixed)
  */
@@ -18,7 +17,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "fs";
 import { join } from "path";
 
-describe("Bug B3.1 Exploration: Temporary File Name Inconsistency", () => {
+describe("Bug B3.1 Exploration: Temporary File Cleanup Robustness", () => {
   const processExecutorPath = join(process.cwd(), "src", "sandbox", "process-executor.ts");
   const content = readFileSync(processExecutorPath, "utf-8");
 
@@ -33,57 +32,43 @@ describe("Bug B3.1 Exploration: Temporary File Name Inconsistency", () => {
     ).toBe(true);
   });
 
-  it("should confirm cleanup logic uses temp_ pattern (not temp_exec_)", () => {
-    // Find the cleanup logic
-    const cleanupPattern = /argsStr\.includes\("temp_"\)/;
-    const hasCorrectCleanup = cleanupPattern.test(content);
+  it("should pass tempFile explicitly into _executeProcess", () => {
+    const explicitPassPattern = /this\._executeProcess\([\s\S]*?tempFile[\s\S]*?\)/;
+    const hasExplicitPass = explicitPassPattern.test(content);
     
     expect(
-      hasCorrectCleanup,
-      "Cleanup logic should search for pattern: temp_ (not temp_exec_)"
+      hasExplicitPass,
+      "execute() should pass tempFile explicitly to _executeProcess"
     ).toBe(true);
   });
 
-  it("should confirm cleanup logic does NOT use temp_exec_ pattern", () => {
-    // Verify the bug pattern is not present
-    const bugPattern = /temp_exec_/;
-    const hasBugPattern = bugPattern.test(content);
+  it("should define tempFilePath parameter in _executeProcess", () => {
+    const signaturePattern = /tempFilePath:\s*string\s*\|\s*null\s*=\s*null/;
+    const hasSignature = signaturePattern.test(content);
     
     expect(
-      hasBugPattern,
-      "Cleanup logic should NOT use temp_exec_ pattern (bug is fixed)"
+      hasSignature,
+      "_executeProcess should define tempFilePath parameter"
+    ).toBe(true);
+  });
+
+  it("should avoid args-based temp pattern scanning", () => {
+    const argsScanPattern = /argsStr\.includes\("temp_"\)|args\.find\(\(a\) => a\.includes\("temp_"\)\)/;
+    const hasArgsScan = argsScanPattern.test(content);
+
+    expect(
+      hasArgsScan,
+      "cleanup logic should not scan args for temp_ pattern anymore"
     ).toBe(false);
   });
 
-  it("should confirm temp file creation and cleanup patterns match", () => {
-    // Extract creation pattern
-    const creationMatch = content.match(/`temp_\$\{executionId\}\.js`/);
-    
-    // Extract cleanup pattern
-    const cleanupMatch = content.match(/argsStr\.includes\("(temp_[^"]*)"\)/);
-    
-    expect(creationMatch).toBeTruthy();
-    expect(cleanupMatch).toBeTruthy();
-    
-    if (creationMatch && cleanupMatch) {
-      const creationPrefix = "temp_"; // From temp_${executionId}.js
-      const cleanupPrefix = cleanupMatch[1]; // From argsStr.includes("temp_")
-      
-      expect(
-        cleanupPrefix,
-        `Cleanup pattern "${cleanupPrefix}" should match creation pattern "${creationPrefix}"`
-      ).toBe(creationPrefix);
-    }
-  });
+  it("should cleanup temp file via tempFilePath with async unlink", () => {
+    const cleanupPattern = /if \(tempFilePath\)[\s\S]*?fsPromises\.unlink\(tempFilePath\)/;
+    const hasCleanup = cleanupPattern.test(content);
 
-  it("should confirm cleanup logic finds temp files correctly", () => {
-    // Verify the cleanup logic structure
-    const cleanupStructure = /argsStr\.includes\("temp_"\)[\s\S]*?args\.find\(\(a\) => a\.includes\("temp_"\)\)/;
-    const hasCorrectStructure = cleanupStructure.test(content);
-    
     expect(
-      hasCorrectStructure,
-      "Cleanup logic should use consistent temp_ pattern in both includes() and find()"
+      hasCleanup,
+      "cleanup logic should use tempFilePath + fsPromises.unlink"
     ).toBe(true);
   });
 });
