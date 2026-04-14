@@ -1,6 +1,14 @@
 import path from "path";
+import { z } from "zod";
 
-export const ASSISTANT_NAME = process.env.ASSISTANT_NAME || "Andy";
+const envSchema = z.object({
+  ASSISTANT_NAME: z.string().trim().min(1).default("Andy"),
+  MAX_CONCURRENT_CONTAINERS: z.coerce.number().int().min(1).default(5),
+});
+
+const env = envSchema.parse(process.env);
+
+export const ASSISTANT_NAME = env.ASSISTANT_NAME;
 export const POLL_INTERVAL = 2000;
 export const SCHEDULER_POLL_INTERVAL = 60000;
 
@@ -9,10 +17,7 @@ const PROJECT_ROOT = process.cwd();
 export const DATA_DIR = path.resolve(PROJECT_ROOT, "data");
 export const GROUPS_DIR = path.resolve(DATA_DIR, "groups");
 
-export const MAX_CONCURRENT_CONTAINERS = Math.max(
-  1,
-  parseInt(process.env.MAX_CONCURRENT_CONTAINERS || "5", 10) || 5,
-);
+export const MAX_CONCURRENT_CONTAINERS = env.MAX_CONCURRENT_CONTAINERS;
 
 function escapeRegExp(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

@@ -91,8 +91,9 @@ export class SandboxManager {
       }
 
       return result;
-    } catch (error: any) {
-      logger.error(`[Sandbox] Execution failed (${traceId}): ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      logger.error(`[Sandbox] Execution failed (${traceId}): ${message}`);
       throw error;
     } finally {
       this.activeSessions.delete(traceId);
