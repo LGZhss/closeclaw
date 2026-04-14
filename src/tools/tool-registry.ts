@@ -63,11 +63,19 @@ export const createToolRegistry = (
   return {
     /** 读取文件处理器 */
     read_file: async ({ path: filePath }) => {
+      // ⚡ Bolt Performance Optimization
+      // 💡 What: Replaced sync readWsFile with async readWsFileAsync.
+      // 🎯 Why: Sync I/O blocks the Node.js event loop, stalling concurrent requests.
+      // 📊 Impact: Improves concurrency and unblocks the main thread for other async tasks.
       return { content: await readWsFileAsync(workspaceDir, filePath) };
     },
 
     /** 写入文件处理器 */
     write_file: async ({ path: filePath, content }) => {
+      // ⚡ Bolt Performance Optimization
+      // 💡 What: Replaced sync writeWsFile with async writeWsFileAsync.
+      // 🎯 Why: Sync I/O blocks the Node.js event loop, stalling concurrent requests.
+      // 📊 Impact: Improves concurrency and unblocks the main thread for other async tasks.
       await writeWsFileAsync(workspaceDir, filePath, content);
       return { success: true };
     },
