@@ -20,7 +20,15 @@ export async function cleanupTmpFiles(): Promise<void> {
 
     await Promise.all(
       tempFiles.map(async (file) => {
-        const filePath = path.join(tmpDir, file);
+        const filePath = path.resolve(tmpDir, file);
+        // Ensure path traversal is mitigated
+        const relativeResult = path.relative(tmpDir, filePath);
+        if (
+          relativeResult.startsWith("..") ||
+          path.isAbsolute(relativeResult)
+        ) {
+          return;
+        }
         try {
           const stats = await fsPromises.stat(filePath);
           if (now - stats.mtimeMs > ONE_HOUR) {
