@@ -30,7 +30,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.22'
-          cache-dependency-path: 'kernel/go.sum'
+          cache-dependency-path: kernel/go.sum
 
       - name: Run JS Tests & Generate Coverage
         run: |
