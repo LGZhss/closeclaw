@@ -43,7 +43,8 @@ describe("Bug B3.3 Exploration: runGit Retry Mechanism", () => {
       const runGitBody = runGitMatch[1];
 
       // Verify it uses a synchronous exec function
-      const usesSyncExec = runGitBody.includes("execSync") || runGitBody.includes("execFileSync");
+      const usesSyncExec =
+        runGitBody.includes("execSync") || runGitBody.includes("execFileSync");
       expect(usesSyncExec).toBe(true);
 
       // Verify it does NOT use Promise
@@ -153,7 +154,9 @@ describe("Bug B3.3 Exploration: runGit Retry Mechanism", () => {
         ).toBe(true);
       } else {
         // If it doesn't use Promise, it should use synchronous execution
-        const usesSyncExec = runGitBody.includes("execSync") || runGitBody.includes("execFileSync");
+        const usesSyncExec =
+          runGitBody.includes("execSync") ||
+          runGitBody.includes("execFileSync");
 
         expect(
           usesSyncExec,
