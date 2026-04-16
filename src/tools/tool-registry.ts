@@ -17,11 +17,7 @@ export type ToolHandler = (args: any, context: any) => Promise<any>;
  * @param rawText 原始命令文本
  * @returns 解析后的参数对象
  */
-export function parseArgsToObject(
-  tool: any,
-  args: string[],
-  rawText: string,
-): any {
+export function parseArgsToObject(tool: any, args: string[], rawText: string): any {
   const props = tool.parameters?.properties || {};
   const propNames = Object.keys(props);
 
