@@ -31,7 +31,7 @@ describe("Bug B3.3 Exploration: runGit Retry Mechanism", () => {
   const utilsPath = join(process.cwd(), "src", "utils", "utils.ts");
   const content = readFileSync(utilsPath, "utf-8");
 
-  it("should confirm runGit uses execSync (not Promise)", () => {
+  it("should confirm runGit uses synchronous execution (not Promise)", () => {
     // Find runGit function
     const runGitMatch = content.match(
       /export const runGit = \(([\s\S]*?)\n\};/,
@@ -42,8 +42,9 @@ describe("Bug B3.3 Exploration: runGit Retry Mechanism", () => {
     if (runGitMatch) {
       const runGitBody = runGitMatch[1];
 
-      // Verify it uses execSync
-      expect(runGitBody).toContain("execSync");
+      // Verify it uses a synchronous exec function
+      const usesSyncExec = runGitBody.includes("execSync") || runGitBody.includes("execFileSync");
+      expect(usesSyncExec).toBe(true);
 
       // Verify it does NOT use Promise
       expect(runGitBody).not.toContain("new Promise");
@@ -128,7 +129,7 @@ describe("Bug B3.3 Exploration: runGit Retry Mechanism", () => {
 
   it("should verify runGit does NOT have the bug (Promise without await)", () => {
     // BUG CONDITION: Promise without await means errors can't be caught
-    // EXPECTED BEHAVIOR: Either use execSync (synchronous) OR use await with Promise
+    // EXPECTED BEHAVIOR: Either use synchronous execution OR use await with Promise
 
     const runGitMatch = content.match(
       /export const runGit = \(([\s\S]*?)\n\};/,
@@ -151,12 +152,12 @@ describe("Bug B3.3 Exploration: runGit Retry Mechanism", () => {
           "If runGit uses Promise, it MUST have await to catch errors properly",
         ).toBe(true);
       } else {
-        // If it doesn't use Promise, it should use synchronous execSync
-        const usesExecSync = runGitBody.includes("execSync");
+        // If it doesn't use Promise, it should use synchronous execution
+        const usesSyncExec = runGitBody.includes("execSync") || runGitBody.includes("execFileSync");
 
         expect(
-          usesExecSync,
-          "runGit should use either 'await new Promise' or synchronous 'execSync'",
+          usesSyncExec,
+          "runGit should use either 'await new Promise' or synchronous execution",
         ).toBe(true);
       }
     }
@@ -216,7 +217,7 @@ describe("Bug B3.3 Exploration: runGit Retry Mechanism", () => {
       expect(
         hasPromiseWithoutAwait,
         "Bug B3.3 is FIXED: runGit does NOT have Promise without await. " +
-          "Current implementation uses execSync (synchronous) with proper error handling.",
+          "Current implementation uses synchronous execution with proper error handling.",
       ).toBe(false);
     }
   });

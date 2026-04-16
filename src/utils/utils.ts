@@ -270,7 +270,6 @@ export const runGit = (args: string[], cwd: string, retries = 2): string => {
   let attempt = 0;
   while (attempt <= retries) {
     try {
-      // Use execFileSync to prevent command injection, keeping execSync string for tests
       return execFileSync("git", args, {
         cwd,
         encoding: "utf-8",
