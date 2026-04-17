@@ -9,11 +9,11 @@ vi.mock("fs/promises", async (importOriginal) => {
   return {
     ...actual,
     default: {
-        ...actual.default,
-        readdir: vi.fn(),
-        stat: vi.fn(),
-        unlink: vi.fn(),
-    }
+      ...actual.default,
+      readdir: vi.fn(),
+      stat: vi.fn(),
+      unlink: vi.fn(),
+    },
   };
 });
 
@@ -22,9 +22,9 @@ vi.mock("os", async (importOriginal) => {
   return {
     ...actual,
     default: {
-        ...actual.default,
-        tmpdir: vi.fn()
-    }
+      ...actual.default,
+      tmpdir: vi.fn(),
+    },
   };
 });
 
@@ -48,10 +48,12 @@ describe("fs-cleanup", () => {
     files: string[],
     statMock: (name: string) => any,
     expectedUnlink: string,
-    expectThrow = false
+    expectThrow = false,
   ) => {
     vi.mocked(fsPromises.readdir).mockResolvedValue(files as any);
-    vi.mocked(fsPromises.stat).mockImplementation(async (filePath) => statMock(path.basename(filePath as string)));
+    vi.mocked(fsPromises.stat).mockImplementation(async (filePath) =>
+      statMock(path.basename(filePath as string)),
+    );
 
     const promise = cleanupTmpFiles();
     if (expectThrow) {
@@ -59,7 +61,9 @@ describe("fs-cleanup", () => {
     } else {
       await expect(promise).resolves.not.toThrow();
       expect(fsPromises.unlink).toHaveBeenCalledTimes(1);
-      expect(fsPromises.unlink).toHaveBeenCalledWith(path.join(MOCK_TMP_DIR, expectedUnlink));
+      expect(fsPromises.unlink).toHaveBeenCalledWith(
+        path.join(MOCK_TMP_DIR, expectedUnlink),
+      );
     }
   };
 
@@ -67,8 +71,10 @@ describe("fs-cleanup", () => {
     const now = Date.now();
     await runTestScenario(
       [MOCK_T1, "temp_2.js", "not_temp.ts", "temp_3.txt"],
-      (name) => ({ mtimeMs: name === MOCK_T1 ? now - ONE_HOUR_MS - 1000 : now - 1000 }),
-      MOCK_T1
+      (name) => ({
+        mtimeMs: name === MOCK_T1 ? now - ONE_HOUR_MS - 1000 : now - 1000,
+      }),
+      MOCK_T1,
     );
     expect(fsPromises.readdir).toHaveBeenCalledWith(MOCK_TMP_DIR);
     expect(fsPromises.stat).toHaveBeenCalledTimes(2);
@@ -81,12 +87,14 @@ describe("fs-cleanup", () => {
         if (name === MOCK_T1) throw new Error("stat failed");
         return { mtimeMs: Date.now() - ONE_HOUR_MS - 1000 };
       },
-      MOCK_T2
+      MOCK_T2,
     );
   });
 
   it("should not fail if readdir throws an error", async () => {
-    vi.mocked(fsPromises.readdir).mockRejectedValue(new Error("readdir failed"));
+    vi.mocked(fsPromises.readdir).mockRejectedValue(
+      new Error("readdir failed"),
+    );
     await expect(cleanupTmpFiles()).resolves.not.toThrow();
   });
 });
