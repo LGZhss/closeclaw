@@ -19,24 +19,28 @@ export async function cleanupTmpFiles(): Promise<void> {
     );
 
     // ⚡ Bolt Optimization:
-    // What: Process all temporary file stats and deletions concurrently using Promise.all.
-    // Why: Previously, the sequential for...of loop waited for each stat/unlink operation to finish before starting the next.
-    // Impact: Eliminates sequential I/O blocking, reducing execution time from O(n) to bounded by file system concurrency limits (typically 50-80% faster for large directories).
-    await Promise.all(
-      tempFiles.map(async (file) => {
-        // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal
-        const filePath = path.join(tmpDir, file);
-        try {
-          const stats = await fsPromises.stat(filePath);
-          if (now - stats.mtimeMs > ONE_HOUR) {
-            await fsPromises.unlink(filePath);
-            logger.debug(`[Cleanup] Deleted old temp file: ${file}`);
+    // What: Process temporary file stats and deletions concurrently in chunks (e.g. 50 files at a time).
+    // Why: Previously, a sequential for...of loop waited for each stat/unlink operation to finish before starting the next. An unbounded Promise.all could trigger EMFILE (too many open files) limits.
+    // Impact: Eliminates sequential I/O blocking while remaining safe from OS file limits, reducing execution time significantly for large directories.
+    const chunkSize = 50;
+    for (let i = 0; i < tempFiles.length; i += chunkSize) {
+      const chunk = tempFiles.slice(i, i + chunkSize);
+      await Promise.all(
+        chunk.map(async (file) => {
+          // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal
+          const filePath = path.join(tmpDir, file);
+          try {
+            const stats = await fsPromises.stat(filePath);
+            if (now - stats.mtimeMs > ONE_HOUR) {
+              await fsPromises.unlink(filePath);
+              logger.debug(`[Cleanup] Deleted old temp file: ${file}`);
+            }
+          } catch (err) {
+            // 忽略单个文件处理失败（可能已被删除）
           }
-        } catch (err) {
-          // 忽略单个文件处理失败（可能已被删除）
-        }
-      }),
-    );
+        }),
+      );
+    }
   } catch (err: any) {
     logger.warn(`[Cleanup] Failed to read tmp directory: ${err.message}`);
   }
