@@ -9,11 +9,11 @@ vi.mock("fs/promises", async (importOriginal) => {
   return {
     ...actual,
     default: {
-      ...actual.default,
-      readdir: vi.fn(),
-      stat: vi.fn(),
-      unlink: vi.fn(),
-    },
+        ...actual.default,
+        readdir: vi.fn(),
+        stat: vi.fn(),
+        unlink: vi.fn(),
+    }
   };
 });
 
@@ -22,9 +22,9 @@ vi.mock("os", async (importOriginal) => {
   return {
     ...actual,
     default: {
-      ...actual.default,
-      tmpdir: vi.fn(),
-    },
+        ...actual.default,
+        tmpdir: vi.fn()
+    }
   };
 });
 
@@ -44,53 +44,49 @@ describe("fs-cleanup", () => {
   const MOCK_T1 = "temp_1.ts";
   const MOCK_T2 = "temp_2.ts";
 
-  it("should delete temp files older than 1 hour", async () => {
-    const files = [MOCK_T1, "temp_2.js", "not_temp.ts", "temp_3.txt"];
+  const runTestScenario = async (
+    files: string[],
+    statMock: (name: string) => any,
+    expectedUnlink: string,
+    expectThrow = false
+  ) => {
     vi.mocked(fsPromises.readdir).mockResolvedValue(files as any);
+    vi.mocked(fsPromises.stat).mockImplementation(async (filePath) => statMock(path.basename(filePath as string)));
 
+    const promise = cleanupTmpFiles();
+    if (expectThrow) {
+      await expect(promise).rejects.toThrow();
+    } else {
+      await expect(promise).resolves.not.toThrow();
+      expect(fsPromises.unlink).toHaveBeenCalledTimes(1);
+      expect(fsPromises.unlink).toHaveBeenCalledWith(path.join(MOCK_TMP_DIR, expectedUnlink));
+    }
+  };
+
+  it("should delete temp files older than 1 hour", async () => {
     const now = Date.now();
-    vi.mocked(fsPromises.stat).mockImplementation(async (filePath) => {
-      const name = path.basename(filePath as string);
-      return {
-        mtimeMs: name === MOCK_T1 ? now - ONE_HOUR_MS - 1000 : now - 1000,
-      } as any;
-    });
-
-    await cleanupTmpFiles();
-
+    await runTestScenario(
+      [MOCK_T1, "temp_2.js", "not_temp.ts", "temp_3.txt"],
+      (name) => ({ mtimeMs: name === MOCK_T1 ? now - ONE_HOUR_MS - 1000 : now - 1000 }),
+      MOCK_T1
+    );
     expect(fsPromises.readdir).toHaveBeenCalledWith(MOCK_TMP_DIR);
     expect(fsPromises.stat).toHaveBeenCalledTimes(2);
-
-    expect(fsPromises.unlink).toHaveBeenCalledTimes(1);
-    expect(fsPromises.unlink).toHaveBeenCalledWith(
-      path.join(MOCK_TMP_DIR, MOCK_T1),
-    );
   });
 
   it("should not fail if stat throws an error for a single file", async () => {
-    vi.mocked(fsPromises.readdir).mockResolvedValue([MOCK_T1, MOCK_T2] as any);
-
-    vi.mocked(fsPromises.stat).mockImplementation(async (filePath) => {
-      const name = path.basename(filePath as string);
-      if (name === MOCK_T1) {
-        throw new Error("stat failed");
-      }
-      return { mtimeMs: Date.now() - ONE_HOUR_MS - 1000 } as any;
-    });
-
-    await expect(cleanupTmpFiles()).resolves.not.toThrow();
-
-    expect(fsPromises.unlink).toHaveBeenCalledTimes(1);
-    expect(fsPromises.unlink).toHaveBeenCalledWith(
-      path.join(MOCK_TMP_DIR, MOCK_T2),
+    await runTestScenario(
+      [MOCK_T1, MOCK_T2],
+      (name) => {
+        if (name === MOCK_T1) throw new Error("stat failed");
+        return { mtimeMs: Date.now() - ONE_HOUR_MS - 1000 };
+      },
+      MOCK_T2
     );
   });
 
   it("should not fail if readdir throws an error", async () => {
-    vi.mocked(fsPromises.readdir).mockRejectedValue(
-      new Error("readdir failed"),
-    );
-
+    vi.mocked(fsPromises.readdir).mockRejectedValue(new Error("readdir failed"));
     await expect(cleanupTmpFiles()).resolves.not.toThrow();
   });
 });
