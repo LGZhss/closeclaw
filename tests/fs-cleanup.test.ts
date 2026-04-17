@@ -9,11 +9,11 @@ vi.mock("fs/promises", async (importOriginal) => {
   return {
     ...actual,
     default: {
-        ...actual.default,
-        readdir: vi.fn(),
-        stat: vi.fn(),
-        unlink: vi.fn(),
-    }
+      ...actual.default,
+      readdir: vi.fn(),
+      stat: vi.fn(),
+      unlink: vi.fn(),
+    },
   };
 });
 
@@ -22,9 +22,9 @@ vi.mock("os", async (importOriginal) => {
   return {
     ...actual,
     default: {
-        ...actual.default,
-        tmpdir: vi.fn()
-    }
+      ...actual.default,
+      tmpdir: vi.fn(),
+    },
   };
 });
 
@@ -51,7 +51,9 @@ describe("fs-cleanup", () => {
     const now = Date.now();
     vi.mocked(fsPromises.stat).mockImplementation(async (filePath) => {
       const name = path.basename(filePath as string);
-      return { mtimeMs: name === MOCK_T1 ? now - ONE_HOUR_MS - 1000 : now - 1000 } as any;
+      return {
+        mtimeMs: name === MOCK_T1 ? now - ONE_HOUR_MS - 1000 : now - 1000,
+      } as any;
     });
 
     await cleanupTmpFiles();
@@ -60,7 +62,9 @@ describe("fs-cleanup", () => {
     expect(fsPromises.stat).toHaveBeenCalledTimes(2);
 
     expect(fsPromises.unlink).toHaveBeenCalledTimes(1);
-    expect(fsPromises.unlink).toHaveBeenCalledWith(path.join(MOCK_TMP_DIR, MOCK_T1));
+    expect(fsPromises.unlink).toHaveBeenCalledWith(
+      path.join(MOCK_TMP_DIR, MOCK_T1),
+    );
   });
 
   it("should not fail if stat throws an error for a single file", async () => {
@@ -77,11 +81,15 @@ describe("fs-cleanup", () => {
     await expect(cleanupTmpFiles()).resolves.not.toThrow();
 
     expect(fsPromises.unlink).toHaveBeenCalledTimes(1);
-    expect(fsPromises.unlink).toHaveBeenCalledWith(path.join(MOCK_TMP_DIR, MOCK_T2));
+    expect(fsPromises.unlink).toHaveBeenCalledWith(
+      path.join(MOCK_TMP_DIR, MOCK_T2),
+    );
   });
 
   it("should not fail if readdir throws an error", async () => {
-    vi.mocked(fsPromises.readdir).mockRejectedValue(new Error("readdir failed"));
+    vi.mocked(fsPromises.readdir).mockRejectedValue(
+      new Error("readdir failed"),
+    );
 
     await expect(cleanupTmpFiles()).resolves.not.toThrow();
   });
