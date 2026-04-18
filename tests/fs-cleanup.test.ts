@@ -41,7 +41,9 @@ describe("fs-cleanup", () => {
     (fsPromises.readdir as any).mockResolvedValue(["temp_123.js"]);
     (fsPromises.stat as any).mockResolvedValue({ mtimeMs: oldTime });
     await cleanupTmpFiles();
-    expect(fsPromises.unlink).toHaveBeenCalledWith(path.join(os.tmpdir(), "temp_123.js"));
+    expect(fsPromises.unlink).toHaveBeenCalledWith(
+      path.join(os.tmpdir(), "temp_123.js"),
+    );
   });
 
   it("should not delete new temp files", async () => {
