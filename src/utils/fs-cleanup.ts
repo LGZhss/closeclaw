@@ -18,19 +18,31 @@ export async function cleanupTmpFiles(): Promise<void> {
       (f) => f.startsWith("temp_") && (f.endsWith(".js") || f.endsWith(".ts")),
     );
 
-    for (const file of tempFiles) {
-      const filePath = path.join(tmpDir, file);
-      try {
-        const stats = await fsPromises.stat(filePath);
-        if (now - stats.mtimeMs > ONE_HOUR) {
-          await fsPromises.unlink(filePath);
-          logger.debug(`[Cleanup] Deleted old temp file: ${file}`);
-        }
-      } catch (err) {
-        // 忽略单个文件处理失败（可能已被删除）
-      }
+    // ⚡ Bolt Optimization:
+    // What: Process temp file stats and unlink operations in concurrent chunks using Promise.all
+    // Why: Sequential await in the loop is slow. Unrestricted Promise.all can cause EMFILE (too many open files).
+    // Impact: Safely speeds up cleanup of large temp directories by balancing concurrency and OS file limits.
+    const CHUNK_SIZE = 50;
+    for (let i = 0; i < tempFiles.length; i += CHUNK_SIZE) {
+      const chunk = tempFiles.slice(i, i + CHUNK_SIZE);
+      await Promise.all(
+        chunk.map(async (file) => {
+          const filePath = path.join(tmpDir, file);
+          try {
+            const stats = await fsPromises.stat(filePath);
+            if (now - stats.mtimeMs > ONE_HOUR) {
+              await fsPromises.unlink(filePath);
+              logger.debug(`[Cleanup] Deleted old temp file: ${file}`);
+            }
+          } catch (err) {
+            // 忽略单个文件处理失败（可能已被删除）
+          }
+        }),
+      );
     }
-  } catch (err: any) {
-    logger.warn(`[Cleanup] Failed to read tmp directory: ${err.message}`);
+  } catch (err: unknown) {
+    logger.warn(
+      `[Cleanup] Failed to read tmp directory: ${(err as Error).message}`,
+    );
   }
 }
