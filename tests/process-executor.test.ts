@@ -40,37 +40,37 @@ describe("ProcessExecutor", () => {
   });
 
   it("should execute system commands correctly on win32", async () => {
-    const origPlatform = Object.getOwnPropertyDescriptor(process, 'platform');
-    Object.defineProperty(process, 'platform', {
-      value: 'win32'
+    const origPlatform = Object.getOwnPropertyDescriptor(process, "platform");
+    Object.defineProperty(process, "platform", {
+      value: "win32",
     });
 
     // Test that win32 branching works properly in executeCommand
-    const command = 'echo hello from command win32';
+    const command = "echo hello from command win32";
     // We just mock _executeProcess since we only want to test the branch logic
-    const spy = vi.spyOn(executor as any, '_executeProcess').mockResolvedValue({
+    const spy = vi.spyOn(executor as any, "_executeProcess").mockResolvedValue({
       stdout: "hello from command win32",
       stderr: "",
-      exitCode: 0
+      exitCode: 0,
     });
 
     await executor.executeCommand(command);
     expect(spy).toHaveBeenCalledWith(
-        "cmd.exe",
-        ["/c", command],
-        expect.anything(),
-        expect.any(String),
-        command
+      "cmd.exe",
+      ["/c", command],
+      expect.anything(),
+      expect.any(String),
+      command,
     );
 
     if (origPlatform) {
-        Object.defineProperty(process, 'platform', origPlatform);
+      Object.defineProperty(process, "platform", origPlatform);
     }
   });
 
   it("should generate executionId properly if not provided in _executeProcess", async () => {
-    const spy = vi.spyOn(executor as any, '_executeProcess');
-    const command = 'echo hello';
+    const spy = vi.spyOn(executor as any, "_executeProcess");
+    const command = "echo hello";
     await executor.executeCommand(command);
     // It should be passed the generated ID from executeCommand
     const callArgs = spy.mock.calls[0];
@@ -79,9 +79,9 @@ describe("ProcessExecutor", () => {
     // Now explicitly test _executeProcess with no ID provided
     const _executor = executor as any;
     const promise = _executor._executeProcess(
-        "node",
-        ["-e", 'console.log("hello")'],
-        {}
+      "node",
+      ["-e", 'console.log("hello")'],
+      {},
     );
     const res = await promise;
     expect(res.exitCode).toBe(0);
@@ -96,7 +96,7 @@ describe("ProcessExecutor", () => {
     const code = 'setTimeout(() => console.log("done"), 2000);';
     const execPromise = executor.execute(code);
 
-    await new Promise(r => setTimeout(r, 100));
+    await new Promise((r) => setTimeout(r, 100));
 
     const runningMap = (executor as any).runningProcesses;
     const executionIds = Array.from(runningMap.keys());
@@ -119,14 +119,14 @@ describe("ProcessExecutor", () => {
   it("should handle errors when stopping execution", async () => {
     const code = 'setTimeout(() => console.log("done"), 2000);';
     const execPromise = executor.execute(code);
-    await new Promise(r => setTimeout(r, 100));
+    await new Promise((r) => setTimeout(r, 100));
 
     const runningMap = (executor as any).runningProcesses;
     const executionIds = Array.from(runningMap.keys());
     const executionId = executionIds[0] as string;
 
     const mockChildProcess = runningMap.get(executionId);
-    vi.spyOn(mockChildProcess, 'kill').mockImplementation(() => {
+    vi.spyOn(mockChildProcess, "kill").mockImplementation(() => {
       throw "string error kill failed";
     });
 
@@ -140,7 +140,9 @@ describe("ProcessExecutor", () => {
   });
 
   it("should fail gracefully if fsPromises.unlink throws a non-ENOENT error in execute", async () => {
-    vi.spyOn(fsPromises, 'unlink').mockRejectedValueOnce(new Error("Fake unlink error"));
+    vi.spyOn(fsPromises, "unlink").mockRejectedValueOnce(
+      new Error("Fake unlink error"),
+    );
     const code = 'console.log("unlink error test");';
     const result = await executor.execute(code);
     expect(result.exitCode).toBe(0);
@@ -153,18 +155,20 @@ describe("ProcessExecutor", () => {
 
     let mockChildProcess: any;
     for (let i = 0; i < 10; i++) {
-        await new Promise(r => setTimeout(r, 10));
-        const runningMap = (executor as any).runningProcesses;
-        const executionIds = Array.from(runningMap.keys());
-        if (executionIds.length > 0) {
-            mockChildProcess = runningMap.get(executionIds[0]);
-            break;
-        }
+      await new Promise((r) => setTimeout(r, 10));
+      const runningMap = (executor as any).runningProcesses;
+      const executionIds = Array.from(runningMap.keys());
+      if (executionIds.length > 0) {
+        mockChildProcess = runningMap.get(executionIds[0]);
+        break;
+      }
     }
 
     expect(mockChildProcess).toBeDefined();
 
-    vi.spyOn(fsPromises, 'unlink').mockRejectedValueOnce(new Error("Fake process error unlink"));
+    vi.spyOn(fsPromises, "unlink").mockRejectedValueOnce(
+      new Error("Fake process error unlink"),
+    );
     mockChildProcess.emit("error", new Error("Spawn failure"));
 
     await expect(execPromise).rejects.toThrow("Spawn failure");
@@ -173,8 +177,10 @@ describe("ProcessExecutor", () => {
   });
 
   it("should test timeout in executeCommand", async () => {
-    const command = process.platform === "win32" ? 'timeout 2' : 'sleep 2';
-    await expect(executor.executeCommand(command, { timeout: 500 })).rejects.toThrow(/命令执行超时/);
+    const command = process.platform === "win32" ? "timeout 2" : "sleep 2";
+    await expect(
+      executor.executeCommand(command, { timeout: 500 }),
+    ).rejects.toThrow(/命令执行超时/);
   });
 
   it("should test _executeProcess error cleanup where fsPromises.unlink throws an ENOENT code", async () => {
@@ -183,20 +189,20 @@ describe("ProcessExecutor", () => {
 
     let mockChildProcess: any;
     for (let i = 0; i < 10; i++) {
-        await new Promise(r => setTimeout(r, 10));
-        const runningMap = (executor as any).runningProcesses;
-        const executionIds = Array.from(runningMap.keys());
-        if (executionIds.length > 0) {
-            mockChildProcess = runningMap.get(executionIds[0]);
-            break;
-        }
+      await new Promise((r) => setTimeout(r, 10));
+      const runningMap = (executor as any).runningProcesses;
+      const executionIds = Array.from(runningMap.keys());
+      if (executionIds.length > 0) {
+        mockChildProcess = runningMap.get(executionIds[0]);
+        break;
+      }
     }
 
     expect(mockChildProcess).toBeDefined();
 
     const enoentError = new Error("ENOENT Error") as NodeJS.ErrnoException;
-    enoentError.code = 'ENOENT';
-    vi.spyOn(fsPromises, 'unlink').mockRejectedValueOnce(enoentError);
+    enoentError.code = "ENOENT";
+    vi.spyOn(fsPromises, "unlink").mockRejectedValueOnce(enoentError);
     mockChildProcess.emit("error", new Error("Spawn failure ENOENT"));
 
     await expect(execPromise).rejects.toThrow("Spawn failure ENOENT");
@@ -206,7 +212,9 @@ describe("ProcessExecutor", () => {
 
   it("should catch close errors using string format", async () => {
     (executor as any).runningProcesses.set("fake-id", {
-      kill: () => { throw "close string error"; }
+      kill: () => {
+        throw "close string error";
+      },
     });
 
     await executor.close();
