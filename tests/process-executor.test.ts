@@ -92,53 +92,19 @@ describe("ProcessExecutor", () => {
     await expect(executor.execute(largeCode)).rejects.toThrow(/Code too large/);
   });
 
-  it("should test _executeProcess error cleanup where fsPromises.unlink throws", async () => {
-    const code = 'console.log("error test");';
-    const execPromise = executor.execute(code);
-
-    let mockChildProcess: any;
+  async function getRunningMockProcess(
+    exec: ProcessExecutor,
+  ): Promise<ChildProcess> {
     for (let i = 0; i < 10; i++) {
       await new Promise((r) => setTimeout(r, 10));
-      const runningMap = (executor as any).runningProcesses;
+      const runningMap = (exec as any).runningProcesses;
       const executionIds = Array.from(runningMap.keys());
       if (executionIds.length > 0) {
-        mockChildProcess = runningMap.get(executionIds[0]);
-        break;
+        return runningMap.get(executionIds[0]) as ChildProcess;
       }
     }
-
-    expect(mockChildProcess).toBeDefined();
-
-    // Test both ENOENT and generic error
-    const enoentError = new Error("ENOENT Error") as NodeJS.ErrnoException;
-    enoentError.code = "ENOENT";
-
-    // Mock sequential rejections for different error branches
-    vi.spyOn(fsPromises, "unlink")
-      .mockRejectedValueOnce(new Error("Fake process error unlink"))
-      .mockRejectedValueOnce(enoentError);
-
-    mockChildProcess.emit("error", new Error("Spawn failure"));
-    await expect(execPromise).rejects.toThrow("Spawn failure");
-
-    // Second execute to trigger ENOENT code branch
-    const execPromise2 = executor.execute(code);
-    let mockChildProcess2: any;
-    for (let i = 0; i < 10; i++) {
-      await new Promise((r) => setTimeout(r, 10));
-      const runningMap = (executor as any).runningProcesses;
-      const executionIds = Array.from(runningMap.keys());
-      if (executionIds.length > 0) {
-        mockChildProcess2 = runningMap.get(executionIds[0]);
-        break;
-      }
-    }
-    expect(mockChildProcess2).toBeDefined();
-    mockChildProcess2.emit("error", new Error("Spawn failure ENOENT"));
-    await expect(execPromise2).rejects.toThrow("Spawn failure ENOENT");
-
-    vi.restoreAllMocks();
-  });
+    throw new Error("No running process found");
+  }
 
   it.each([
     {
@@ -193,6 +159,34 @@ describe("ProcessExecutor", () => {
         const code = 'console.log("unlink error test");';
         const result = await executor.execute(code);
         expect(result.exitCode).toBe(0);
+        vi.restoreAllMocks();
+      },
+    },
+    {
+      desc: "test _executeProcess error cleanup where fsPromises.unlink throws",
+      testBody: async () => {
+        const code = 'console.log("error test");';
+        const execPromise = executor.execute(code);
+
+        const mockChildProcess = await getRunningMockProcess(executor);
+        expect(mockChildProcess).toBeDefined();
+
+        const enoentError = new Error("ENOENT Error") as NodeJS.ErrnoException;
+        enoentError.code = "ENOENT";
+
+        vi.spyOn(fsPromises, "unlink")
+          .mockRejectedValueOnce(new Error("Fake process error unlink"))
+          .mockRejectedValueOnce(enoentError);
+
+        mockChildProcess.emit("error", new Error("Spawn failure"));
+        await expect(execPromise).rejects.toThrow("Spawn failure");
+
+        const execPromise2 = executor.execute(code);
+        const mockChildProcess2 = await getRunningMockProcess(executor);
+        expect(mockChildProcess2).toBeDefined();
+        mockChildProcess2.emit("error", new Error("Spawn failure ENOENT"));
+        await expect(execPromise2).rejects.toThrow("Spawn failure ENOENT");
+
         vi.restoreAllMocks();
       },
     },
