@@ -92,64 +92,7 @@ describe("ProcessExecutor", () => {
     await expect(executor.execute(largeCode)).rejects.toThrow(/Code too large/);
   });
 
-  it("should stop a running execution", async () => {
-    const code = 'setTimeout(() => console.log("done"), 2000);';
-    const execPromise = executor.execute(code);
-
-    await new Promise((r) => setTimeout(r, 100));
-
-    const runningMap = (executor as any).runningProcesses;
-    const executionIds = Array.from(runningMap.keys());
-    expect(executionIds.length).toBe(1);
-    const executionId = executionIds[0] as string;
-
-    const stopped = await executor.stop(executionId);
-    expect(stopped).toBe(true);
-
-    expect(executor.getRunningProcessesCount()).toBe(0);
-
-    await execPromise.catch(() => {});
-  });
-
-  it("should return false when stopping a non-existent execution", async () => {
-    const stopped = await executor.stop("non-existent-id");
-    expect(stopped).toBe(false);
-  });
-
-  it("should handle errors when stopping execution", async () => {
-    const code = 'setTimeout(() => console.log("done"), 2000);';
-    const execPromise = executor.execute(code);
-    await new Promise((r) => setTimeout(r, 100));
-
-    const runningMap = (executor as any).runningProcesses;
-    const executionIds = Array.from(runningMap.keys());
-    const executionId = executionIds[0] as string;
-
-    const mockChildProcess = runningMap.get(executionId);
-    vi.spyOn(mockChildProcess, "kill").mockImplementation(() => {
-      throw "string error kill failed";
-    });
-
-    const stopped = await executor.stop(executionId);
-    expect(stopped).toBe(false);
-
-    vi.restoreAllMocks();
-    mockChildProcess.kill();
-
-    await execPromise.catch(() => {});
-  });
-
-  it("should fail gracefully if fsPromises.unlink throws a non-ENOENT error in execute", async () => {
-    vi.spyOn(fsPromises, "unlink").mockRejectedValueOnce(
-      new Error("Fake unlink error"),
-    );
-    const code = 'console.log("unlink error test");';
-    const result = await executor.execute(code);
-    expect(result.exitCode).toBe(0);
-    vi.restoreAllMocks();
-  });
-
-  it("should fail gracefully if fsPromises.unlink throws a non-ENOENT error in _executeProcess error handler", async () => {
+  it("should test _executeProcess error cleanup where fsPromises.unlink throws", async () => {
     const code = 'console.log("error test");';
     const execPromise = executor.execute(code);
 
@@ -166,14 +109,107 @@ describe("ProcessExecutor", () => {
 
     expect(mockChildProcess).toBeDefined();
 
-    vi.spyOn(fsPromises, "unlink").mockRejectedValueOnce(
-      new Error("Fake process error unlink"),
-    );
-    mockChildProcess.emit("error", new Error("Spawn failure"));
+    // Test both ENOENT and generic error
+    const enoentError = new Error("ENOENT Error") as NodeJS.ErrnoException;
+    enoentError.code = "ENOENT";
 
+    // Mock sequential rejections for different error branches
+    vi.spyOn(fsPromises, "unlink")
+      .mockRejectedValueOnce(new Error("Fake process error unlink"))
+      .mockRejectedValueOnce(enoentError);
+
+    mockChildProcess.emit("error", new Error("Spawn failure"));
     await expect(execPromise).rejects.toThrow("Spawn failure");
 
+    // Second execute to trigger ENOENT code branch
+    const execPromise2 = executor.execute(code);
+    let mockChildProcess2: any;
+    for (let i = 0; i < 10; i++) {
+      await new Promise((r) => setTimeout(r, 10));
+      const runningMap = (executor as any).runningProcesses;
+      const executionIds = Array.from(runningMap.keys());
+      if (executionIds.length > 0) {
+        mockChildProcess2 = runningMap.get(executionIds[0]);
+        break;
+      }
+    }
+    expect(mockChildProcess2).toBeDefined();
+    mockChildProcess2.emit("error", new Error("Spawn failure ENOENT"));
+    await expect(execPromise2).rejects.toThrow("Spawn failure ENOENT");
+
     vi.restoreAllMocks();
+  });
+
+  it.each([
+    {
+      desc: "stop a running execution",
+      testBody: async () => {
+        const code = 'setTimeout(() => console.log("done"), 2000);';
+        const execPromise = executor.execute(code);
+        await new Promise((r) => setTimeout(r, 100));
+        const runningMap = (executor as any).runningProcesses;
+        const executionIds = Array.from(runningMap.keys());
+        expect(executionIds.length).toBe(1);
+        const executionId = executionIds[0] as string;
+        const stopped = await executor.stop(executionId);
+        expect(stopped).toBe(true);
+        expect(executor.getRunningProcessesCount()).toBe(0);
+        await execPromise.catch(() => {});
+      },
+    },
+    {
+      desc: "return false when stopping a non-existent execution",
+      testBody: async () => {
+        const stopped = await executor.stop("non-existent-id");
+        expect(stopped).toBe(false);
+      },
+    },
+    {
+      desc: "handle errors when stopping execution",
+      testBody: async () => {
+        const code = 'setTimeout(() => console.log("done"), 2000);';
+        const execPromise = executor.execute(code);
+        await new Promise((r) => setTimeout(r, 100));
+        const runningMap = (executor as any).runningProcesses;
+        const executionIds = Array.from(runningMap.keys());
+        const executionId = executionIds[0] as string;
+        const mockChildProcess = runningMap.get(executionId);
+        vi.spyOn(mockChildProcess, "kill").mockImplementation(() => {
+          throw "string error kill failed";
+        });
+        const stopped = await executor.stop(executionId);
+        expect(stopped).toBe(false);
+        vi.restoreAllMocks();
+        mockChildProcess.kill();
+        await execPromise.catch(() => {});
+      },
+    },
+    {
+      desc: "fail gracefully if fsPromises.unlink throws a non-ENOENT error in execute",
+      testBody: async () => {
+        vi.spyOn(fsPromises, "unlink").mockRejectedValueOnce(
+          new Error("Fake unlink error"),
+        );
+        const code = 'console.log("unlink error test");';
+        const result = await executor.execute(code);
+        expect(result.exitCode).toBe(0);
+        vi.restoreAllMocks();
+      },
+    },
+    {
+      desc: "catch close errors using string format",
+      testBody: async () => {
+        (executor as any).runningProcesses.set("fake-id", {
+          kill: () => {
+            throw "close string error";
+          },
+        });
+        await executor.close();
+        expect(executor.getRunningProcessesCount()).toBe(0);
+      },
+    },
+  ])("should $desc", async ({ testBody }) => {
+    await testBody();
   });
 
   it("should test timeout in executeCommand", async () => {
@@ -181,43 +217,5 @@ describe("ProcessExecutor", () => {
     await expect(
       executor.executeCommand(command, { timeout: 500 }),
     ).rejects.toThrow(/命令执行超时/);
-  });
-
-  it("should test _executeProcess error cleanup where fsPromises.unlink throws an ENOENT code", async () => {
-    const code = 'console.log("error enoent test");';
-    const execPromise = executor.execute(code);
-
-    let mockChildProcess: any;
-    for (let i = 0; i < 10; i++) {
-      await new Promise((r) => setTimeout(r, 10));
-      const runningMap = (executor as any).runningProcesses;
-      const executionIds = Array.from(runningMap.keys());
-      if (executionIds.length > 0) {
-        mockChildProcess = runningMap.get(executionIds[0]);
-        break;
-      }
-    }
-
-    expect(mockChildProcess).toBeDefined();
-
-    const enoentError = new Error("ENOENT Error") as NodeJS.ErrnoException;
-    enoentError.code = "ENOENT";
-    vi.spyOn(fsPromises, "unlink").mockRejectedValueOnce(enoentError);
-    mockChildProcess.emit("error", new Error("Spawn failure ENOENT"));
-
-    await expect(execPromise).rejects.toThrow("Spawn failure ENOENT");
-
-    vi.restoreAllMocks();
-  });
-
-  it("should catch close errors using string format", async () => {
-    (executor as any).runningProcesses.set("fake-id", {
-      kill: () => {
-        throw "close string error";
-      },
-    });
-
-    await executor.close();
-    expect(executor.getRunningProcessesCount()).toBe(0);
   });
 });
