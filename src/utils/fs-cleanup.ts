@@ -29,7 +29,7 @@ export async function cleanupTmpFiles(): Promise<void> {
 
       await Promise.all(
         chunk.map(async (file) => {
-          // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal
+          // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
           const filePath = path.join(tmpDir, file);
           try {
             const stats = await fsPromises.stat(filePath);
