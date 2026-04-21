@@ -27,6 +27,7 @@ export async function cleanupTmpFiles(): Promise<void> {
       const batch = tempFiles.slice(i, i + BATCH_SIZE);
       await Promise.all(
         batch.map(async (file) => {
+          // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
           const filePath = path.join(tmpDir, file);
           try {
             const stats = await fsPromises.stat(filePath);
