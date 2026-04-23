@@ -6,6 +6,7 @@
 import { spawn, ChildProcess } from "child_process";
 import os from "os";
 import path from "path";
+import crypto from "crypto";
 import fsPromises from "fs/promises";
 import { logger } from "../logger.js";
 import { config } from "../config.js";
@@ -47,7 +48,8 @@ export class ProcessExecutor {
       );
     }
 
-    const executionId = `exec_${Date.now()}_${Math.random().toString(36).substring(2, 11)}_${process.hrtime.bigint()}`;
+    // Security: Use crypto.randomBytes instead of Math.random() to prevent predictable execution IDs, avoiding collisions and cross-execution manipulation.
+    const executionId = `exec_${Date.now()}_${crypto.randomBytes(8).toString("hex")}_${process.hrtime.bigint()}`;
     const timeout = options.timeout || config.sandbox.timeout;
     const tempFile = path.join(os.tmpdir(), `temp_${executionId}.js`);
 
@@ -94,7 +96,8 @@ export class ProcessExecutor {
     command: string,
     options: ExecutionOptions = {},
   ): Promise<ExecutionResult> {
-    const executionId = `exec_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+    // Security: Use crypto.randomBytes instead of Math.random() to prevent predictable execution IDs, avoiding collisions and cross-execution manipulation.
+    const executionId = `exec_${Date.now()}_${crypto.randomBytes(8).toString("hex")}`;
 
     // 解析命令
     let cmd: string;
@@ -126,7 +129,8 @@ export class ProcessExecutor {
     tempFilePath: string | null = null,
   ): Promise<ExecutionResult> {
     if (!executionId) {
-      executionId = `exec_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+      // Security: Use crypto.randomBytes instead of Math.random() to prevent predictable execution IDs, avoiding collisions and cross-execution manipulation.
+      executionId = `exec_${Date.now()}_${crypto.randomBytes(8).toString("hex")}`;
     }
     const timeout = options.timeout || config.sandbox.timeout;
     const cwd = options.cwd || process.cwd();
