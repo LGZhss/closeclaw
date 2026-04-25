@@ -42,7 +42,7 @@ describe("cleanupTmpFiles", () => {
   const ONE_HOUR = 1000 * 60 * 60;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     vi.mocked(os.tmpdir).mockReturnValue(mockTmpDir);
   });
 
