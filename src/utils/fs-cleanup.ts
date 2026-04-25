@@ -18,10 +18,7 @@ export async function cleanupTmpFiles(): Promise<void> {
       (f) => f.startsWith("temp_") && (f.endsWith(".js") || f.endsWith(".ts")),
     );
 
-    // ⚡ Bolt: Chunked parallel file deletion.
-    // 💡 What: Replaced sequential await inside a for loop with Promise.all batched execution (chunk size 50).
-    // 🎯 Why: A sequential loop over a large number of files causes unnecessary wait time for each I/O operation.
-    // 📊 Impact: Significantly reduces overall execution time when cleaning up a large temporary directory without hitting EMFILE limits.
+    // Process files in batches to optimize I/O performance without hitting EMFILE limits.
     const chunkSize = 50;
     for (let i = 0; i < tempFiles.length; i += chunkSize) {
       const chunk = tempFiles.slice(i, i + chunkSize);
