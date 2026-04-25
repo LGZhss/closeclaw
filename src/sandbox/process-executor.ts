@@ -127,7 +127,7 @@ export class ProcessExecutor {
     tempFilePath: string | null = null,
   ): Promise<ExecutionResult> {
     if (!executionId) {
-      executionId = `exec_${Date.now()}_${crypto.randomBytes(8).toString("hex")}`;
+      executionId = `exec_${Date.now()}_${crypto.randomBytes(8).toString("hex")}_${process.hrtime.bigint()}`;
     }
     const timeout = options.timeout || config.sandbox.timeout;
     const cwd = options.cwd || process.cwd();
