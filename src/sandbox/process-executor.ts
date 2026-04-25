@@ -95,7 +95,7 @@ export class ProcessExecutor {
     command: string,
     options: ExecutionOptions = {},
   ): Promise<ExecutionResult> {
-    const executionId = `exec_${Date.now()}_${crypto.randomBytes(8).toString("hex")}`;
+    const executionId = `exec_${Date.now()}_${crypto.randomBytes(8).toString("hex")}_${process.hrtime.bigint()}`;
 
     // 解析命令
     let cmd: string;
