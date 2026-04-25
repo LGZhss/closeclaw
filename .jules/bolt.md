@@ -9,5 +9,6 @@
 **Action:** Apply this pattern when checking if a normalized path falls under any of a predefined list of protected root directories.
 
 ## 2026-04-25 - Use Async I/O in Tool Registry
+
 **Learning:** Using synchronous file operations (`readWsFile`, `writeWsFile`) in tool handlers blocks the Node.js event loop during concurrent LLM requests.
 **Action:** Always use asynchronous file operations (`readWsFileAsync`, `writeWsFileAsync`) within tool handlers to prevent blocking the Node.js event loop during concurrent LLM requests.
