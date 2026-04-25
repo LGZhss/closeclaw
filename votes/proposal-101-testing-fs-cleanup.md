@@ -1,7 +1,8 @@
 # Proposal: Add Tests for cleanupTmpFiles
 
 > **状态**: ✅ 已通过（用户提出特批）
-
+> **Proposal-By**: [Author name/ID]
+> **Implemented-By**: [Implementer name/ID or task reference]
 ## 1. 提案背景 / Background
 
 The `cleanupTmpFiles()` function in `src/utils/fs-cleanup.ts` currently lacks test coverage. It's crucial to test its behavior (filtering based on prefix, suffix, and modification time) to ensure it correctly deletes old temporary files without removing unrelated ones.
