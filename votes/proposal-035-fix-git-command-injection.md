@@ -4,7 +4,9 @@
 
 ## 目标
 
+
 修复 `src/utils/utils.ts` 中的 `runGit` 和 `isGitRepo` 方法中存在的命令注入漏洞。
+
 
 ## 具体变更
 
