@@ -6,7 +6,7 @@
 import path from "path";
 import fs from "fs";
 import fsPromises from "fs/promises";
-import { execSync, spawn } from "child_process";
+import { execSync, execFileSync, spawn } from "child_process";
 import { logger } from "../logger.js";
 
 /** 核心加固 (P031): 敏感文件名黑名单，防止 Agent 越权读取 */
@@ -279,7 +279,7 @@ export const runGit = (args: string[], cwd: string, retries = 2): string => {
   let attempt = 0;
   while (attempt <= retries) {
     try {
-      return execSync(`git ${args.join(" ")}`, {
+      return execFileSync("git", args, {
         cwd,
         encoding: "utf-8",
         stdio: ["ignore", "pipe", "pipe"],
