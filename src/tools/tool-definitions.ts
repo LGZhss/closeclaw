@@ -66,3 +66,15 @@ export const TOOL_DEFINITIONS = {
     },
   },
 };
+
+export type ToolArguments = Record<string, unknown>;
+export type ToolContext = Record<string, unknown>;
+export interface ToolDefinition {
+  name: string;
+  description: string;
+  parameters: {
+    type: string;
+    properties: Record<string, { type: string; description: string }>;
+    required: string[];
+  };
+}

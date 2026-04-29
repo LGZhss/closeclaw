@@ -3,11 +3,19 @@
  * 将工具名称映射到具体的执行逻辑
  */
 
-import { readWsFile, writeWsFile } from "../utils/utils.js";
+import { readWsFileAsync, writeWsFileAsync } from "../utils/utils.js";
 import { SandboxManager } from "../sandbox/manager.js";
+import {
+  ToolArguments,
+  ToolContext,
+  ToolDefinition,
+} from "./tool-definitions.js";
 
 /** 工具处理函数类型 */
-export type ToolHandler = (args: any, context: any) => Promise<any>;
+export type ToolHandler = (
+  args: ToolArguments,
+  context: ToolContext,
+) => Promise<unknown>;
 
 /**
  * 解析命令行风格的参数到对象
@@ -17,7 +25,11 @@ export type ToolHandler = (args: any, context: any) => Promise<any>;
  * @param rawText 原始命令文本
  * @returns 解析后的参数对象
  */
-export function parseArgsToObject(tool: any, args: string[], rawText: string): any {
+export function parseArgsToObject(
+  tool: ToolDefinition,
+  args: string[],
+  rawText: string,
+): ToolArguments {
   const props = tool.parameters?.properties || {};
   const propNames = Object.keys(props);
 
@@ -38,7 +50,7 @@ export function parseArgsToObject(tool: any, args: string[], rawText: string): a
   }
 
   // 默认处理：按位置映射参数
-  const result: any = {};
+  const result: ToolArguments = {};
   propNames.forEach((prop, i) => {
     if (args[i] !== undefined) {
       result[prop] = args[i];
@@ -58,19 +70,34 @@ export const createToolRegistry = (
 ): Record<string, ToolHandler> => {
   return {
     /** 读取文件处理器 */
+    // What: Replace readWsFile with readWsFileAsync.
+    // Why: To avoid blocking the Node.js event loop during concurrent LLM requests.
+    // Impact: Improves concurrency and responsiveness when handling multiple tool calls.
     read_file: async ({ path: filePath }) => {
-      return { content: readWsFile(workspaceDir, filePath) };
+      return {
+        content: await readWsFileAsync(workspaceDir, filePath as string),
+      };
     },
 
     /** 写入文件处理器 */
+    // What: Replace writeWsFile with writeWsFileAsync.
+    // Why: To avoid blocking the Node.js event loop during concurrent LLM requests.
+    // Impact: Improves concurrency and responsiveness when handling multiple tool calls.
     write_file: async ({ path: filePath, content }) => {
-      writeWsFile(workspaceDir, filePath, content);
+      await writeWsFileAsync(
+        workspaceDir,
+        filePath as string,
+        content as string,
+      );
       return { success: true };
     },
 
     /** 在沙盒中执行代码处理器 */
     execute_code: async ({ code }, { traceId }) => {
-      return await sandboxManager.run({ type: "code", content: code }, traceId);
+      return await sandboxManager.run(
+        { type: "code", content: code as string },
+        traceId as string,
+      );
     },
 
     /** 列出目录处理器 */
