@@ -54,8 +54,12 @@ export class ProcessExecutor {
 
     try {
       // 写入代码到临时文件，使用异步操作避免阻塞事件循环 (P033 优化)
+      // 🛡️ Sentinel: Set restrictive permissions (0o600) to prevent unauthorized access in shared tmpdir
       // eslint-disable-next-line security/detect-non-literal-fs-filename
-      await fsPromises.writeFile(tempFile, code);
+      await fsPromises.writeFile(tempFile, code, {
+        encoding: "utf-8",
+        mode: 0o600,
+      });
 
       // 安全地使用 spawn 执行 node 命令
       return await this._executeProcess(
