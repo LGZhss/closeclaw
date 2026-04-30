@@ -7,3 +7,7 @@
 
 **Learning:** Using `Set.has()` and checking path segments (`indexOf('/')` and `substring()`) is significantly faster than using `.startsWith()` in a loop over an array of paths, yielding a ~57% performance improvement for path validation.
 **Action:** Apply this pattern when checking if a normalized path falls under any of a predefined list of protected root directories.
+
+## 2026-04-30 - Replace synchronous readWsFile and writeWsFile in ToolRegistry
+**Learning:** In src/tools/tool-registry.ts, the read_file and write_file handlers were blocking the Node.js event loop by using synchronous file operations (readWsFile, writeWsFile), degrading performance during concurrent LLM requests.
+**Action:** Replace synchronous file system APIs with their asynchronous counterparts (readWsFileAsync and writeWsFileAsync) in tool handler implementations to allow the event loop to continue processing other requests while waiting for file I/O.
