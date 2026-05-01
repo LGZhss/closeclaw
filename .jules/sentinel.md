@@ -5,6 +5,7 @@
 **Prevention:** Always use Node.js `crypto.randomBytes()` instead of `Math.random()` for any system-level identifiers.
 
 ## 2026-05-01 - Insecure Shared Temporary File Creation
+
 **Vulnerability:** The ProcessExecutor writes temporary code files to the shared os.tmpdir() without explicit restrictive permissions, allowing local unauthorized users to read or modify the code before it is executed (TOCTOU vulnerability).
 **Learning:** Default file permissions in shared temporary directories are often overly permissive.
 **Prevention:** Always explicitly set restrictive file permissions (e.g., passing { mode: 0o600 }) when writing to shared temporary directories (e.g., using fsPromises.writeFile).
