@@ -9,5 +9,6 @@
 **Action:** Apply this pattern when checking if a normalized path falls under any of a predefined list of protected root directories.
 
 ## 2026-05-02 - Avoid event loop blocking in Tool Registry
+
 **Learning:** Synchronous file operations (`readWsFile`, `writeWsFile`) in tool handlers (`tool-registry.ts`) block the Node.js event loop during concurrent LLM requests, causing severe bottlenecks and unresponsiveness.
 **Action:** Always use asynchronous equivalents (`readWsFileAsync`, `writeWsFileAsync`) and properly `await` them in tool handlers to maintain high concurrency.
