@@ -171,8 +171,11 @@ export const writeWsFile = (
 ): void => {
   const safePath = resolveSafePath(workspaceDir, relativePath);
   ensureDir(path.dirname(safePath));
+  // What: Added { mode: 0o600 } to writeFileSync.
+  // Why: When writing files, ensuring restrictive file permissions prevents unauthorized read or modify access from other users.
+  // Impact: Mitigates TOCTOU (Time-of-Check to Time-of-Use) and unauthorized access vulnerabilities.
   // eslint-disable-next-line security/detect-non-literal-fs-filename
-  fs.writeFileSync(safePath, content, "utf-8");
+  fs.writeFileSync(safePath, content, { encoding: "utf-8", mode: 0o600 });
 };
 
 /**
@@ -188,8 +191,14 @@ export const writeWsFileAsync = async (
 ): Promise<void> => {
   const safePath = resolveSafePath(workspaceDir, relativePath);
   await ensureDirAsync(path.dirname(safePath));
+  // What: Added { mode: 0o600 } to writeFile options.
+  // Why: When writing files, ensuring restrictive file permissions prevents unauthorized read or modify access from other users.
+  // Impact: Mitigates TOCTOU (Time-of-Check to Time-of-Use) and unauthorized access vulnerabilities.
   // eslint-disable-next-line security/detect-non-literal-fs-filename
-  await fsPromises.writeFile(safePath, content, "utf-8");
+  await fsPromises.writeFile(safePath, content, {
+    encoding: "utf-8",
+    mode: 0o600,
+  });
 };
 
 /**
