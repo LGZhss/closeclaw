@@ -3,7 +3,7 @@
  * 将工具名称映射到具体的执行逻辑
  */
 
-import { readWsFile, writeWsFile } from "../utils/utils.js";
+import { readWsFileAsync, writeWsFileAsync } from "../utils/utils.js";
 import { SandboxManager } from "../sandbox/manager.js";
 
 /** 工具处理函数类型 */
@@ -17,7 +17,11 @@ export type ToolHandler = (args: any, context: any) => Promise<any>;
  * @param rawText 原始命令文本
  * @returns 解析后的参数对象
  */
-export function parseArgsToObject(tool: any, args: string[], rawText: string): any {
+export function parseArgsToObject(
+  tool: any,
+  args: string[],
+  rawText: string,
+): any {
   const props = tool.parameters?.properties || {};
   const propNames = Object.keys(props);
 
@@ -59,12 +63,20 @@ export const createToolRegistry = (
   return {
     /** 读取文件处理器 */
     read_file: async ({ path: filePath }) => {
-      return { content: readWsFile(workspaceDir, filePath) };
+      // ⚡ Bolt: Prevent blocking the Node.js event loop during concurrent LLM requests
+      // What: Replaced readWsFile with readWsFileAsync
+      // Why: Synchronous I/O blocks the main thread, degrading throughput for concurrent LLM tool requests.
+      // Impact: Eliminates event loop blocking during file reads, significantly improving concurrent performance.
+      return { content: await readWsFileAsync(workspaceDir, filePath) };
     },
 
     /** 写入文件处理器 */
     write_file: async ({ path: filePath, content }) => {
-      writeWsFile(workspaceDir, filePath, content);
+      // ⚡ Bolt: Prevent blocking the Node.js event loop during concurrent LLM requests
+      // What: Replaced writeWsFile with writeWsFileAsync
+      // Why: Synchronous I/O blocks the main thread, degrading throughput for concurrent LLM tool requests.
+      // Impact: Eliminates event loop blocking during file writes, significantly improving concurrent performance.
+      await writeWsFileAsync(workspaceDir, filePath, content);
       return { success: true };
     },
 
