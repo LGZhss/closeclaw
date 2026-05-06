@@ -7,3 +7,8 @@
 
 **Learning:** Using `Set.has()` and checking path segments (`indexOf('/')` and `substring()`) is significantly faster than using `.startsWith()` in a loop over an array of paths, yielding a ~57% performance improvement for path validation.
 **Action:** Apply this pattern when checking if a normalized path falls under any of a predefined list of protected root directories.
+
+## 2026-05-06 - Prevent Event Loop Blocking in Tool Registry
+
+**Learning:** Using synchronous file operations (`readWsFile`, `writeWsFile`) inside tool handlers (which are already async functions) blocks the Node.js event loop, degrading concurrent performance when handling multiple LLM requests.
+**Action:** Always use asynchronous file operations (`readWsFileAsync`, `writeWsFileAsync`) and `await` them properly inside tool handlers to ensure non-blocking execution.
