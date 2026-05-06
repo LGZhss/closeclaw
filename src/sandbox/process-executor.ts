@@ -55,7 +55,11 @@ export class ProcessExecutor {
     try {
       // 写入代码到临时文件，使用异步操作避免阻塞事件循环 (P033 优化)
       // eslint-disable-next-line security/detect-non-literal-fs-filename
-      await fsPromises.writeFile(tempFile, code);
+      // Sentinel Security Fix: Set restrictive file permissions on temporary file
+      // What: Added { mode: 0o600 } to fsPromises.writeFile
+      // Why: Writing to os.tmpdir() without restrictive permissions allows unauthorized read or modification by other users
+      // Impact: Prevents TOCTOU vulnerabilities and unauthorized access to sandbox execution code
+      await fsPromises.writeFile(tempFile, code, { mode: 0o600 });
 
       // 安全地使用 spawn 执行 node 命令
       return await this._executeProcess(
