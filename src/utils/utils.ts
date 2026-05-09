@@ -6,7 +6,7 @@
 import path from "path";
 import fs from "fs";
 import fsPromises from "fs/promises";
-import { execSync, spawn } from "child_process";
+import { execSync, execFileSync, spawn } from "child_process";
 import { logger } from "../logger.js";
 
 /** 核心加固 (P031): 敏感文件名黑名单，防止 Agent 越权读取 */
@@ -196,22 +196,32 @@ export const writeWsFileAsync = async (
  * 安全执行系统命令 (P033 高性能增强)
  * 封装 execSync，增加日志审计和大小限制
  */
+// 🛡️ Sentinel: Refactored to prevent command injection by using execFileSync instead of execSync
+// What: Swapped execSync for execFileSync with separate file and args arguments.
+// Why: Using execSync with concatenated strings allows command injection. execFileSync avoids shell parsing.
+// Impact: Eliminates command injection risks for users of safeCmd.
 export const safeCmd = (
-  command: string,
+  file: string,
+  args: string[] = [],
   options: { cwd?: string; maxBuffer?: number } = {},
 ): string => {
   try {
-    const result = execSync(command, {
+    const result = execFileSync(file, args, {
       cwd: options.cwd || process.cwd(),
       encoding: "utf-8",
       maxBuffer: options.maxBuffer || 1024 * 1024 * 2, // 默认 2MB
       stdio: ["ignore", "pipe", "pipe"],
+      shell: false,
     });
     return result.trim();
-  } catch (error: any) {
-    const stderr = error.stderr?.toString() || "";
-    logger.warn(`[safeCmd] 执行失败: ${command}, 错误: ${stderr}`);
-    throw new Error(stderr || error.message);
+  } catch (error: unknown) {
+    const stderr = (error as { stderr?: unknown }).stderr?.toString() || "";
+    logger.warn(
+      `[safeCmd] 执行失败: ${file} ${args.join(" ")}, 错误: ${stderr}`,
+    );
+    throw new Error(
+      stderr || (error instanceof Error ? error.message : String(error)),
+    );
   }
 };
 
